@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selection Sort — AlgoClassroom</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/main.css">
+<style>
+:root {
+  --bar-default: #1a2840;
+  --bar-default-stroke: #2a4060;
+  --bar-compare: #ff8c42;
+  --bar-swap: #ff6b9d;
+  --bar-sorted: #06d6a0;
+  --bar-min: #ffd166;
+}
+
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+#vizCanvas {
+  width: 100%;
+  border-radius: 8px;
+  background: transparent;
+  display: block;
+}
+
+.controls {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+.arr-input {
+  flex: 1; min-width: 200px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.cc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; position: relative; overflow: hidden;
+  transition: border-color .3s, transform .3s;
+}
+.cc:hover { border-color: rgba(0,212,170,.3); transform: translateY(-2px); }
+.cc::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--teal),var(--blue)); opacity:0; transition:opacity .3s; }
+.cc:hover::after { opacity:1; }
+.cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
+.cc-title { font-family: var(--mono); font-size: 9px; color: var(--teal); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+.cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+.legend { display:flex; gap:14px; flex-wrap:wrap; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px; text-align: center;
+}
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+  </div>
+</nav>
+
+<div class="algo-page">
+
+  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🔎</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Sorting Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Selection Sort</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty beginner">Beginner</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      Repeatedly select the smallest unsorted element and swap it to the front of the unsorted portion. Builds the sorted list from the beginning.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Best: <span>O(n²)</span></div>
+      <div class="cplx-chip">Average: <span>O(n²)</span></div>
+      <div class="cplx-chip">Worst: <span>O(n²)</span></div>
+      <div class="cplx-chip">Space: <span>O(1)</span></div>
+      <div class="cplx-chip">Stable: <span>✗ No</span></div>
+    </div>
+  </header>
+
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">🔍</span><div class="cc-title">Min Selection</div><div class="cc-desc">In each pass, scan the unsorted portion to find the smallest element.</div></div>
+    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Swap to Front</div><div class="cc-desc">Swap the found minimum with the first unsorted position.</div></div>
+    <div class="cc"><span class="cc-icon">📈</span><div class="cc-title">Fixed Passes</div><div class="cc-desc">Always performs exactly n-1 passes with O(n²) comparisons — no early termination.</div></div>
+    <div class="cc"><span class="cc-icon">⚠️</span><div class="cc-title">Unstable Sort</div><div class="cc-desc">Equal elements may not maintain their relative order after sorting.</div></div>
+  </div>
+
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍💻</span>
+    <div class="narration-text" id="narText">Welcome to Selection Sort! Enter your array below, then press ▶ Play to watch the sort in action with step-by-step narration.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-row">
+    <div class="si"><span class="sl">Pass</span><span class="sv orange" id="sPass">0</span></div>
+    <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
+    <div class="si"><span class="sl">Swaps</span><span class="sv" id="sSwaps">0</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <!-- Main layout -->
+  <div class="two-col">
+
+    <!-- LEFT: Canvas -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:var(--bar-compare);"></div>Comparing</div>
+          <div class="li"><div class="ld" style="background:var(--bar-min);"></div>Current Min</div>
+          <div class="li"><div class="ld" style="background:var(--bar-swap);"></div>Swapping</div>
+          <div class="li"><div class="ld" style="background:var(--bar-sorted);"></div>Sorted</div>
+        </div>
+        <canvas id="vizCanvas" height="340"></canvas>
+      </div>
+    </div>
+
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Comparisons</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSwaps">0</div><div class="stat-box-l">Swaps</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPasses">0</div><div class="stat-box-l">Passes</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Size</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">selectionSort</span>(arr):</span>
+<span id="cl2" class="code-line">  n = arr.<span class="fn">length</span></span>
+<span id="cl3" class="code-line">  <span class="kw">for</span> i = 0 <span class="kw">to</span> n-2:</span>
+<span id="cl4" class="code-line">    minIdx = i</span>
+<span id="cl5" class="code-line">    <span class="kw">for</span> j = i+1 <span class="kw">to</span> n-1:</span>
+<span id="cl6" class="code-line">      <span class="kw">if</span> arr[j] < arr[minIdx]:</span>
+<span id="cl7" class="code-line">        minIdx = j</span>
+<span id="cl8" class="code-line">    <span class="kw">if</span> minIdx != i:</span>
+<span id="cl9" class="code-line">      <span class="fn">swap</span>(arr[i], arr[minIdx])</span>
+<span id="cl10" class="code-line">  <span class="kw">return</span> arr</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Current Array</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">
+          —
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="ctrl-row">
+      <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+      <button class="btn" id="btnNext">⏭ Next Step</button>
+      <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+      <button class="btn" onclick="randomize()">🎲 Random Array</button>
+      <div class="speed-ctrl">
+        <span class="speed-lbl">⚡ Speed</span>
+        <input type="range" id="speedSlider" min="1" max="5" value="2">
+        <span class="speed-val" id="speedVal">2×</span>
+      </div>
+    </div>
+    <div class="input-row">
+      <label>Array (comma-separated):</label>
+      <input type="text" class="arr-input" id="arrInput" value="64, 34, 25, 12, 22, 11, 90, 45, 7, 38">
+      <button class="btn" onclick="applyArray()">Apply</button>
+    </div>
+  </div>
+
+</div><!-- .algo-page -->
+
+<script src="../../assets/js/main.js"></script>
+<script src="../../assets/js/algo-base.js"></script>
+<script>
+// ════════════════════════════════════════════════
+// SELECTION SORT — STEP GENERATOR
+// ════════════════════════════════════════════════
+function buildSelectionSortSteps(arr) {
+  const steps = [];
+  const a = [...arr];
+  const n = a.length;
+  let totalComps = 0;
+  let totalSwaps = 0;
+
+  steps.push({
+    arr: [...a], compare: [], min: null, sorted: [],
+    narration: `Starting Selection Sort on [${a.join(', ')}]. We'll do ${n-1} passes, each finding the min in the unsorted part.`,
+    phase: 'active', pass: 0, comps: 0, swaps: 0, codeLine: 1,
+  });
+
+  for (let i = 0; i < n - 1; i++) {
+    let minIdx = i;
+    const sorted = Array.from({ length: i }, (_, k) => k);
+
+    steps.push({
+      arr: [...a], compare: [], min: minIdx, sorted,
+      narration: `Pass ${i + 1}: Start with min at index ${i} (value ${a[i]}). Scan from ${i+1} to end.`,
+      phase: 'active', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 4,
+    });
+
+    for (let j = i + 1; j < n; j++) {
+      totalComps++;
+      steps.push({
+        arr: [...a], compare: [j, minIdx], min: minIdx, sorted,
+        narration: `Compare a[${j}]=${a[j]} with current min a[${minIdx}]=${a[minIdx]}. ${a[j] < a[minIdx] ? 'Smaller — update min!' : 'Not smaller.'}`,
+        phase: 'compare', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 6,
+      });
+
+      if (a[j] < a[minIdx]) {
+        minIdx = j;
+        steps.push({
+          arr: [...a], compare: [j, minIdx], min: minIdx, sorted,
+          narration: `New min found at ${j} (value ${a[j]}).`,
+          phase: 'compare', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 7,
+        });
+      }
+    }
+
+    if (minIdx !== i) {
+      const prevArr = [...a];
+      [a[i], a[minIdx]] = [a[minIdx], a[i]];
+      totalSwaps++;
+      steps.push({
+        arr: [...a], 
+        compare: [i, minIdx], 
+        min: null,
+        sorted,
+        swapAnim: { idxA: i, idxB: minIdx }, // Animation data
+        narration: `Swap a[${i}] and a[${minIdx}]. Array now: [${a.join(', ')}]. Total swaps: ${totalSwaps}.`,
+        phase: 'swap', 
+        pass: i + 1, 
+        comps: totalComps, 
+        swaps: totalSwaps, 
+        codeLine: 9,
+        prevArr: prevArr // Store previous array state for animation
+      });
+    } else {
+      steps.push({
+        arr: [...a], compare: [], min: null, sorted: [...sorted, i],
+        narration: `No swap needed — a[${i}] was already the min.`,
+        phase: 'active', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 8,
+      });
+    }
+  }
+
+  steps.push({
+    arr: [...a], compare: [], min: null, sorted: Array.from({ length: n }, (_, k) => k),
+    narration: `Selection Sort complete! Sorted array: [${a.join(', ')}]. Total: ${totalComps} comparisons, ${totalSwaps} swaps.`,
+    phase: 'done', pass: n - 1, comps: totalComps, swaps: totalSwaps, codeLine: 10,
+  });
+
+  return steps;
+}
+
+// ════════════════════════════════════════════════
+// CANVAS RENDERING WITH SWAP ANIMATION
+// ════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+
+function resizeCanvas() {
+  canvas.width = canvas.parentElement.clientWidth;
+}
+
+function getBarLayout(arr) {
+  const n = arr.length;
+  const W = canvas.width;
+  const barW = Math.max(6, (W - (n + 1) * 4) / n);
+  const gap = (W - n * barW) / (n + 1);
+  return { barW, gap };
+}
+
+/**
+ * Animate a swap between two indices.
+ * prevStep = step BEFORE swap (compare phase)
+ * nextStep = step AFTER swap (contains swapAnim info)
+ * onDone = callback when animation completes
+ */
+function animateSwap(prevStep, nextStep, onDone) {
+  // Cancel any ongoing animation
+  if (animRafId) {
+    cancelAnimationFrame(animRafId);
+    animRafId = null;
+  }
+
+  const { idxA, idxB } = nextStep.swapAnim;
+  const { barW, gap } = getBarLayout(prevStep.arr);
+  const travelX = (barW + gap) * (idxB - idxA); // Can be non-adjacent
+
+  const DURATION = 420; // animation duration in ms
+  const start = performance.now();
+
+  // Display previous state during animation
+  const displayStep = { 
+    ...prevStep, 
+    phase: 'swap', 
+    compare: [idxA, idxB],
+    min: null 
+  };
+
+  // Smooth ease-in-out function
+  function easeInOut(t) {
+    return t < 0.5 
+      ? 2 * t * t 
+      : -1 + (4 - 2 * t) * t;
+  }
+
+  function tick(now) {
+    const elapsed = now - start;
+    const rawT = Math.min(elapsed / DURATION, 1);
+    const t = easeInOut(rawT);
+
+    // Arc height for curved motion
+    const arcHeight = Math.min(40, canvas.height * 0.12);
+
+    // Horizontal motion
+    const xA = t * travelX;
+    const xB = -t * travelX;
+
+    // Vertical arc motion
+    const yA = -Math.sin(rawT * Math.PI) * arcHeight;
+    const yB =  Math.sin(rawT * Math.PI) * arcHeight;
+
+    const offsets = {};
+    offsets[idxA] = { x: xA, y: yA };
+    offsets[idxB] = { x: xB, y: yB };
+
+    drawBars(displayStep, offsets);
+
+    if (rawT < 1) {
+      animRafId = requestAnimationFrame(tick);
+    } else {
+      animRafId = null;
+      onDone(); // Draw final swapped state
+    }
+  }
+
+  animRafId = requestAnimationFrame(tick);
+}
+
+function drawBars(step, offsets = {}) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!step) return;
+
+  const arr = step.arr;
+  const n = arr.length;
+  const W = canvas.width;
+  const H = canvas.height;
+  const maxVal = Math.max(...arr);
+  const barW = Math.max(6, (W - (n + 1) * 4) / n);
+  const gap = (W - n * barW) / (n + 1);
+  const compareSet = new Set(step.compare || []);
+  const sortedSet = new Set(step.sorted || []);
+  const minIdx = step.min;
+
+  arr.forEach((val, i) => {
+    const baseX = gap + i * (barW + gap);
+    const h = (val / maxVal) * (H - 50);
+    const baseY = H - h - 28;
+
+    // Apply animation offsets if any
+    let x = baseX;
+    let y = baseY;
+    if (offsets[i]) {
+      x += offsets[i].x;
+      y += offsets[i].y;
+    }
+
+    let fillColor = '#1a2840';
+    let strokeColor = '#2a4060';
+    let glowColor = null;
+
+    if (sortedSet.has(i)) {
+      fillColor = 'rgba(6,214,160,0.2)';
+      strokeColor = '#06d6a0';
+      glowColor = 'rgba(6,214,160,0.3)';
+    } else if (i === minIdx) {
+      fillColor = 'rgba(255,209,102,0.25)';
+      strokeColor = '#ffd166';
+      glowColor = 'rgba(255,209,102,0.35)';
+    }
+    if (compareSet.has(i)) {
+      if (step.phase === 'swap') {
+        fillColor = 'rgba(255,107,157,0.25)';
+        strokeColor = '#ff6b9d';
+        glowColor = 'rgba(255,107,157,0.4)';
+      } else {
+        fillColor = 'rgba(255,140,66,0.25)';
+        strokeColor = '#ff8c42';
+        glowColor = 'rgba(255,140,66,0.35)';
+      }
+    }
+
+    // Glow
+    if (glowColor) {
+      ctx.beginPath();
+      ctx.roundRect(x - 3, y - 3, barW + 6, h + 6, 6);
+      ctx.fillStyle = glowColor;
+      ctx.fill();
+    }
+
+    // Bar
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, h, [4, 4, 0, 0]);
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Value label
+    ctx.fillStyle = compareSet.has(i) ? '#fff' : sortedSet.has(i) ? '#06d6a0' : (i === minIdx ? '#ffd166' : '#4a6a9a');
+    ctx.font = `bold ${Math.min(11, barW - 2)}px JetBrains Mono`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    if (barW >= 18) ctx.fillText(val, x + barW / 2, y - 3);
+
+    // Index label
+    ctx.fillStyle = '#2a3d58';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textBaseline = 'top';
+    ctx.fillText(i, x + barW / 2, H - 20);
+  });
+}
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let steps = [];
+let arr = [64, 34, 25, 12, 22, 11, 90, 45, 7, 38];
+
+const page = new AlgoPage({
+  onRenderStep(step) {
+    // Cancel any ongoing animation
+    if (animRafId) {
+      cancelAnimationFrame(animRafId);
+      animRafId = null;
+    }
+
+    // Check if this step has swap animation and there's a previous step
+    if (step.swapAnim && step.prevArr && page.stepIdx > 0) {
+      const prevStep = steps[page.stepIdx - 1];
+      animateSwap(prevStep, step, () => {
+        drawBars(step);
+        // Update UI after animation completes
+        updateUI(step);
+      });
+    } else {
+      drawBars(step);
+      updateUI(step);
+    }
+  },
+  onReset() {
+    // Cancel any ongoing animation
+    if (animRafId) {
+      cancelAnimationFrame(animRafId);
+      animRafId = null;
+    }
+    // Draw the initial array state instead of null
+    if (steps.length > 0 && steps[0]) {
+      drawBars(steps[0]);
+    } else {
+      drawBars(null);
+    }
+    document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
+    document.getElementById('sPass').textContent = '0';
+    document.getElementById('sComps').textContent = '0';
+    document.getElementById('sSwaps').textContent = '0';
+    document.getElementById('statComps').textContent = '0';
+    document.getElementById('statSwaps').textContent = '0';
+    document.getElementById('statPasses').textContent = '0';
+  }
+});
+
+function updateUI(step) {
+  document.getElementById('sPass').textContent = step.pass || 0;
+  document.getElementById('sComps').textContent = step.comps || 0;
+  document.getElementById('sSwaps').textContent = step.swaps || 0;
+  document.getElementById('statComps').textContent = step.comps || 0;
+  document.getElementById('statSwaps').textContent = step.swaps || 0;
+  document.getElementById('statPasses').textContent = step.pass || 0;
+  document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
+
+  // Highlight code line
+  for (let i = 1; i <= 10; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
+  }
+}
+
+function init() {
+  resizeCanvas();
+  document.getElementById('statN').textContent = arr.length;
+  steps = buildSelectionSortSteps(arr);
+  page.setSteps(steps);
+  // Draw the first step instead of null to show initial array
+  if (steps.length > 0) {
+    drawBars(steps[0]);
+    document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
+  } else {
+    drawBars(null);
+    document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
+  }
+}
+
+function applyArray() {
+  const raw = document.getElementById('arrInput').value;
+  const parsed = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+  if (parsed.length < 2) { alert('Enter at least 2 valid positive numbers.'); return; }
+  arr = parsed.slice(0, 20);
+  page.reset();
+  init();
+}
+
+function randomize() {
+  arr = Array.from({ length: 12 }, () => Math.floor(Math.random() * 90) + 5);
+  document.getElementById('arrInput').value = arr.join(', ');
+  page.reset();
+  init();
+}
+
+window.addEventListener('resize', () => { 
+  resizeCanvas(); 
+  if (page.stepIdx >= 0 && steps[page.stepIdx]) {
+    drawBars(steps[page.stepIdx]);
+  } else if (steps.length > 0 && steps[0]) {
+    // Show first step if no step is selected
+    drawBars(steps[0]);
+  } else {
+    drawBars(null);
+  }
+});
+
+// Initialize
+init();
+</script>
+</body>
+</html>

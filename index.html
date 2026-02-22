@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlgoClassroom — 60+ Interactive Algorithm Visualizations</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span>
+    </a>
+    <div class="nav-links">
+      <a href="#sorting">Sorting</a>
+      <a href="#searching">Searching</a>
+      <a href="#graph">Graph</a>
+      <a href="#dp">Dynamic Programming</a>
+      <a href="#ds">Data Structures</a>
+    </div>
+    <div class="nav-badge">60+ Algorithms</div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-tag">Interactive Algorithm Classroom</div>
+  <h1 class="hero-title">
+    Learn Algorithms<br><span class="gradient-text">Visually</span>
+  </h1>
+  <p class="hero-sub">Step through 60+ algorithms with interactive animations, narrated explanations, and real-time code tracing. From beginner to advanced.</p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-n">60+</span><span class="stat-l">Algorithms</span></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><span class="stat-n">8</span><span class="stat-l">Categories</span></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><span class="stat-n">100%</span><span class="stat-l">Free & Open</span></div>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" class="search-input" placeholder="Search algorithms... (e.g. quicksort, dijkstra, BFS)">
+  </div>
+</header>
+
+<main class="main-content">
+
+  <!-- SORTING -->
+  <section id="sorting" class="category-section">
+    <div class="cat-header">
+      <div class="cat-icon">🔀</div>
+      <div>
+        <h2 class="cat-title">Sorting Algorithms</h2>
+        <p class="cat-desc">Rearranging elements in order — the foundation of computer science</p>
+      </div>
+      <div class="cat-count">10 algorithms</div>
+    </div>
+    <div class="algo-grid" id="grid-sorting">
+      <a href="algorithms/sorting/bubble-sort.html" class="algo-card" data-tags="sorting beginner O(n²)">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">🫧</div>
+        <h3>Bubble Sort</h3>
+        <p>Compare adjacent elements and swap — the classic teaching algorithm</p>
+        <div class="card-meta"><span>O(n²)</span><span>Stable</span><span>In-place</span></div>
+      </a>
+      <a href="algorithms/sorting/selection-sort.html" class="algo-card" data-tags="sorting beginner O(n²)">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">🎯</div>
+        <h3>Selection Sort</h3>
+        <p>Find the minimum element and place it at the beginning each pass</p>
+        <div class="card-meta"><span>O(n²)</span><span>Unstable</span><span>In-place</span></div>
+      </a>
+      <a href="algorithms/sorting/insertion-sort.html" class="algo-card" data-tags="sorting beginner O(n²)">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">🃏</div>
+        <h3>Insertion Sort</h3>
+        <p>Build a sorted array one element at a time, like sorting playing cards</p>
+        <div class="card-meta"><span>O(n²)</span><span>Stable</span><span>In-place</span></div>
+      </a>
+      <a href="algorithms/sorting/merge-sort.html" class="algo-card" data-tags="sorting intermediate O(n log n)">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔗</div>
+        <h3>Merge Sort</h3>
+        <p>Divide and conquer — split, sort recursively, then merge back together</p>
+        <div class="card-meta"><span>O(n log n)</span><span>Stable</span><span>O(n) space</span></div>
+      </a>
+      <a href="algorithms/sorting/quick-sort.html" class="algo-card" data-tags="sorting intermediate O(n log n)">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">⚡</div>
+        <h3>Quick Sort</h3>
+        <p>Pick a pivot, partition around it, and recursively sort each side</p>
+        <div class="card-meta"><span>O(n log n)</span><span>Unstable</span><span>In-place</span></div>
+      </a>
+      <a href="algorithms/sorting/heap-sort.html" class="algo-card" data-tags="sorting intermediate O(n log n)">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🏔️</div>
+        <h3>Heap Sort</h3>
+        <p>Build a max-heap, then extract max repeatedly to sort in-place</p>
+        <div class="card-meta"><span>O(n log n)</span><span>Unstable</span><span>In-place</span></div>
+      </a>
+      <a href="algorithms/sorting/counting-sort.html" class="algo-card" data-tags="sorting intermediate O(n+k)">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔢</div>
+        <h3>Counting Sort</h3>
+        <p>Count occurrences of each element — beats comparison sort lower bound</p>
+        <div class="card-meta"><span>O(n+k)</span><span>Stable</span><span>Non-comparison</span></div>
+      </a>
+      <a href="algorithms/sorting/radix-sort.html" class="algo-card" data-tags="sorting intermediate O(nk)">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">📻</div>
+        <h3>Radix Sort</h3>
+        <p>Sort digit by digit from least significant to most significant</p>
+        <div class="card-meta"><span>O(nk)</span><span>Stable</span><span>Non-comparison</span></div>
+      </a>
+      <a href="algorithms/sorting/shell-sort.html" class="algo-card" data-tags="sorting intermediate">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🐚</div>
+        <h3>Shell Sort</h3>
+        <p>Generalization of insertion sort using diminishing gap sequences</p>
+        <div class="card-meta"><span>O(n log² n)</span><span>Unstable</span><span>In-place</span></div>
+      </a>
+      <a href="algorithms/sorting/tim-sort.html" class="algo-card" data-tags="sorting advanced">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">⏱️</div>
+        <h3>Tim Sort</h3>
+        <p>Hybrid merge + insertion sort — used in Python and Java's built-in sort</p>
+        <div class="card-meta"><span>O(n log n)</span><span>Stable</span><span>Adaptive</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- SEARCHING -->
+  <section id="searching" class="category-section">
+    <div class="cat-header">
+      <div class="cat-icon">🔍</div>
+      <div>
+        <h2 class="cat-title">Searching Algorithms</h2>
+        <p class="cat-desc">Finding elements efficiently in sorted and unsorted data</p>
+      </div>
+      <div class="cat-count">7 algorithms</div>
+    </div>
+    <div class="algo-grid" id="grid-searching">
+      <a href="algorithms/searching/linear-search.html" class="algo-card" data-tags="searching beginner O(n)">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">➡️</div>
+        <h3>Linear Search</h3>
+        <p>Check each element one by one — simple but O(n) in worst case</p>
+        <div class="card-meta"><span>O(n)</span><span>Unsorted</span></div>
+      </a>
+      <a href="algorithms/searching/binary-search.html" class="algo-card" data-tags="searching beginner O(log n)">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">✂️</div>
+        <h3>Binary Search</h3>
+        <p>Divide sorted array in half each step — the classic O(log n) search</p>
+        <div class="card-meta"><span>O(log n)</span><span>Sorted only</span></div>
+      </a>
+      <a href="algorithms/searching/jump-search.html" class="algo-card" data-tags="searching intermediate">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🦘</div>
+        <h3>Jump Search</h3>
+        <p>Jump ahead by √n steps then do linear search in the block</p>
+        <div class="card-meta"><span>O(√n)</span><span>Sorted only</span></div>
+      </a>
+      <a href="algorithms/searching/interpolation-search.html" class="algo-card" data-tags="searching intermediate">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">📐</div>
+        <h3>Interpolation Search</h3>
+        <p>Estimate position using value distribution — faster than binary for uniform data</p>
+        <div class="card-meta"><span>O(log log n)</span><span>Sorted + uniform</span></div>
+      </a>
+      <a href="algorithms/searching/exponential-search.html" class="algo-card" data-tags="searching intermediate">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">📈</div>
+        <h3>Exponential Search</h3>
+        <p>Grow search range exponentially, then binary search in the range</p>
+        <div class="card-meta"><span>O(log n)</span><span>Sorted only</span></div>
+      </a>
+      <a href="algorithms/searching/ternary-search.html" class="algo-card" data-tags="searching intermediate">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔱</div>
+        <h3>Ternary Search</h3>
+        <p>Divide range into three parts — useful for unimodal functions</p>
+        <div class="card-meta"><span>O(log₃ n)</span><span>Unimodal</span></div>
+      </a>
+      <a href="algorithms/searching/fibonacci-search.html" class="algo-card" data-tags="searching intermediate">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🌀</div>
+        <h3>Fibonacci Search</h3>
+        <p>Use Fibonacci numbers to divide array — avoids division operations</p>
+        <div class="card-meta"><span>O(log n)</span><span>Sorted only</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- GRAPH -->
+  <section id="graph" class="category-section">
+    <div class="cat-header">
+      <div class="cat-icon">🕸️</div>
+      <div>
+        <h2 class="cat-title">Graph Algorithms</h2>
+        <p class="cat-desc">Traversal, shortest paths, spanning trees, and connectivity</p>
+      </div>
+      <div class="cat-count">12 algorithms</div>
+    </div>
+    <div class="algo-grid" id="grid-graph">
+      <a href="algorithms/graph/bfs.html" class="algo-card featured" data-tags="graph intermediate BFS traversal">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-badge">★ Featured</div>
+        <div class="card-icon">🌊</div>
+        <h3>BFS</h3>
+        <p>Breadth-First Search — explore level by level, find shortest paths</p>
+        <div class="card-meta"><span>O(V+E)</span><span>Shortest path</span><span>Queue</span></div>
+      </a>
+      <a href="algorithms/graph/dfs.html" class="algo-card" data-tags="graph intermediate DFS traversal">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🌲</div>
+        <h3>DFS</h3>
+        <p>Depth-First Search — explore as far as possible before backtracking</p>
+        <div class="card-meta"><span>O(V+E)</span><span>Cycle detection</span><span>Stack</span></div>
+      </a>
+      <a href="algorithms/graph/dijkstra.html" class="algo-card" data-tags="graph advanced shortest path">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🗺️</div>
+        <h3>Dijkstra's</h3>
+        <p>Shortest path in weighted graphs using a greedy priority queue approach</p>
+        <div class="card-meta"><span>O((V+E)log V)</span><span>Weighted</span></div>
+      </a>
+      <a href="algorithms/graph/bellman-ford.html" class="algo-card" data-tags="graph advanced shortest path">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">⚖️</div>
+        <h3>Bellman-Ford</h3>
+        <p>Handles negative weights — detects negative cycles in graphs</p>
+        <div class="card-meta"><span>O(VE)</span><span>Negative weights</span></div>
+      </a>
+      <a href="algorithms/graph/floyd-warshall.html" class="algo-card" data-tags="graph advanced all pairs">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🔄</div>
+        <h3>Floyd-Warshall</h3>
+        <p>All-pairs shortest path using dynamic programming in O(V³)</p>
+        <div class="card-meta"><span>O(V³)</span><span>All-pairs</span></div>
+      </a>
+      <a href="algorithms/graph/kruskal.html" class="algo-card" data-tags="graph advanced MST spanning tree">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🌿</div>
+        <h3>Kruskal's MST</h3>
+        <p>Minimum Spanning Tree — greedily add shortest edges that don't form cycles</p>
+        <div class="card-meta"><span>O(E log E)</span><span>MST</span><span>Union-Find</span></div>
+      </a>
+      <a href="algorithms/graph/prim.html" class="algo-card" data-tags="graph advanced MST spanning tree">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🌱</div>
+        <h3>Prim's MST</h3>
+        <p>Minimum Spanning Tree — grow tree one vertex at a time from a start node</p>
+        <div class="card-meta"><span>O(E log V)</span><span>MST</span><span>Priority Queue</span></div>
+      </a>
+      <a href="algorithms/graph/topological-sort.html" class="algo-card" data-tags="graph intermediate DAG">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">📋</div>
+        <h3>Topological Sort</h3>
+        <p>Linear ordering of vertices in a DAG — prerequisite scheduling</p>
+        <div class="card-meta"><span>O(V+E)</span><span>DAG only</span><span>DFS-based</span></div>
+      </a>
+      <a href="algorithms/graph/union-find.html" class="algo-card" data-tags="graph intermediate union find">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔗</div>
+        <h3>Union-Find</h3>
+        <p>Disjoint Set Union — efficiently track connected components</p>
+        <div class="card-meta"><span>O(α(n))</span><span>Connectivity</span></div>
+      </a>
+      <a href="algorithms/graph/tarjan.html" class="algo-card" data-tags="graph advanced SCC">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🌐</div>
+        <h3>Tarjan's SCC</h3>
+        <p>Find all Strongly Connected Components using a single DFS pass</p>
+        <div class="card-meta"><span>O(V+E)</span><span>Directed graphs</span></div>
+      </a>
+      <a href="algorithms/graph/a-star.html" class="algo-card" data-tags="graph advanced pathfinding heuristic">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">⭐</div>
+        <h3>A* Search</h3>
+        <p>Heuristic pathfinding — optimal and faster than Dijkstra with a good heuristic</p>
+        <div class="card-meta"><span>O(E)</span><span>Heuristic</span><span>Pathfinding</span></div>
+      </a>
+      <a href="algorithms/graph/kosaraju.html" class="algo-card" data-tags="graph advanced SCC">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🧭</div>
+        <h3>Kosaraju's SCC</h3>
+        <p>Two-pass DFS to find Strongly Connected Components</p>
+        <div class="card-meta"><span>O(V+E)</span><span>Two DFS passes</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- DYNAMIC PROGRAMMING -->
+  <section id="dp" class="category-section">
+    <div class="cat-header">
+      <div class="cat-icon">🧩</div>
+      <div>
+        <h2 class="cat-title">Dynamic Programming</h2>
+        <p class="cat-desc">Break problems into overlapping subproblems and memoize results</p>
+      </div>
+      <div class="cat-count">10 algorithms</div>
+    </div>
+    <div class="algo-grid">
+      <a href="algorithms/dynamic-programming/fibonacci.html" class="algo-card" data-tags="dp beginner memoization">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">🐇</div>
+        <h3>Fibonacci DP</h3>
+        <p>Classic memoization intro — top-down vs bottom-up comparison</p>
+        <div class="card-meta"><span>O(n)</span><span>Memoization</span></div>
+      </a>
+      <a href="algorithms/dynamic-programming/knapsack.html" class="algo-card" data-tags="dp intermediate knapsack">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🎒</div>
+        <h3>0/1 Knapsack</h3>
+        <p>Maximize value with weight constraint — include or exclude each item</p>
+        <div class="card-meta"><span>O(nW)</span><span>Classic DP</span></div>
+      </a>
+      <a href="algorithms/dynamic-programming/lcs.html" class="algo-card" data-tags="dp intermediate LCS string">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">📏</div>
+        <h3>Longest Common Subsequence</h3>
+        <p>Find longest subsequence common to two sequences using a 2D table</p>
+        <div class="card-meta"><span>O(mn)</span><span>Strings</span></div>
+      </a>
+      <a href="algorithms/dynamic-programming/lis.html" class="algo-card" data-tags="dp intermediate LIS">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">📈</div>
+        <h3>Longest Increasing Subsequence</h3>
+        <p>Find the longest strictly increasing subsequence in an array</p>
+        <div class="card-meta"><span>O(n log n)</span><span>Sequences</span></div>
+      </a>
+      <a href="algorithms/dynamic-programming/edit-distance.html" class="algo-card" data-tags="dp intermediate edit distance string">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">✏️</div>
+        <h3>Edit Distance</h3>
+        <p>Minimum operations to transform one string into another (Levenshtein)</p>
+        <div class="card-meta"><span>O(mn)</span><span>Strings</span></div>
+      </a>
+      <a href="algorithms/dynamic-programming/coin-change.html" class="algo-card" data-tags="dp intermediate coin change">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🪙</div>
+        <h3>Coin Change</h3>
+        <p>Minimum coins to make an amount — canonical DP table visualization</p>
+        <div class="card-meta"><span>O(n·amount)</span><span>Unbounded</span></div>
+      </a>
+      <a href="algorithms/dynamic-programming/matrix-chain.html" class="algo-card" data-tags="dp advanced matrix chain">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🔢</div>
+        <h3>Matrix Chain Multiplication</h3>
+        <p>Optimal parenthesization of matrix products to minimize operations</p>
+        <div class="card-meta"><span>O(n³)</span><span>Interval DP</span></div>
+      </a>
+      <a href="algorithms/dynamic-programming/subset-sum.html" class="algo-card" data-tags="dp intermediate subset sum">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">➕</div>
+        <h3>Subset Sum</h3>
+        <p>Can a subset of numbers sum to a target? Classic DP boolean table</p>
+        <div class="card-meta"><span>O(n·sum)</span><span>Boolean DP</span></div>
+      </a>
+      <a href="algorithms/dynamic-programming/rod-cutting.html" class="algo-card" data-tags="dp intermediate rod cutting">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔪</div>
+        <h3>Rod Cutting</h3>
+        <p>Maximize revenue by cutting rod into pieces of varying prices</p>
+        <div class="card-meta"><span>O(n²)</span><span>Optimization</span></div>
+      </a>
+      <a href="algorithms/dynamic-programming/longest-palindrome.html" class="algo-card" data-tags="dp intermediate palindrome">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔁</div>
+        <h3>Longest Palindromic Substring</h3>
+        <p>Find the longest substring that reads the same forward and backward</p>
+        <div class="card-meta"><span>O(n²)</span><span>Strings</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- DATA STRUCTURES -->
+  <section id="ds" class="category-section">
+    <div class="cat-header">
+      <div class="cat-icon">🏗️</div>
+      <div>
+        <h2 class="cat-title">Data Structures</h2>
+        <p class="cat-desc">Core operations visualized — insert, delete, search, traverse</p>
+      </div>
+      <div class="cat-count">10 algorithms</div>
+    </div>
+    <div class="algo-grid">
+      <a href="algorithms/data-structures/stack.html" class="algo-card" data-tags="data structures beginner stack">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">📚</div>
+        <h3>Stack</h3>
+        <p>LIFO — push, pop, peek with visual call stack simulation</p>
+        <div class="card-meta"><span>O(1) ops</span><span>LIFO</span></div>
+      </a>
+      <a href="algorithms/data-structures/queue.html" class="algo-card" data-tags="data structures beginner queue">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">🚶</div>
+        <h3>Queue</h3>
+        <p>FIFO — enqueue, dequeue, and circular queue visualization</p>
+        <div class="card-meta"><span>O(1) ops</span><span>FIFO</span></div>
+      </a>
+      <a href="algorithms/data-structures/linked-list.html" class="algo-card" data-tags="data structures beginner linked list">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">🔗</div>
+        <h3>Linked List</h3>
+        <p>Singly and doubly linked lists — insert, delete, reverse operations</p>
+        <div class="card-meta"><span>O(n) search</span><span>Dynamic</span></div>
+      </a>
+      <a href="algorithms/data-structures/binary-search-tree.html" class="algo-card" data-tags="data structures intermediate BST tree">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🌳</div>
+        <h3>Binary Search Tree</h3>
+        <p>Insert, delete, search with in-order, pre-order, post-order traversal</p>
+        <div class="card-meta"><span>O(log n) avg</span><span>Ordered</span></div>
+      </a>
+      <a href="algorithms/data-structures/avl-tree.html" class="algo-card" data-tags="data structures advanced AVL balanced tree">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">⚖️</div>
+        <h3>AVL Tree</h3>
+        <p>Self-balancing BST — rotations keep height at O(log n) always</p>
+        <div class="card-meta"><span>O(log n)</span><span>Self-balancing</span></div>
+      </a>
+      <a href="algorithms/data-structures/heap.html" class="algo-card" data-tags="data structures intermediate heap priority queue">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🏔️</div>
+        <h3>Heap / Priority Queue</h3>
+        <p>Max-heap and min-heap — heapify, insert, extract-max operations</p>
+        <div class="card-meta"><span>O(log n) ops</span><span>Priority Queue</span></div>
+      </a>
+      <a href="algorithms/data-structures/hash-table.html" class="algo-card" data-tags="data structures intermediate hash table">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🗄️</div>
+        <h3>Hash Table</h3>
+        <p>Key-value store with collision resolution: chaining and open addressing</p>
+        <div class="card-meta"><span>O(1) avg</span><span>Collision handling</span></div>
+      </a>
+      <a href="algorithms/data-structures/trie.html" class="algo-card" data-tags="data structures intermediate trie prefix tree">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🌐</div>
+        <h3>Trie (Prefix Tree)</h3>
+        <p>Efficient string search and prefix matching — autocomplete structure</p>
+        <div class="card-meta"><span>O(m) ops</span><span>Strings</span></div>
+      </a>
+      <a href="algorithms/data-structures/segment-tree.html" class="algo-card" data-tags="data structures advanced segment tree range query">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🌿</div>
+        <h3>Segment Tree</h3>
+        <p>Range queries and point updates — sum, min, max over intervals</p>
+        <div class="card-meta"><span>O(log n)</span><span>Range queries</span></div>
+      </a>
+      <a href="algorithms/data-structures/fenwick-tree.html" class="algo-card" data-tags="data structures advanced Fenwick BIT">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🌱</div>
+        <h3>Fenwick Tree (BIT)</h3>
+        <p>Binary Indexed Tree — efficient prefix sums with O(log n) updates</p>
+        <div class="card-meta"><span>O(log n)</span><span>Prefix sums</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- STRING ALGORITHMS -->
+  <section id="string" class="category-section">
+    <div class="cat-header">
+      <div class="cat-icon">📝</div>
+      <div>
+        <h2 class="cat-title">String Algorithms</h2>
+        <p class="cat-desc">Pattern matching, string manipulation, and text processing</p>
+      </div>
+      <div class="cat-count">6 algorithms</div>
+    </div>
+    <div class="algo-grid">
+      <a href="algorithms/string/kmp.html" class="algo-card" data-tags="string intermediate KMP pattern matching">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔍</div>
+        <h3>KMP Search</h3>
+        <p>Knuth-Morris-Pratt — efficient pattern matching using failure function</p>
+        <div class="card-meta"><span>O(n+m)</span><span>Pattern Matching</span></div>
+      </a>
+      <a href="algorithms/string/rabin-karp.html" class="algo-card" data-tags="string intermediate Rabin Karp hashing">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🎲</div>
+        <h3>Rabin-Karp</h3>
+        <p>Hashing-based pattern search — find multiple patterns simultaneously</p>
+        <div class="card-meta"><span>O(n+m) avg</span><span>Rolling Hash</span></div>
+      </a>
+      <a href="algorithms/string/z-algorithm.html" class="algo-card" data-tags="string intermediate Z-function pattern">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔤</div>
+        <h3>Z-Algorithm</h3>
+        <p>Compute Z-array for efficient pattern matching in linear time</p>
+        <div class="card-meta"><span>O(n)</span><span>Z-Array</span></div>
+      </a>
+      <a href="algorithms/string/manacher.html" class="algo-card" data-tags="string advanced palindrome Manacher">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🔁</div>
+        <h3>Manacher's Algorithm</h3>
+        <p>Find all palindromic substrings in O(n) using clever center expansion</p>
+        <div class="card-meta"><span>O(n)</span><span>Palindromes</span></div>
+      </a>
+      <a href="algorithms/string/suffix-array.html" class="algo-card" data-tags="string advanced suffix array">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">📑</div>
+        <h3>Suffix Array</h3>
+        <p>Sorted suffixes of a string — powerful structure for string queries</p>
+        <div class="card-meta"><span>O(n log n)</span><span>Suffixes</span></div>
+      </a>
+      <a href="algorithms/string/aho-corasick.html" class="algo-card" data-tags="string advanced Aho-Corasick multi-pattern">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🎯</div>
+        <h3>Aho-Corasick</h3>
+        <p>Multi-pattern search using a trie with failure links — search all patterns at once</p>
+        <div class="card-meta"><span>O(n+m+z)</span><span>Multi-pattern</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- MATH -->
+  <section id="math" class="category-section">
+    <div class="cat-header">
+      <div class="cat-icon">🧮</div>
+      <div>
+        <h2 class="cat-title">Math Algorithms</h2>
+        <p class="cat-desc">Number theory, primes, GCD, and mathematical computations</p>
+      </div>
+      <div class="cat-count">5 algorithms</div>
+    </div>
+    <div class="algo-grid">
+      <a href="algorithms/math/sieve-of-eratosthenes.html" class="algo-card" data-tags="math intermediate primes sieve">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔑</div>
+        <h3>Sieve of Eratosthenes</h3>
+        <p>Find all primes up to N — cross out multiples iteratively</p>
+        <div class="card-meta"><span>O(n log log n)</span><span>Primes</span></div>
+      </a>
+      <a href="algorithms/math/euclidean-gcd.html" class="algo-card" data-tags="math beginner GCD Euclidean">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">📐</div>
+        <h3>Euclidean GCD</h3>
+        <p>Greatest Common Divisor using Euclidean algorithm and its extensions</p>
+        <div class="card-meta"><span>O(log min(a,b))</span><span>Number Theory</span></div>
+      </a>
+      <a href="algorithms/math/fast-power.html" class="algo-card" data-tags="math intermediate fast power modular">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">⚡</div>
+        <h3>Fast Power (Binary Exponentiation)</h3>
+        <p>Compute a^n in O(log n) by squaring — essential for modular arithmetic</p>
+        <div class="card-meta"><span>O(log n)</span><span>Exponentiation</span></div>
+      </a>
+      <a href="algorithms/math/prime-factorization.html" class="algo-card" data-tags="math intermediate prime factorization">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🧬</div>
+        <h3>Prime Factorization</h3>
+        <p>Decompose a number into its prime factors — trial division and optimizations</p>
+        <div class="card-meta"><span>O(√n)</span><span>Primes</span></div>
+      </a>
+      <a href="algorithms/math/modular-inverse.html" class="algo-card" data-tags="math advanced modular inverse">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🔀</div>
+        <h3>Modular Inverse</h3>
+        <p>Find x such that a·x ≡ 1 (mod m) using extended Euclidean or Fermat</p>
+        <div class="card-meta"><span>O(log m)</span><span>Number Theory</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- BACKTRACKING -->
+  <section id="backtracking" class="category-section">
+    <div class="cat-header">
+      <div class="cat-icon">↩️</div>
+      <div>
+        <h2 class="cat-title">Backtracking Algorithms</h2>
+        <p class="cat-desc">Explore all possibilities by trying and undoing — constraint satisfaction</p>
+      </div>
+      <div class="cat-count">6 algorithms</div>
+    </div>
+    <div class="algo-grid">
+      <a href="algorithms/backtracking/n-queens.html" class="algo-card" data-tags="backtracking intermediate N-queens">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">♛</div>
+        <h3>N-Queens</h3>
+        <p>Place N queens on N×N board so no two queens attack each other</p>
+        <div class="card-meta"><span>O(n!)</span><span>Constraint</span></div>
+      </a>
+      <a href="algorithms/backtracking/sudoku-solver.html" class="algo-card" data-tags="backtracking intermediate sudoku">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔢</div>
+        <h3>Sudoku Solver</h3>
+        <p>Fill 9×9 grid using backtracking — try digit, check constraints, backtrack</p>
+        <div class="card-meta"><span>O(9^(n²))</span><span>Constraint</span></div>
+      </a>
+      <a href="algorithms/backtracking/maze-solver.html" class="algo-card" data-tags="backtracking beginner maze">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">🌀</div>
+        <h3>Maze Solver</h3>
+        <p>Find a path through a maze using recursive backtracking exploration</p>
+        <div class="card-meta"><span>O(4^(mn))</span><span>Pathfinding</span></div>
+      </a>
+      <a href="algorithms/backtracking/permutations.html" class="algo-card" data-tags="backtracking intermediate permutations">
+        <div class="card-difficulty intermediate">Intermediate</div>
+        <div class="card-icon">🔀</div>
+        <h3>All Permutations</h3>
+        <p>Generate all permutations of a set — classic backtracking tree</p>
+        <div class="card-meta"><span>O(n!)</span><span>Combinatorics</span></div>
+      </a>
+      <a href="algorithms/backtracking/subset-generation.html" class="algo-card" data-tags="backtracking beginner subsets">
+        <div class="card-difficulty beginner">Beginner</div>
+        <div class="card-icon">📦</div>
+        <h3>Subset Generation</h3>
+        <p>Generate all 2^n subsets using recursive include/exclude decisions</p>
+        <div class="card-meta"><span>O(2^n)</span><span>Power set</span></div>
+      </a>
+      <a href="algorithms/backtracking/graph-coloring.html" class="algo-card" data-tags="backtracking advanced graph coloring">
+        <div class="card-difficulty advanced">Advanced</div>
+        <div class="card-icon">🎨</div>
+        <h3>Graph Coloring</h3>
+        <p>Color vertices with k colors so no adjacent vertices share a color</p>
+        <div class="card-meta"><span>O(k^V)</span><span>NP-complete</span></div>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span>
+    </div>
+    <p class="footer-text">60+ interactive algorithm visualizations — pure HTML, CSS, and JavaScript.</p>
+    <p style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:8px;">No frameworks. No build tools. Just algorithms.</p>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>
