@@ -70,6 +70,18 @@
 }
 .stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
 .stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+.narration-text.intro-mode {
+  color: var(--teal);
+  font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
@@ -125,7 +137,7 @@
   <!-- Narration -->
   <div class="narration" id="narration">
     <span class="teacher" id="teacher">🧑‍💻</span>
-    <div class="narration-text" id="narText">Welcome to Selection Sort! Enter your array below, then press ▶ Play to watch the sort in action with step-by-step narration.</div>
+    <div class="narration-text" id="narText">Welcome to Selection Sort! Let me explain how this algorithm works before we begin...</div>
     <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
   </div>
 
@@ -148,7 +160,7 @@
       <div class="panel">
         <div class="panel-hd">📊 Visualization</div>
         <div class="legend">
-          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Unsorted</div>
           <div class="li"><div class="ld" style="background:var(--bar-compare);"></div>Comparing</div>
           <div class="li"><div class="ld" style="background:var(--bar-min);"></div>Current Min</div>
           <div class="li"><div class="ld" style="background:var(--bar-swap);"></div>Swapping</div>
@@ -223,6 +235,94 @@
 <script src="../../assets/js/algo-base.js"></script>
 <script>
 // ════════════════════════════════════════════════
+// INTRODUCTORY SPEECH SEQUENCE
+// ════════════════════════════════════════════════
+function playIntroSpeech() {
+  const introSteps = [
+    {
+      type: 'intro',
+      narration: "Hello! I'm your algorithm teacher. Today we're learning Selection Sort - a simple but clever sorting algorithm!",
+      duration: 3000
+    },
+    {
+      type: 'intro',
+      narration: "Imagine you have a list of numbers and you want to sort them from smallest to largest. Selection Sort works by repeatedly finding the smallest element and moving it to the front.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "Here's the strategy: In each pass, we scan through the unsorted portion of the array to find the minimum element. Then we swap it with the first element of the unsorted portion.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "This is different from Bubble Sort! Instead of swapping adjacent elements repeatedly, we make just one swap per pass - the minimum element goes directly to its correct position.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "Watch the colors! Blue bars are unsorted. Green bars are already sorted. When we compare, bars turn orange. The current minimum candidate glows yellow. When we swap, bars turn pink.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "A unique characteristic: Selection Sort always makes exactly the same number of comparisons - O(n²) - whether the array is sorted or not. No early exit optimization here!",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "Also, Selection Sort is unstable. If you have equal elements, their relative order might change. But it has minimal swaps - only n-1 swaps total!",
+      duration: 3000
+    },
+    {
+      type: 'intro',
+      narration: "Now, let's see it in action! Watch how each pass finds the smallest unsorted element and places it correctly. Press Play to begin!",
+      duration: 3000,
+      isLast: true
+    }
+  ];
+
+  let introIndex = 0;
+  const narText = document.getElementById('narText');
+  const teacher = document.getElementById('teacher');
+  const speakBars = document.getElementById('speakBars');
+  
+  // Add intro mode class
+  narText.classList.add('intro-mode');
+  teacher.textContent = '🧑‍🏫';
+  
+  function playNextIntro() {
+    if (introIndex < introSteps.length) {
+      const step = introSteps[introIndex];
+      narText.textContent = step.narration;
+      
+      // Animate speak bars
+      speakBars.classList.add('active');
+      
+      // Schedule next intro step
+      setTimeout(() => {
+        introIndex++;
+        if (introIndex < introSteps.length) {
+          playNextIntro();
+        } else {
+          // End of intro
+          narText.classList.remove('intro-mode');
+          teacher.textContent = '🧑‍💻';
+          speakBars.classList.remove('active');
+          
+          // Show first step's narration
+          if (steps.length > 0 && steps[0]) {
+            narText.textContent = steps[0].narration;
+          }
+        }
+      }, step.duration);
+    }
+  }
+  
+  playNextIntro();
+}
+
+// ════════════════════════════════════════════════
 // SELECTION SORT — STEP GENERATOR
 // ════════════════════════════════════════════════
 function buildSelectionSortSteps(arr) {
@@ -234,7 +334,7 @@ function buildSelectionSortSteps(arr) {
 
   steps.push({
     arr: [...a], compare: [], min: null, sorted: [],
-    narration: `Starting Selection Sort on [${a.join(', ')}]. We'll do ${n-1} passes, each finding the min in the unsorted part.`,
+    narration: `Starting Selection Sort on [${a.join(', ')}]. We'll do ${n-1} passes, each finding the minimum in the unsorted part.`,
     phase: 'active', pass: 0, comps: 0, swaps: 0, codeLine: 1,
   });
 
@@ -244,7 +344,7 @@ function buildSelectionSortSteps(arr) {
 
     steps.push({
       arr: [...a], compare: [], min: minIdx, sorted,
-      narration: `Pass ${i + 1}: Start with min at index ${i} (value ${a[i]}). Scan from ${i+1} to end.`,
+      narration: `Pass ${i + 1}: Start with minimum at index ${i} (value ${a[i]}). Scanning from ${i+1} to the end to find anything smaller.`,
       phase: 'active', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 4,
     });
 
@@ -252,7 +352,7 @@ function buildSelectionSortSteps(arr) {
       totalComps++;
       steps.push({
         arr: [...a], compare: [j, minIdx], min: minIdx, sorted,
-        narration: `Compare a[${j}]=${a[j]} with current min a[${minIdx}]=${a[minIdx]}. ${a[j] < a[minIdx] ? 'Smaller — update min!' : 'Not smaller.'}`,
+        narration: `Compare a[${j}]=${a[j]} with current minimum a[${minIdx}]=${a[minIdx]}. ${a[j] < a[minIdx] ? 'Found smaller element!' : 'Not smaller.'}`,
         phase: 'compare', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 6,
       });
 
@@ -260,7 +360,7 @@ function buildSelectionSortSteps(arr) {
         minIdx = j;
         steps.push({
           arr: [...a], compare: [j, minIdx], min: minIdx, sorted,
-          narration: `New min found at ${j} (value ${a[j]}).`,
+          narration: `New minimum found at index ${j} with value ${a[j]}.`,
           phase: 'compare', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 7,
         });
       }
@@ -275,19 +375,19 @@ function buildSelectionSortSteps(arr) {
         compare: [i, minIdx], 
         min: null,
         sorted,
-        swapAnim: { idxA: i, idxB: minIdx }, // Animation data
-        narration: `Swap a[${i}] and a[${minIdx}]. Array now: [${a.join(', ')}]. Total swaps: ${totalSwaps}.`,
+        swapAnim: { idxA: i, idxB: minIdx },
+        narration: `Swap complete! Minimum ${a[i]} is now at position ${i}. Array: [${a.join(', ')}]. Swaps: ${totalSwaps}.`,
         phase: 'swap', 
         pass: i + 1, 
         comps: totalComps, 
         swaps: totalSwaps, 
         codeLine: 9,
-        prevArr: prevArr // Store previous array state for animation
+        prevArr: prevArr
       });
     } else {
       steps.push({
         arr: [...a], compare: [], min: null, sorted: [...sorted, i],
-        narration: `No swap needed — a[${i}] was already the min.`,
+        narration: `Element at position ${i} (value ${a[i]}) was already the minimum. No swap needed.`,
         phase: 'active', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 8,
       });
     }
@@ -308,6 +408,7 @@ function buildSelectionSortSteps(arr) {
 const canvas = document.getElementById('vizCanvas');
 const ctx = canvas.getContext('2d');
 let animRafId = null;
+let introPlayed = false;
 
 function resizeCanvas() {
   canvas.width = canvas.parentElement.clientWidth;
@@ -338,7 +439,7 @@ function animateSwap(prevStep, nextStep, onDone) {
   const { barW, gap } = getBarLayout(prevStep.arr);
   const travelX = (barW + gap) * (idxB - idxA); // Can be non-adjacent
 
-  const DURATION = 420; // animation duration in ms
+  const DURATION = 500; // animation duration in ms
   const start = performance.now();
 
   // Display previous state during animation
@@ -362,7 +463,7 @@ function animateSwap(prevStep, nextStep, onDone) {
     const t = easeInOut(rawT);
 
     // Arc height for curved motion
-    const arcHeight = Math.min(40, canvas.height * 0.12);
+    const arcHeight = Math.min(50, canvas.height * 0.15);
 
     // Horizontal motion
     const xA = t * travelX;
@@ -520,6 +621,9 @@ const page = new AlgoPage({
     document.getElementById('statComps').textContent = '0';
     document.getElementById('statSwaps').textContent = '0';
     document.getElementById('statPasses').textContent = '0';
+    
+    // Play intro speech on reset
+    playIntroSpeech();
   }
 });
 
@@ -531,6 +635,22 @@ function updateUI(step) {
   document.getElementById('statSwaps').textContent = step.swaps || 0;
   document.getElementById('statPasses').textContent = step.pass || 0;
   document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
+
+  // Update phase badge
+  const phaseBadge = document.getElementById('phaseBadge');
+  if (step.phase === 'compare') {
+    phaseBadge.textContent = 'Comparing';
+    phaseBadge.className = 'phase-badge ph-compare';
+  } else if (step.phase === 'swap') {
+    phaseBadge.textContent = 'Swapping';
+    phaseBadge.className = 'phase-badge ph-swap';
+  } else if (step.phase === 'done') {
+    phaseBadge.textContent = 'Complete';
+    phaseBadge.className = 'phase-badge ph-done';
+  } else {
+    phaseBadge.textContent = 'Active';
+    phaseBadge.className = 'phase-badge ph-active';
+  }
 
   // Highlight code line
   for (let i = 1; i <= 10; i++) {
@@ -548,6 +668,14 @@ function init() {
   if (steps.length > 0) {
     drawBars(steps[0]);
     document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
+    
+    // Play intro speech on initial load, but only once
+    if (!introPlayed) {
+      setTimeout(() => {
+        playIntroSpeech();
+        introPlayed = true;
+      }, 500);
+    }
   } else {
     drawBars(null);
     document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;

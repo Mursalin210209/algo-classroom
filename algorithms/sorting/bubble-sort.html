@@ -8,8 +8,8 @@
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
 :root {
-  --bar-default: #1a2840;
-  --bar-default-stroke: #2a4060;
+  --bar-default: #0898ff;
+  --bar-default-stroke: #c7ddff;
   --bar-compare: #ff8c42;
   --bar-swap: #ff6b9d;
   --bar-sorted: #06d6a0;
@@ -70,6 +70,18 @@
 }
 .stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
 .stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+.narration-text.intro-mode {
+  color: var(--teal);
+  font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
@@ -124,8 +136,8 @@
 
   <!-- Narration -->
   <div class="narration" id="narration">
-    <span class="teacher" id="teacher">🧑‍💻</span>
-    <div class="narration-text" id="narText">Welcome to Bubble Sort! Enter your array below, then press ▶ Play to watch the sort in action with step-by-step narration.</div>
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Bubble Sort! Let me explain how this algorithm works before we begin...</div>
     <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
   </div>
 
@@ -302,6 +314,89 @@ function buildBubbleSortSteps(arr) {
 }
 
 // ════════════════════════════════════════════════
+// INTRODUCTORY SPEECH SEQUENCE
+// ════════════════════════════════════════════════
+function playIntroSpeech() {
+  const introSteps = [
+    {
+      type: 'intro',
+      narration: "Hello! I'm your algorithm teacher. Today we're learning Bubble Sort, one of the simplest sorting algorithms.",
+      duration: 3000
+    },
+    {
+      type: 'intro',
+      narration: "The name 'Bubble Sort' comes from how larger elements 'bubble up' to the top (the end) of the array, like bubbles in a glass of soda.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "Here's how it works: We repeatedly step through the array, comparing adjacent elements. If they're in the wrong order, we swap them.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "With each complete pass through the array, the largest unsorted element bubbles up to its correct position at the end.",
+      duration: 3000
+    },
+    {
+      type: 'intro',
+      narration: "Watch the visualization carefully. Blue bars are being compared. Pink bars are being swapped. Green bars are already in their final sorted position.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "A cool optimization: if we complete a pass with no swaps, the array is already sorted! This gives Bubble Sort O(n) best-case performance.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "Now, let's see it in action! I'll guide you through each step. Press Play to begin, or Next Step to go at your own pace.",
+      duration: 3500,
+      isLast: true
+    }
+  ];
+
+  let introIndex = 0;
+  const narText = document.getElementById('narText');
+  const teacher = document.getElementById('teacher');
+  const speakBars = document.getElementById('speakBars');
+  
+  // Add intro mode class
+  narText.classList.add('intro-mode');
+  teacher.textContent = '🧑‍🏫';
+  
+  function playNextIntro() {
+    if (introIndex < introSteps.length) {
+      const step = introSteps[introIndex];
+      narText.textContent = step.narration;
+      
+      // Animate speak bars
+      speakBars.classList.add('active');
+      
+      // Schedule next intro step
+      setTimeout(() => {
+        introIndex++;
+        if (introIndex < introSteps.length) {
+          playNextIntro();
+        } else {
+          // End of intro
+          narText.classList.remove('intro-mode');
+          teacher.textContent = '🧑‍💻';
+          speakBars.classList.remove('active');
+          
+          // Show first step's narration
+          if (steps.length > 0 && steps[0]) {
+            narText.textContent = steps[0].narration;
+          }
+        }
+      }, step.duration);
+    }
+  }
+  
+  playNextIntro();
+}
+
+// ════════════════════════════════════════════════
 // CANVAS RENDERING WITH SWAP ANIMATION
 // ════════════════════════════════════════════════
 const canvas = document.getElementById('vizCanvas');
@@ -473,6 +568,7 @@ function drawBars(step, offsets = {}) {
 // ════════════════════════════════════════════════
 let steps = [];
 let arr = [64, 34, 25, 12, 22, 11, 90, 45, 7, 38];
+let introPlayed = false;
 
 const page = new AlgoPage({
   onRenderStep(step) {
@@ -514,6 +610,9 @@ const page = new AlgoPage({
     document.getElementById('statComps').textContent = '0';
     document.getElementById('statSwaps').textContent = '0';
     document.getElementById('statPasses').textContent = '0';
+    
+    // Play intro speech on reset
+    playIntroSpeech();
   }
 });
 
@@ -542,6 +641,14 @@ function init() {
   if (steps.length > 0) {
     drawBars(steps[0]);
     document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
+    
+    // Play intro speech on initial load, but only once
+    if (!introPlayed) {
+      setTimeout(() => {
+        playIntroSpeech();
+        introPlayed = true;
+      }, 500);
+    }
   } else {
     drawBars(null);
     document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;

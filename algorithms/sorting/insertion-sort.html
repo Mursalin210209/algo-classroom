@@ -70,6 +70,18 @@
 }
 .stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
 .stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+.narration-text.intro-mode {
+  color: var(--teal);
+  font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
@@ -116,16 +128,16 @@
 
   <!-- Concept cards -->
   <div class="concepts">
-    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Adjacent Swaps</div><div class="cc-desc">Swaps the current element leftward with adjacent predecessors until sorted.</div></div>
-    <div class="cc"><span class="cc-icon">🫧</span><div class="cc-title">Bubbling Down</div><div class="cc-desc">The current element "bubbles" left to its correct position in the sorted prefix.</div></div>
-    <div class="cc"><span class="cc-icon">⚡</span><div class="cc-title">Early Stop</div><div class="cc-desc">For each insertion, stops comparisons early if the element is already in place — O(n) for sorted arrays.</div></div>
-    <div class="cc"><span class="cc-icon">📚</span><div class="cc-title">Stable Sort</div><div class="cc-desc">Equal elements maintain their original relative order — a useful property for multi-key sorting.</div></div>
+    <div class="cc"><span class="cc-icon">🃏</span><div class="cc-title">Like Playing Cards</div><div class="cc-desc">Think of sorting a hand of cards - you take one card and insert it into the correct position among the already-sorted cards.</div></div>
+    <div class="cc"><span class="cc-icon">⬅️</span><div class="cc-title">Shifting Left</div><div class="cc-desc">Each new element is shifted left, swapping with larger neighbors until it finds its proper place.</div></div>
+    <div class="cc"><span class="cc-icon">⚡</span><div class="cc-title">Adaptive</div><div class="cc-desc">For nearly-sorted arrays, insertion sort runs in nearly O(n) time - great for partially sorted data!</div></div>
+    <div class="cc"><span class="cc-icon">📚</span><div class="cc-title">Online Algorithm</div><div class="cc-desc">Can sort elements as they arrive - you don't need the entire array upfront.</div></div>
   </div>
 
   <!-- Narration -->
   <div class="narration" id="narration">
     <span class="teacher" id="teacher">🧑‍💻</span>
-    <div class="narration-text" id="narText">Welcome to Insertion Sort! Enter your array below, then press ▶ Play to watch the sort in action with step-by-step narration.</div>
+    <div class="narration-text" id="narText">Welcome to Insertion Sort! Let me explain how this algorithm works before we begin...</div>
     <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
   </div>
 
@@ -148,7 +160,7 @@
       <div class="panel">
         <div class="panel-hd">📊 Visualization</div>
         <div class="legend">
-          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Unsorted</div>
           <div class="li"><div class="ld" style="background:var(--bar-compare);"></div>Comparing</div>
           <div class="li"><div class="ld" style="background:var(--bar-swap);"></div>Swapping</div>
           <div class="li"><div class="ld" style="background:var(--bar-sorted);"></div>Sorted</div>
@@ -182,9 +194,6 @@
 <span id="cl7" class="code-line">      j = j - 1</span>
 <span id="cl8" class="code-line">  <span class="kw">return</span> arr</span>
         </div>
-
-
-        
       </div>
 
       <div class="panel">
@@ -223,6 +232,94 @@
 <script src="../../assets/js/algo-base.js"></script>
 <script>
 // ════════════════════════════════════════════════
+// INTRODUCTORY SPEECH SEQUENCE
+// ════════════════════════════════════════════════
+function playIntroSpeech() {
+  const introSteps = [
+    {
+      type: 'intro',
+      narration: "Hello! I'm your algorithm teacher. Today we're learning Insertion Sort - one of the most intuitive sorting algorithms!",
+      duration: 3000
+    },
+    {
+      type: 'intro',
+      narration: "Think about how you sort a hand of playing cards. You pick up one card at a time and insert it into the correct position among the cards you're already holding.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "That's exactly how Insertion Sort works! It maintains a sorted subarray on the left, and repeatedly takes the next unsorted element and inserts it where it belongs.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "Here's the process: We start with the first element as our sorted portion. Then we look at the next element and compare it with elements to its left, shifting them right until we find its correct spot.",
+      duration: 4000
+    },
+    {
+      type: 'intro',
+      narration: "Watch the colors! Blue bars are unsorted. Green bars are already in their sorted positions. When we compare, bars turn orange. When we swap, they turn pink.",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "One of the coolest features: Insertion Sort is adaptive. If the array is already sorted or nearly sorted, it runs in nearly linear time - O(n) in the best case!",
+      duration: 3500
+    },
+    {
+      type: 'intro',
+      narration: "It's also stable (equal elements keep their order) and works online - you can sort elements as they arrive, without needing the whole array upfront.",
+      duration: 3000
+    },
+    {
+      type: 'intro',
+      narration: "Now, let's see it in action! Watch how each element bubbles left to its correct position. Press Play to begin, or Next Step to go at your own pace.",
+      duration: 3500,
+      isLast: true
+    }
+  ];
+
+  let introIndex = 0;
+  const narText = document.getElementById('narText');
+  const teacher = document.getElementById('teacher');
+  const speakBars = document.getElementById('speakBars');
+  
+  // Add intro mode class
+  narText.classList.add('intro-mode');
+  teacher.textContent = '🧑‍🏫';
+  
+  function playNextIntro() {
+    if (introIndex < introSteps.length) {
+      const step = introSteps[introIndex];
+      narText.textContent = step.narration;
+      
+      // Animate speak bars
+      speakBars.classList.add('active');
+      
+      // Schedule next intro step
+      setTimeout(() => {
+        introIndex++;
+        if (introIndex < introSteps.length) {
+          playNextIntro();
+        } else {
+          // End of intro
+          narText.classList.remove('intro-mode');
+          teacher.textContent = '🧑‍💻';
+          speakBars.classList.remove('active');
+          
+          // Show first step's narration
+          if (steps.length > 0 && steps[0]) {
+            narText.textContent = steps[0].narration;
+          }
+        }
+      }, step.duration);
+    }
+  }
+  
+  playNextIntro();
+}
+
+// ════════════════════════════════════════════════
 // INSERTION SORT — STEP GENERATOR
 // ════════════════════════════════════════════════
 function buildInsertionSortSteps(arr) {
@@ -252,11 +349,16 @@ function buildInsertionSortSteps(arr) {
       totalComps++;
       steps.push({
         arr: [...a], compare: [j - 1, j], sorted,
-        narration: `Compare a[${j-1}]=${a[j-1]} and a[${j}]=${a[j]}. ${a[j-1] > a[j] ? `${a[j-1]} > ${a[j]} — swap needed!` : `${a[j-1]} ≤ ${a[j]} — in position.`}`,
+        narration: `Compare a[${j-1}]=${a[j-1]} and a[${j}]=${a[j]}. ${a[j-1] > a[j] ? `${a[j-1]} > ${a[j]} — need to shift left!` : `${a[j-1]} ≤ ${a[j]} — found correct position.`}`,
         phase: 'compare', pass: i, comps: totalComps, swaps: totalSwaps, codeLine: 5,
       });
 
       if (a[j - 1] <= a[j]) {
+        steps.push({
+          arr: [...a], compare: [], sorted,
+          narration: `Element ${a[j]} is in the right place. Moving to next element.`,
+          phase: 'active', pass: i, comps: totalComps, swaps: totalSwaps, codeLine: 5,
+        });
         break;
       }
 
@@ -269,7 +371,7 @@ function buildInsertionSortSteps(arr) {
         compare: [j - 1, j], 
         sorted,
         swapAnim: { idxA: j - 1, idxB: j }, 
-        narration: `Swapped! Array is now [${a.join(', ')}]. Total swaps: ${totalSwaps}.`,
+        narration: `Swapped ${a[j]} left! Array is now [${a.join(', ')}]. Total swaps: ${totalSwaps}.`,
         phase: 'swap', 
         pass: i, 
         comps: totalComps, 
@@ -297,7 +399,7 @@ function buildInsertionSortSteps(arr) {
 const canvas = document.getElementById('vizCanvas');
 const ctx = canvas.getContext('2d');
 let animRafId = null;
-let currentAnimation = null;
+let introPlayed = false;
 
 function resizeCanvas() {
   canvas.width = canvas.parentElement.clientWidth;
@@ -504,6 +606,9 @@ const page = new AlgoPage({
     document.getElementById('statComps').textContent = '0';
     document.getElementById('statSwaps').textContent = '0';
     document.getElementById('statPasses').textContent = '0';
+    
+    // Play intro speech on reset
+    playIntroSpeech();
   }
 });
 
@@ -515,6 +620,22 @@ function updateUI(step) {
   document.getElementById('statSwaps').textContent = step.swaps || 0;
   document.getElementById('statPasses').textContent = step.pass || 0;
   document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
+
+  // Update phase badge
+  const phaseBadge = document.getElementById('phaseBadge');
+  if (step.phase === 'compare') {
+    phaseBadge.textContent = 'Comparing';
+    phaseBadge.className = 'phase-badge ph-compare';
+  } else if (step.phase === 'swap') {
+    phaseBadge.textContent = 'Swapping';
+    phaseBadge.className = 'phase-badge ph-swap';
+  } else if (step.phase === 'done') {
+    phaseBadge.textContent = 'Complete';
+    phaseBadge.className = 'phase-badge ph-done';
+  } else {
+    phaseBadge.textContent = 'Active';
+    phaseBadge.className = 'phase-badge ph-active';
+  }
 
   // Highlight code line
   for (let i = 1; i <= 10; i++) {
@@ -532,6 +653,14 @@ function init() {
   if (steps.length > 0) {
     drawBars(steps[0]);
     document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
+    
+    // Play intro speech on initial load, but only once
+    if (!introPlayed) {
+      setTimeout(() => {
+        playIntroSpeech();
+        introPlayed = true;
+      }, 500);
+    }
   } else {
     drawBars(null);
     document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
