@@ -5,83 +5,120 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Insertion Sort — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
+<!-- Using inline styles to avoid dependency on external main.css -->
 <style>
-:root {
-  --bar-default: #1a2840;
-  --bar-default-stroke: #2a4060;
-  --bar-compare: #ff8c42;
-  --bar-swap: #ff6b9d;
-  --bar-sorted: #06d6a0;
-  --bar-min: #ffd166;
-}
-
-.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
-@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
-
-#vizCanvas {
-  width: 100%;
-  border-radius: 8px;
-  background: transparent;
-  display: block;
-}
-
-.controls {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 18px;
-  display: flex; flex-direction: column; gap: 12px;
-}
-.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-
-.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
-.arr-input {
-  flex: 1; min-width: 200px;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 7px; padding: 7px 11px;
-  color: var(--text); font-family: var(--mono); font-size: 11px;
-  outline: none; transition: border-color .2s;
-}
-.arr-input:focus { border-color: var(--teal); }
-
-.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
-.cc {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 14px; position: relative; overflow: hidden;
-  transition: border-color .3s, transform .3s;
-}
-.cc:hover { border-color: rgba(0,212,170,.3); transform: translateY(-2px); }
-.cc::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--teal),var(--blue)); opacity:0; transition:opacity .3s; }
-.cc:hover::after { opacity:1; }
-.cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
-.cc-title { font-family: var(--mono); font-size: 9px; color: var(--teal); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
-.cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
-
-.legend { display:flex; gap:14px; flex-wrap:wrap; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
-.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
-.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
-
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stat-box {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 9px; padding: 12px 14px; text-align: center;
-}
-.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
-.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
-
-.narration-text.intro-mode {
-  color: var(--teal);
-  font-weight: 600;
-  animation: glowPulse 2s infinite;
-}
-
-@keyframes glowPulse {
-  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
-  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
-  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
-}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0b0f17; font-family: 'Syne', sans-serif; color: #eef2fb; line-height: 1.6; }
+  :root {
+    --bg: #0b0f17;
+    --surface: #131a28;
+    --surface2: #1a2538;
+    --border: #25344f;
+    --text: #eef2fb;
+    --text-dim: #8a9fc0;
+    --teal: #00d4aa;
+    --blue: #3b7cff;
+    --bar-default: #1a2840;
+    --bar-default-stroke: #2a4060;
+    --bar-compare: #ff8c42;
+    --bar-swap: #ff6b9d;
+    --bar-sorted: #06d6a0;
+  }
+  .bg-grid { position: fixed; top:0; left:0; width:100%; height:100%; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.15; pointer-events: none; z-index: 0; }
+  .bg-glow { position: fixed; top:-20%; right:-10%; width:60%; height:80%; background: radial-gradient(circle at 70% 30%, rgba(0,212,170,0.08), transparent 70%); pointer-events: none; z-index: 0; }
+  .navbar { background: rgba(19,26,40,0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 0 24px; position: sticky; top:0; z-index: 10; }
+  .nav-inner { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:64px; }
+  .nav-logo { font-size:22px; font-weight:800; letter-spacing:-1px; color:var(--text); text-decoration:none; }
+  .logo-bracket { color:var(--teal); font-weight:300; }
+  .logo-dot { color:var(--teal); }
+  .nav-links a { color:var(--text-dim); text-decoration:none; margin-left:32px; font-size:14px; font-weight:500; transition:color .2s; }
+  .nav-links a:hover { color:var(--teal); }
+  .algo-page { max-width:1400px; margin:20px auto 60px; padding:0 24px; position:relative; z-index:2; }
+  .back-link { display:inline-block; color:var(--text-dim); text-decoration:none; font-size:14px; margin-bottom:16px; }
+  .back-link:hover { color:var(--teal); }
+  .complexity { display:flex; flex-wrap:wrap; gap:8px; }
+  .cplx-chip { background:var(--surface2); border:1px solid var(--border); border-radius:30px; padding:4px 12px; font-size:11px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; }
+  .cplx-chip span { color:var(--teal); font-weight:700; margin-left:4px; }
+  .card-difficulty { padding:4px 12px; border-radius:30px; font-size:12px; font-weight:600; background:rgba(0,212,170,0.15); border:1px solid rgba(0,212,170,0.3); color:var(--teal); }
+  .beginner { background:rgba(0,212,170,0.1); border-color:rgba(0,212,170,0.2); color:#00d4aa; }
+  .status-row { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 18px; margin-bottom:20px; display:flex; flex-wrap:wrap; align-items:center; gap:16px; }
+  .si { display:flex; align-items:center; gap:8px; }
+  .sl { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-family:var(--mono); }
+  .sv { font-size:20px; font-weight:800; font-family:var(--mono); color:var(--text); }
+  .sv.orange { color:var(--bar-compare); }
+  .phase-badge { padding:4px 12px; border-radius:30px; font-size:11px; font-weight:600; background:var(--surface2); color:var(--text-dim); border:1px solid var(--border); }
+  .ph-active { background:rgba(0,212,170,0.1); border-color:rgba(0,212,170,0.3); color:var(--teal); }
+  .ph-compare { background:rgba(255,140,66,0.1); border-color:rgba(255,140,66,0.3); color:#ff8c42; }
+  .ph-swap { background:rgba(255,107,157,0.1); border-color:rgba(255,107,157,0.3); color:#ff6b9d; }
+  .ph-done { background:rgba(6,214,160,0.1); border-color:rgba(6,214,160,0.3); color:#06d6a0; }
+  .divider-auto { flex:1; min-width:20px; }
+  .prog-wrap { width:140px; height:4px; background:var(--surface2); border-radius:4px; overflow:hidden; }
+  .prog-fill { height:100%; background:var(--teal); width:0%; transition:width .3s; }
+  .step-ctr { font-family:var(--mono); font-size:12px; color:var(--text-dim); }
+  .panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+  .panel-hd { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--teal); margin-bottom:12px; }
+  .btn { background:transparent; border:1px solid var(--border); border-radius:8px; padding:8px 16px; font-family:var(--mono); font-size:12px; font-weight:600; color:var(--text); cursor:pointer; transition:.2s; }
+  .btn-primary { background:var(--teal); border-color:var(--teal); color:#0b0f17; }
+  .btn-danger { border-color:#ff6b9d; color:#ff6b9d; }
+  .btn:hover { background:rgba(0,212,170,0.1); border-color:var(--teal); }
+  .btn-primary:hover { background:#00bf99; border-color:#00bf99; }
+  .code-block { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.8; }
+  .code-line { display:block; color:var(--text-dim); }
+  .kw { color:#ff8c42; }
+  .fn { color:#06d6a0; }
+  .num { color:#ff6b9d; }
+  .c { color:#5a7195; font-style:italic; }
+  .speed-ctrl { display:flex; align-items:center; gap:8px; margin-left:auto; }
+  .speed-lbl { font-size:10px; color:var(--text-dim); font-family:var(--mono); }
+  .speed-val { font-size:12px; font-weight:700; color:var(--teal); min-width:30px; }
+  input[type=range] { width:80px; background:transparent; }
+  .two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+  #vizCanvas { width: 100%; border-radius: 8px; background: transparent; display: block; }
+  .controls { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+  .input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+  .input-row label { font-size: 10px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
+  .arr-input { flex: 1; min-width: 200px; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px; outline: none; }
+  .arr-input:focus { border-color: var(--teal); }
+  .concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .cc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
+  .cc-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--teal); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+  .cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+  .li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+  .ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; text-align: center; }
+  .stat-box-n { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 800; color: var(--teal); }
+  .stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+  .narration { background: var(--surface); border: 1px solid var(--border); border-radius: 40px; padding: 12px 24px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .teacher { font-size: 28px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+  .narration-text { flex: 1; font-size: 14px; color: var(--text-dim); font-weight: 400; line-height: 1.6; }
+  .speak-bars { display: flex; align-items: center; gap: 3px; }
+  .speak-bars span { width: 3px; height: 16px; background: var(--text-dim); border-radius: 3px; transition: .2s; }
+  .speak-bars.on span { background: var(--teal); animation: sound 0.5s infinite alternate; }
+  @keyframes sound { 0% { height: 8px; } 100% { height: 20px; } }
+  .speak-bars.on span:nth-child(2) { animation-delay: 0.1s; }
+  .speak-bars.on span:nth-child(3) { animation-delay: 0.2s; }
+  .speak-bars.on span:nth-child(4) { animation-delay: 0.3s; }
+  .speak-bars.on span:nth-child(5) { animation-delay: 0.4s; }
+  .narration-text.intro-mode { color: var(--teal); font-weight: 600; animation: glowPulse 2s infinite; }
+  @keyframes glowPulse { 0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); } 50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); } 100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); } }
+  /* Voice toggle */
+  .voice-btn {
+    margin-left: auto; background: none;
+    border: 1px solid var(--border); border-radius: 7px;
+    padding: 4px 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 10px; color: var(--teal);
+    letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+  }
+  .voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+  .voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+  .voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+  .voice-icon { font-size: 14px; }
 </style>
 </head>
 <body>
@@ -89,6 +126,7 @@
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
+<!-- NAVBAR — identical to Insertion Sort, includes theme toggle -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
@@ -98,6 +136,14 @@
       <a href="../../index.html#graph">Graph</a>
       <a href="../../index.html#dp">Dynamic Programming</a>
     </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
@@ -109,7 +155,7 @@
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
       <span style="font-size:40px;">📥</span>
       <div>
-        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Sorting Algorithm</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Sorting Algorithm</div>
         <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Insertion Sort</h1>
       </div>
       <div style="margin-left:auto;"><span class="card-difficulty beginner">Beginner</span></div>
@@ -164,6 +210,10 @@
           <div class="li"><div class="ld" style="background:var(--bar-compare);"></div>Comparing</div>
           <div class="li"><div class="ld" style="background:var(--bar-swap);"></div>Swapping</div>
           <div class="li"><div class="ld" style="background:var(--bar-sorted);"></div>Sorted</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
         </div>
         <canvas id="vizCanvas" height="340"></canvas>
       </div>
@@ -198,7 +248,7 @@
 
       <div class="panel">
         <div class="panel-hd">📋 Current Array</div>
-        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">
+        <div id="arrDisplay" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">
           —
         </div>
       </div>
@@ -213,9 +263,9 @@
       <button class="btn" id="btnNext">⏭ Next Step</button>
       <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
       <button class="btn" onclick="randomize()">🎲 Random Array</button>
-      <div class="speed-ctrl">
+      <div class="speed-ctrl" id="speedWrap">
         <span class="speed-lbl">⚡ Speed</span>
-        <input type="range" id="speedSlider" min="1" max="5" value="2">
+        <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="updateSpeed(this.value)">
         <span class="speed-val" id="speedVal">2×</span>
       </div>
     </div>
@@ -228,100 +278,112 @@
 
 </div><!-- .algo-page -->
 
-<script src="../../assets/js/main.js"></script>
-<script src="../../assets/js/algo-base.js"></script>
 <script>
 // ════════════════════════════════════════════════
-// INTRODUCTORY SPEECH SEQUENCE
+// THEME TOGGLE
 // ════════════════════════════════════════════════
-function playIntroSpeech() {
-  const introSteps = [
-    {
-      type: 'intro',
-      narration: "Hello! I'm your algorithm teacher. Today we're learning Insertion Sort - one of the most intuitive sorting algorithms!",
-      duration: 3000
-    },
-    {
-      type: 'intro',
-      narration: "Think about how you sort a hand of playing cards. You pick up one card at a time and insert it into the correct position among the cards you're already holding.",
-      duration: 3500
-    },
-    {
-      type: 'intro',
-      narration: "That's exactly how Insertion Sort works! It maintains a sorted subarray on the left, and repeatedly takes the next unsorted element and inserts it where it belongs.",
-      duration: 3500
-    },
-    {
-      type: 'intro',
-      narration: "Here's the process: We start with the first element as our sorted portion. Then we look at the next element and compare it with elements to its left, shifting them right until we find its correct spot.",
-      duration: 4000
-    },
-    {
-      type: 'intro',
-      narration: "Watch the colors! Blue bars are unsorted. Green bars are already in their sorted positions. When we compare, bars turn orange. When we swap, they turn pink.",
-      duration: 3500
-    },
-    {
-      type: 'intro',
-      narration: "One of the coolest features: Insertion Sort is adaptive. If the array is already sorted or nearly sorted, it runs in nearly linear time - O(n) in the best case!",
-      duration: 3500
-    },
-    {
-      type: 'intro',
-      narration: "It's also stable (equal elements keep their order) and works online - you can sort elements as they arrive, without needing the whole array upfront.",
-      duration: 3000
-    },
-    {
-      type: 'intro',
-      narration: "Now, let's see it in action! Watch how each element bubbles left to its correct position. Press Play to begin, or Next Step to go at your own pace.",
-      duration: 3500,
-      isLast: true
-    }
-  ];
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
 
-  let introIndex = 0;
-  const narText = document.getElementById('narText');
-  const teacher = document.getElementById('teacher');
-  const speakBars = document.getElementById('speakBars');
-  
-  // Add intro mode class
-  narText.classList.add('intro-mode');
-  teacher.textContent = '🧑‍🏫';
-  
-  function playNextIntro() {
-    if (introIndex < introSteps.length) {
-      const step = introSteps[introIndex];
-      narText.textContent = step.narration;
-      
-      // Animate speak bars
-      speakBars.classList.add('active');
-      
-      // Schedule next intro step
-      setTimeout(() => {
-        introIndex++;
-        if (introIndex < introSteps.length) {
-          playNextIntro();
-        } else {
-          // End of intro
-          narText.classList.remove('intro-mode');
-          teacher.textContent = '🧑‍💻';
-          speakBars.classList.remove('active');
-          
-          // Show first step's narration
-          if (steps.length > 0 && steps[0]) {
-            narText.textContent = steps[0].narration;
-          }
-        }
-      }, step.duration);
-    }
+// Restore saved theme on load
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    // label update happens after DOM ready — handled below in init
   }
-  
-  playNextIntro();
+})();
+
+// ════════════════════════════════════════════════
+// WEB SPEECH API
+// ════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English'))       ||
+    voices.find(v => v.lang === 'en-US' && v.localService)       ||
+    voices.find(v => v.lang.startsWith('en'))                    ||
+    voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice  = ttsVoice;
+    utt.rate   = 0.88;
+    utt.pitch  = 1.05;
+    utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+
+function stopSpeech() {
+  synth && synth.cancel();
+  document.getElementById('speakBars').classList.remove('on');
 }
 
 // ════════════════════════════════════════════════
-// INSERTION SORT — STEP GENERATOR
+// VOICE TOGGLE — default OFF
 // ════════════════════════════════════════════════
+let voiceEnabled = false;
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn   = document.getElementById('voiceToggle');
+  const icon  = document.getElementById('voiceIcon');
+  const lbl   = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+
+// ------------------------------------------------
+// Helper: rounded rect
+// ------------------------------------------------
+CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, radii) {
+  if (!Array.isArray(radii)) radii = [radii, radii, radii, radii];
+  this.moveTo(x + radii[0], y);
+  this.lineTo(x + w - radii[1], y);
+  this.quadraticCurveTo(x + w, y, x + w, y + radii[1]);
+  this.lineTo(x + w, y + h - radii[2]);
+  this.quadraticCurveTo(x + w, y + h, x + w - radii[2], y + h);
+  this.lineTo(x + radii[3], y + h);
+  this.quadraticCurveTo(x, y + h, x, y + h - radii[3]);
+  this.lineTo(x, y + radii[0]);
+  this.quadraticCurveTo(x, y, x + radii[0], y);
+  return this;
+};
+
+// ------------------------------------------------
+// Insertion Sort step generator (with swapAnim for each adjacent swap)
+// ------------------------------------------------
 function buildInsertionSortSteps(arr) {
   const steps = [];
   const a = [...arr];
@@ -349,7 +411,7 @@ function buildInsertionSortSteps(arr) {
       totalComps++;
       steps.push({
         arr: [...a], compare: [j - 1, j], sorted,
-        narration: `Compare a[${j-1}]=${a[j-1]} and a[${j}]=${a[j]}. ${a[j-1] > a[j] ? `${a[j-1]} > ${a[j]} — need to shift left!` : `${a[j-1]} ≤ ${a[j]} — found correct position.`}`,
+        narration: `Compare a[${j-1}]=${a[j-1]} and a[${j}]=${a[j]}. ${a[j-1] > a[j] ? `${a[j-1]} > ${a[j]} — need to swap left!` : `${a[j-1]} ≤ ${a[j]} — found correct position.`}`,
         phase: 'compare', pass: i, comps: totalComps, swaps: totalSwaps, codeLine: 5,
       });
 
@@ -362,6 +424,7 @@ function buildInsertionSortSteps(arr) {
         break;
       }
 
+      // Perform swap and record step with swapAnim
       const prevArr = [...a];
       [a[j - 1], a[j]] = [a[j], a[j - 1]];
       totalSwaps++;
@@ -393,13 +456,12 @@ function buildInsertionSortSteps(arr) {
   return steps;
 }
 
-// ════════════════════════════════════════════════
-// CANVAS RENDERING WITH SWAP ANIMATION
-// ════════════════════════════════════════════════
+// ------------------------------------------------
+// Canvas and animation state
+// ------------------------------------------------
 const canvas = document.getElementById('vizCanvas');
 const ctx = canvas.getContext('2d');
 let animRafId = null;
-let introPlayed = false;
 
 function resizeCanvas() {
   canvas.width = canvas.parentElement.clientWidth;
@@ -413,14 +475,8 @@ function getBarLayout(arr) {
   return { barW, gap };
 }
 
-/**
- * Animate a swap between two indices.
- * prevStep = step BEFORE swap (compare phase)
- * nextStep = step AFTER swap (contains swapAnim info)
- * onDone = callback when animation completes
- */
+// The provided sophisticated animateSwap function
 function animateSwap(prevStep, nextStep, onDone) {
-  // Cancel any ongoing animation
   if (animRafId) {
     cancelAnimationFrame(animRafId);
     animRafId = null;
@@ -428,23 +484,19 @@ function animateSwap(prevStep, nextStep, onDone) {
 
   const { idxA, idxB } = nextStep.swapAnim;
   const { barW, gap } = getBarLayout(prevStep.arr);
-  const travelX = (barW + gap); // horizontal distance between adjacent bars
+  const travelX = (barW + gap);
 
-  const DURATION = 420; // animation duration in ms
+  const DURATION = 420;
   const start = performance.now();
 
-  // Display previous state during animation
   const displayStep = { 
     ...prevStep, 
     phase: 'swap', 
     compare: [idxA, idxB] 
   };
 
-  // Smooth ease-in-out function
   function easeInOut(t) {
-    return t < 0.5 
-      ? 2 * t * t 
-      : -1 + (4 - 2 * t) * t;
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
   }
 
   function tick(now) {
@@ -452,14 +504,9 @@ function animateSwap(prevStep, nextStep, onDone) {
     const rawT = Math.min(elapsed / DURATION, 1);
     const t = easeInOut(rawT);
 
-    // Arc height for curved motion
     const arcHeight = Math.min(40, canvas.height * 0.12);
-
-    // Horizontal motion
     const xA = t * travelX;
     const xB = -t * travelX;
-
-    // Vertical arc motion
     const yA = -Math.sin(rawT * Math.PI) * arcHeight;
     const yB =  Math.sin(rawT * Math.PI) * arcHeight;
 
@@ -473,7 +520,7 @@ function animateSwap(prevStep, nextStep, onDone) {
       animRafId = requestAnimationFrame(tick);
     } else {
       animRafId = null;
-      onDone(); // Draw final swapped state
+      onDone();
     }
   }
 
@@ -499,7 +546,6 @@ function drawBars(step, offsets = {}) {
     const h = (val / maxVal) * (H - 50);
     const baseY = H - h - 28;
 
-    // Apply animation offsets if any
     let x = baseX;
     let y = baseY;
     if (offsets[i]) {
@@ -528,7 +574,6 @@ function drawBars(step, offsets = {}) {
       }
     }
 
-    // Glow
     if (glowColor) {
       ctx.beginPath();
       ctx.roundRect(x - 3, y - 3, barW + 6, h + 6, 6);
@@ -536,7 +581,6 @@ function drawBars(step, offsets = {}) {
       ctx.fill();
     }
 
-    // Bar
     ctx.beginPath();
     ctx.roundRect(x, y, barW, h, [4, 4, 0, 0]);
     ctx.fillStyle = fillColor;
@@ -545,72 +589,38 @@ function drawBars(step, offsets = {}) {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Value label
     ctx.fillStyle = compareSet.has(i) ? '#fff' : sortedSet.has(i) ? '#06d6a0' : '#4a6a9a';
-    ctx.font = `bold ${Math.min(11, barW - 2)}px JetBrains Mono`;
+    ctx.font = `bold ${Math.min(11, barW - 2)}px 'JetBrains Mono', monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     if (barW >= 18) ctx.fillText(val, x + barW / 2, y - 3);
 
-    // Index label
     ctx.fillStyle = '#2a3d58';
-    ctx.font = '9px JetBrains Mono';
+    ctx.font = '9px JetBrains Mono, monospace';
     ctx.textBaseline = 'top';
     ctx.fillText(i, x + barW / 2, H - 20);
   });
 }
 
-// ════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════
+// ------------------------------------------------
+// Main controller (AlgoPage-like manual implementation)
+// ------------------------------------------------
 let steps = [];
 let arr = [64, 34, 25, 12, 22, 11, 90, 45, 7, 38];
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+let introAborted = false;
 
-const page = new AlgoPage({
-  onRenderStep(step) {
-    // Cancel any ongoing animation
-    if (animRafId) {
-      cancelAnimationFrame(animRafId);
-      animRafId = null;
-    }
+const SPEED_DELAYS = { 1:1400, 2:800, 3:450, 4:220, 5:90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
 
-    // Check if this step has swap animation and there's a previous step
-    if (step.swapAnim && step.prevArr && page.stepIdx > 0) {
-      const prevStep = steps[page.stepIdx - 1];
-      animateSwap(prevStep, step, () => {
-        drawBars(step);
-        // Update UI after animation completes
-        updateUI(step);
-      });
-    } else {
-      drawBars(step);
-      updateUI(step);
-    }
-  },
-  onReset() {
-    // Cancel any ongoing animation
-    if (animRafId) {
-      cancelAnimationFrame(animRafId);
-      animRafId = null;
-    }
-    // Draw the initial array state instead of null
-    if (steps.length > 0 && steps[0]) {
-      drawBars(steps[0]);
-    } else {
-      drawBars(null);
-    }
-    document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
-    document.getElementById('sPass').textContent = '0';
-    document.getElementById('sComps').textContent = '0';
-    document.getElementById('sSwaps').textContent = '0';
-    document.getElementById('statComps').textContent = '0';
-    document.getElementById('statSwaps').textContent = '0';
-    document.getElementById('statPasses').textContent = '0';
-    
-    // Play intro speech on reset
-    playIntroSpeech();
-  }
-});
+function updateSpeed(val) {
+  speedMult = parseInt(val);
+  document.getElementById('speedVal').textContent = speedMult + '×';
+}
 
 function updateUI(step) {
   document.getElementById('sPass').textContent = step.pass || 0;
@@ -621,7 +631,6 @@ function updateUI(step) {
   document.getElementById('statPasses').textContent = step.pass || 0;
   document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
 
-  // Update phase badge
   const phaseBadge = document.getElementById('phaseBadge');
   if (step.phase === 'compare') {
     phaseBadge.textContent = 'Comparing';
@@ -637,65 +646,177 @@ function updateUI(step) {
     phaseBadge.className = 'phase-badge ph-active';
   }
 
-  // Highlight code line
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 8; i++) {
     const el = document.getElementById(`cl${i}`);
     if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
   }
+
+  const pct = steps.length > 1 ? ((stepIdx / (steps.length-1))*100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('stepCtr').textContent = `Step ${stepIdx+1} / ${steps.length}`;
 }
 
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+
+  const afterDraw = () => {
+    document.getElementById('narText').textContent = step.narration;
+    updateUI(step);
+    if (autoAdvance) scheduleNext(step);
+  };
+
+  if (step.swapAnim && step.prevArr && idx > 0) {
+    const prevStep = steps[idx - 1];
+    animateSwap(prevStep, step, () => {
+      drawBars(step);
+      afterDraw();
+    });
+  } else {
+    drawBars(step);
+    afterDraw();
+  }
+}
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function nextStep() {
+  clearIntroTimeouts();
+  stopPlay();
+  if (stepIdx + 1 < steps.length) renderStep(stepIdx + 1, false);
+}
+
+function resetToFirst() {
+  clearIntroTimeouts();
+  stopPlay();
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  if (steps.length > 0) {
+    drawBars(steps[0]);
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+    updateUI(steps[0]);
+    document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
+  }
+  if (voiceEnabled) playIntroSpeech();
+}
+
+// ------------------------------------------------
+// Intro speech
+// ------------------------------------------------
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const introLines = [
+    "Hello! I am your algorithm teacher. Today we are learning Insertion Sort — one of the most intuitive sorting algorithms.",
+    "Think about how you sort a hand of playing cards. You pick up one card at a time and insert it into the correct position among the cards you're already holding.",
+    "That's exactly how Insertion Sort works! It maintains a sorted subarray on the left, and repeatedly takes the next unsorted element and inserts it where it belongs.",
+    "Here's the process: We start with the first element as our sorted portion. Then we look at the next element and compare it with elements to its left, shifting them right until we find its correct spot.",
+    "Watch the colors! Blue bars are unsorted. Green bars are already in their sorted positions. When we compare, bars turn orange. When we swap, they turn pink.",
+    "One of the coolest features: Insertion Sort is adaptive. If the array is already sorted or nearly sorted, it runs in nearly linear time — O(n) in the best case!",
+    "Now, turn on Voice Mode and press Play. I will guide you through every single step."
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < introLines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = introLines[i];
+    await speak(introLines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+
+// ------------------------------------------------
+// Initialization and event listeners
+// ------------------------------------------------
 function init() {
   resizeCanvas();
   document.getElementById('statN').textContent = arr.length;
   steps = buildInsertionSortSteps(arr);
-  page.setSteps(steps);
-  // Draw the first step instead of null to show initial array
+  stepIdx = -1;
   if (steps.length > 0) {
     drawBars(steps[0]);
-    document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
-    
-    // Play intro speech on initial load, but only once
-    if (!introPlayed) {
-      setTimeout(() => {
-        playIntroSpeech();
-        introPlayed = true;
-      }, 500);
-    }
-  } else {
-    drawBars(null);
+    document.getElementById('narText').textContent = steps[0].narration;
+    updateUI(steps[0]);
     document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
+  }
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+
+  // Sync theme toggle label on load
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
   }
 }
 
 function applyArray() {
+  clearIntroTimeouts();
   const raw = document.getElementById('arrInput').value;
   const parsed = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
   if (parsed.length < 2) { alert('Enter at least 2 valid positive numbers.'); return; }
   arr = parsed.slice(0, 20);
-  page.reset();
   init();
 }
 
 function randomize() {
+  clearIntroTimeouts();
   arr = Array.from({ length: 12 }, () => Math.floor(Math.random() * 90) + 5);
   document.getElementById('arrInput').value = arr.join(', ');
-  page.reset();
   init();
 }
 
-window.addEventListener('resize', () => { 
-  resizeCanvas(); 
-  if (page.stepIdx >= 0 && steps[page.stepIdx]) {
-    drawBars(steps[page.stepIdx]);
-  } else if (steps.length > 0 && steps[0]) {
-    // Show first step if no step is selected
-    drawBars(steps[0]);
-  } else {
-    drawBars(null);
-  }
+document.getElementById('btnPlay').addEventListener('click', () => {
+  if (isPlaying) stopPlay(); else startPlay();
+});
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetToFirst);
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) drawBars(steps[stepIdx]);
+  else if (steps.length > 0) drawBars(steps[0]);
 });
 
-// Initialize
 init();
 </script>
 </body>

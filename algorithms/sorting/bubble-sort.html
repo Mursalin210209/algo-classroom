@@ -8,35 +8,30 @@
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
 :root {
-  --bar-default: #0898ff;
-  --bar-default-stroke: #c7ddff;
+  --bar-default: #1a2840;
+  --bar-default-stroke: #2a4060;
   --bar-compare: #ff8c42;
   --bar-swap: #ff6b9d;
   --bar-sorted: #06d6a0;
-  --bar-min: #ffd166;
 }
 
 .two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
 @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
 
 #vizCanvas {
-  width: 100%;
-  border-radius: 8px;
-  background: transparent;
-  display: block;
+  width: 100%; border-radius: 8px;
+  background: transparent; display: block;
 }
 
 .controls {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 18px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
   display: flex; flex-direction: column; gap: 12px;
 }
 .ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-
 .input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
 .input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+
 .arr-input {
   flex: 1; min-width: 200px;
   background: var(--surface2); border: 1px solid var(--border);
@@ -59,7 +54,7 @@
 .cc-title { font-family: var(--mono); font-size: 9px; color: var(--teal); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
 .cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
 
-.legend { display:flex; gap:14px; flex-wrap:wrap; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
 .li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
 .ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
 
@@ -71,12 +66,24 @@
 .stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
 .stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 
+/* Voice toggle */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+
 .narration-text.intro-mode {
-  color: var(--teal);
-  font-weight: 600;
+  color: var(--teal); font-weight: 600;
   animation: glowPulse 2s infinite;
 }
-
 @keyframes glowPulse {
   0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
   50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
@@ -89,6 +96,7 @@
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
+<!-- NAVBAR — identical to Insertion Sort, includes theme toggle -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
@@ -98,6 +106,14 @@
       <a href="../../index.html#graph">Graph</a>
       <a href="../../index.html#dp">Dynamic Programming</a>
     </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
@@ -130,7 +146,7 @@
   <div class="concepts">
     <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Adjacent Swaps</div><div class="cc-desc">Each pass compares neighbors and swaps out-of-order pairs. Only adjacent elements ever swap.</div></div>
     <div class="cc"><span class="cc-icon">🫧</span><div class="cc-title">Bubbling Up</div><div class="cc-desc">The largest unsorted element moves to its correct position at the end after each full pass.</div></div>
-    <div class="cc"><span class="cc-icon">⚡</span><div class="cc-title">Early Exit</div><div class="cc-desc">If no swaps happen during a pass, the array is sorted — O(n) best case for already-sorted arrays.</div></div>
+    <div class="cc"><span class="cc-icon">⚡</span><div class="cc-title">Early Exit</div><div class="cc-desc">If no swaps happen during a pass, the array is already sorted — O(n) best case for already-sorted arrays.</div></div>
     <div class="cc"><span class="cc-icon">📚</span><div class="cc-title">Stable Sort</div><div class="cc-desc">Equal elements maintain their original relative order — a useful property for multi-key sorting.</div></div>
   </div>
 
@@ -164,6 +180,10 @@
           <div class="li"><div class="ld" style="background:var(--bar-compare);"></div>Comparing</div>
           <div class="li"><div class="ld" style="background:var(--bar-swap);"></div>Swapping</div>
           <div class="li"><div class="ld" style="background:var(--bar-sorted);"></div>Sorted</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
         </div>
         <canvas id="vizCanvas" height="340"></canvas>
       </div>
@@ -196,16 +216,11 @@
 <span id="cl9" class="code-line">    <span class="kw">if not</span> swapped: <span class="kw">break</span></span>
 <span id="cl10" class="code-line">  <span class="kw">return</span> arr</span>
         </div>
-
-
-        
       </div>
 
       <div class="panel">
         <div class="panel-hd">📋 Current Array</div>
-        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">
-          —
-        </div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
       </div>
 
     </div>
@@ -218,9 +233,9 @@
       <button class="btn" id="btnNext">⏭ Next Step</button>
       <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
       <button class="btn" onclick="randomize()">🎲 Random Array</button>
-      <div class="speed-ctrl">
+      <div class="speed-ctrl" id="speedWrap">
         <span class="speed-lbl">⚡ Speed</span>
-        <input type="range" id="speedSlider" min="1" max="5" value="2">
+        <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
         <span class="speed-val" id="speedVal">2×</span>
       </div>
     </div>
@@ -233,9 +248,92 @@
 
 </div><!-- .algo-page -->
 
-<script src="../../assets/js/main.js"></script>
-<script src="../../assets/js/algo-base.js"></script>
 <script>
+// ════════════════════════════════════════════════
+// THEME TOGGLE
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+
+// Restore saved theme on load
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    // label update happens after DOM ready — handled below in init
+  }
+})();
+
+// ════════════════════════════════════════════════
+// WEB SPEECH API
+// ════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English'))       ||
+    voices.find(v => v.lang === 'en-US' && v.localService)       ||
+    voices.find(v => v.lang.startsWith('en'))                    ||
+    voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice  = ttsVoice;
+    utt.rate   = 0.88;
+    utt.pitch  = 1.05;
+    utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+
+function stopSpeech() {
+  synth && synth.cancel();
+  document.getElementById('speakBars').classList.remove('on');
+}
+
+// ════════════════════════════════════════════════
+// VOICE TOGGLE — default OFF
+// ════════════════════════════════════════════════
+let voiceEnabled = false;
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn   = document.getElementById('voiceToggle');
+  const icon  = document.getElementById('voiceIcon');
+  const lbl   = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+
 // ════════════════════════════════════════════════
 // BUBBLE SORT — STEP GENERATOR
 // ════════════════════════════════════════════════
@@ -243,12 +341,11 @@ function buildBubbleSortSteps(arr) {
   const steps = [];
   const a = [...arr];
   const n = a.length;
-  let totalComps = 0;
-  let totalSwaps = 0;
+  let totalComps = 0, totalSwaps = 0;
 
   steps.push({
     arr: [...a], compare: [], sorted: [],
-    narration: `Starting Bubble Sort on [${a.join(', ')}]. We'll do up to ${n-1} passes, comparing adjacent pairs and swapping when needed.`,
+    narration: `Starting Bubble Sort on ${n} elements. We will do up to ${n-1} passes, comparing adjacent pairs and swapping when needed.`,
     phase: 'active', pass: 0, comps: 0, swaps: 0, codeLine: 1,
   });
 
@@ -258,38 +355,32 @@ function buildBubbleSortSteps(arr) {
 
     steps.push({
       arr: [...a], compare: [], sorted,
-      narration: `Pass ${i + 1}: We'll compare up to index ${n - i - 2}. Sorted portion: last ${i} elements.`,
+      narration: `Starting pass ${i + 1}. We compare from the beginning up to the unsorted portion. The last ${i} element${i !== 1 ? 's are' : ' is'} already sorted.`,
       phase: 'active', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 3,
     });
 
     for (let j = 0; j < n - i - 1; j++) {
       totalComps++;
+      const needSwap = a[j] > a[j + 1];
       steps.push({
         arr: [...a], compare: [j, j + 1], sorted,
-        narration: `Compare a[${j}]=${a[j]} and a[${j+1}]=${a[j+1]}. ${a[j] > a[j+1] ? `${a[j]} > ${a[j+1]} — swap needed!` : `${a[j]} ≤ ${a[j+1]} — no swap.`}`,
+        narration: needSwap
+          ? `Comparing ${a[j]} and ${a[j+1]}. Since ${a[j]} is greater than ${a[j+1]}, we need to swap them.`
+          : `Comparing ${a[j]} and ${a[j+1]}. ${a[j]} is already less than or equal to ${a[j+1]}, so no swap needed.`,
         phase: 'compare', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 6,
       });
 
-      if (a[j] > a[j + 1]) {
-        // Store the swap info for animation
+      if (needSwap) {
         const prevArr = [...a];
         [a[j], a[j + 1]] = [a[j + 1], a[j]];
         totalSwaps++;
         swapped = true;
-        
-        // Add swap step with animation info
         steps.push({
-          arr: [...a], 
-          compare: [j, j + 1], 
-          sorted,
-          swapAnim: { idxA: j, idxB: j + 1 }, // Animation data
-          narration: `Swapped! Array is now [${a.join(', ')}]. Total swaps: ${totalSwaps}.`,
-          phase: 'swap', 
-          pass: i + 1, 
-          comps: totalComps, 
-          swaps: totalSwaps, 
-          codeLine: 7,
-          prevArr: prevArr // Store previous array state for animation
+          arr: [...a], compare: [j, j + 1], sorted,
+          swapAnim: { idxA: j, idxB: j + 1 },
+          narration: `Swapped! ${a[j+1]} moved right and ${a[j]} moved left. Total swaps so far: ${totalSwaps}.`,
+          phase: 'swap', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 7,
+          prevArr,
         });
       }
     }
@@ -297,7 +388,7 @@ function buildBubbleSortSteps(arr) {
     if (!swapped) {
       steps.push({
         arr: [...a], compare: [], sorted: Array.from({ length: n }, (_, k) => k),
-        narration: `No swaps in pass ${i+1} — array is already sorted! Early exit. Final: [${a.join(', ')}].`,
+        narration: `No swaps happened in pass ${i+1}. The array is already sorted! We can exit early. Bubble Sort is complete.`,
         phase: 'done', pass: i + 1, comps: totalComps, swaps: totalSwaps, codeLine: 9,
       });
       return steps;
@@ -306,384 +397,286 @@ function buildBubbleSortSteps(arr) {
 
   steps.push({
     arr: [...a], compare: [], sorted: Array.from({ length: n }, (_, k) => k),
-    narration: `Bubble Sort complete! Sorted array: [${a.join(', ')}]. Total: ${totalComps} comparisons, ${totalSwaps} swaps.`,
+    narration: `Bubble Sort is complete! The array is fully sorted. We made ${totalComps} comparisons and ${totalSwaps} swaps in total.`,
     phase: 'done', pass: n - 1, comps: totalComps, swaps: totalSwaps, codeLine: 10,
   });
-
   return steps;
 }
 
 // ════════════════════════════════════════════════
-// INTRODUCTORY SPEECH SEQUENCE
+// INTRO SPEECH
 // ════════════════════════════════════════════════
-function playIntroSpeech() {
-  const introSteps = [
-    {
-      type: 'intro',
-      narration: "Hello! I'm your algorithm teacher. Today we're learning Bubble Sort, one of the simplest sorting algorithms.",
-      duration: 3000
-    },
-    {
-      type: 'intro',
-      narration: "The name 'Bubble Sort' comes from how larger elements 'bubble up' to the top (the end) of the array, like bubbles in a glass of soda.",
-      duration: 3500
-    },
-    {
-      type: 'intro',
-      narration: "Here's how it works: We repeatedly step through the array, comparing adjacent elements. If they're in the wrong order, we swap them.",
-      duration: 3500
-    },
-    {
-      type: 'intro',
-      narration: "With each complete pass through the array, the largest unsorted element bubbles up to its correct position at the end.",
-      duration: 3000
-    },
-    {
-      type: 'intro',
-      narration: "Watch the visualization carefully. Blue bars are being compared. Pink bars are being swapped. Green bars are already in their final sorted position.",
-      duration: 3500
-    },
-    {
-      type: 'intro',
-      narration: "A cool optimization: if we complete a pass with no swaps, the array is already sorted! This gives Bubble Sort O(n) best-case performance.",
-      duration: 3500
-    },
-    {
-      type: 'intro',
-      narration: "Now, let's see it in action! I'll guide you through each step. Press Play to begin, or Next Step to go at your own pace.",
-      duration: 3500,
-      isLast: true
-    }
-  ];
+let introAborted = false;
 
-  let introIndex = 0;
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const introLines = [
+    "Hello! I am your algorithm teacher. Today we are learning Bubble Sort — one of the most fundamental sorting algorithms.",
+    "Bubble Sort gets its name because larger elements gradually bubble up to the end of the array, just like bubbles rising in water.",
+    "The idea is simple: compare two neighboring elements. If the left one is bigger than the right one, swap them.",
+    "We repeat this process in passes. After each pass, the largest unsorted element has settled into its correct final position.",
+    "In the visualization, orange bars are being compared, pink bars are being swapped, and green bars are already in their sorted position.",
+    "An important optimization: if a full pass happens with zero swaps, the array is already sorted and we stop early.",
+    "Now, turn on Voice Mode and press Play. I will guide you through every single step."
+  ];
   const narText = document.getElementById('narText');
-  const teacher = document.getElementById('teacher');
-  const speakBars = document.getElementById('speakBars');
-  
-  // Add intro mode class
   narText.classList.add('intro-mode');
-  teacher.textContent = '🧑‍🏫';
-  
-  function playNextIntro() {
-    if (introIndex < introSteps.length) {
-      const step = introSteps[introIndex];
-      narText.textContent = step.narration;
-      
-      // Animate speak bars
-      speakBars.classList.add('active');
-      
-      // Schedule next intro step
-      setTimeout(() => {
-        introIndex++;
-        if (introIndex < introSteps.length) {
-          playNextIntro();
-        } else {
-          // End of intro
-          narText.classList.remove('intro-mode');
-          teacher.textContent = '🧑‍💻';
-          speakBars.classList.remove('active');
-          
-          // Show first step's narration
-          if (steps.length > 0 && steps[0]) {
-            narText.textContent = steps[0].narration;
-          }
-        }
-      }, step.duration);
-    }
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < introLines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = introLines[i];
+    await speak(introLines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
   }
-  
-  playNextIntro();
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
 }
 
 // ════════════════════════════════════════════════
-// CANVAS RENDERING WITH SWAP ANIMATION
+// CANVAS
 // ════════════════════════════════════════════════
 const canvas = document.getElementById('vizCanvas');
 const ctx = canvas.getContext('2d');
 let animRafId = null;
-let currentAnimation = null;
 
-function resizeCanvas() {
-  canvas.width = canvas.parentElement.clientWidth;
-}
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
 
-function getBarLayout(arr) {
-  const n = arr.length;
-  const W = canvas.width;
+function animateSwap(prevStep, nextStep, onDone) {
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  const { idxA, idxB } = nextStep.swapAnim;
+  const n = prevStep.arr.length, W = canvas.width;
   const barW = Math.max(6, (W - (n + 1) * 4) / n);
   const gap = (W - n * barW) / (n + 1);
-  return { barW, gap };
-}
-
-/**
- * Animate a swap between two indices.
- * prevStep = step BEFORE swap (compare phase)
- * nextStep = step AFTER swap (contains swapAnim info)
- * onDone = callback when animation completes
- */
-function animateSwap(prevStep, nextStep, onDone) {
-  // Cancel any ongoing animation
-  if (animRafId) {
-    cancelAnimationFrame(animRafId);
-    animRafId = null;
-  }
-
-  const { idxA, idxB } = nextStep.swapAnim;
-  const { barW, gap } = getBarLayout(prevStep.arr);
-  const travelX = (barW + gap); // horizontal distance between adjacent bars
-
-  const DURATION = 420; // animation duration in ms
-  const start = performance.now();
-
-  // Display previous state during animation
-  const displayStep = { 
-    ...prevStep, 
-    phase: 'swap', 
-    compare: [idxA, idxB] 
-  };
-
-  // Smooth ease-in-out function
-  function easeInOut(t) {
-    return t < 0.5 
-      ? 2 * t * t 
-      : -1 + (4 - 2 * t) * t;
-  }
-
+  const travelX = barW + gap;
+  const DURATION = 500, start = performance.now();
+  const displayStep = { ...prevStep, phase: 'swap', compare: [idxA, idxB] };
+  function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
   function tick(now) {
-    const elapsed = now - start;
-    const rawT = Math.min(elapsed / DURATION, 1);
-    const t = easeInOut(rawT);
-
-    // Arc height for curved motion
-    const arcHeight = Math.min(40, canvas.height * 0.12);
-
-    // Horizontal motion
-    const xA = t * travelX;
-    const xB = -t * travelX;
-
-    // Vertical arc motion
-    const yA = -Math.sin(rawT * Math.PI) * arcHeight;
-    const yB =  Math.sin(rawT * Math.PI) * arcHeight;
-
+    const rawT = Math.min((now - start) / DURATION, 1);
+    const t = ease(rawT);
+    const arc = Math.min(45, canvas.height * 0.13);
     const offsets = {};
-    offsets[idxA] = { x: xA, y: yA };
-    offsets[idxB] = { x: xB, y: yB };
-
+    offsets[idxA] = { x:  t * travelX, y: -Math.sin(rawT * Math.PI) * arc };
+    offsets[idxB] = { x: -t * travelX, y:  Math.sin(rawT * Math.PI) * arc };
     drawBars(displayStep, offsets);
-
-    if (rawT < 1) {
-      animRafId = requestAnimationFrame(tick);
-    } else {
-      animRafId = null;
-      onDone(); // Draw final swapped state
-    }
+    if (rawT < 1) animRafId = requestAnimationFrame(tick);
+    else { animRafId = null; onDone(); }
   }
-
   animRafId = requestAnimationFrame(tick);
 }
 
 function drawBars(step, offsets = {}) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!step) return;
-
-  const arr = step.arr;
-  const n = arr.length;
-  const W = canvas.width;
-  const H = canvas.height;
+  const arr = step.arr, n = arr.length, W = canvas.width, H = canvas.height;
   const maxVal = Math.max(...arr);
   const barW = Math.max(6, (W - (n + 1) * 4) / n);
-  const gap = (W - n * barW) / (n + 1);
-  const compareSet = new Set(step.compare || []);
-  const sortedSet = new Set(step.sorted || []);
+  const gap  = (W - n * barW) / (n + 1);
+  const cmp  = new Set(step.compare || []);
+  const srt  = new Set(step.sorted  || []);
 
   arr.forEach((val, i) => {
-    const baseX = gap + i * (barW + gap);
-    const h = (val / maxVal) * (H - 50);
-    const baseY = H - h - 28;
+    const bx = gap + i * (barW + gap);
+    const h  = (val / maxVal) * (H - 50);
+    const by = H - h - 28;
+    const x  = bx + (offsets[i]?.x || 0);
+    const y  = by + (offsets[i]?.y || 0);
 
-    // Apply animation offsets if any
-    let x = baseX;
-    let y = baseY;
-    if (offsets[i]) {
-      x += offsets[i].x;
-      y += offsets[i].y;
+    let fill = '#1a2840', stroke = '#2a4060', glow = null;
+    if (srt.has(i)) { fill = 'rgba(6,214,160,0.2)'; stroke = '#06d6a0'; glow = 'rgba(6,214,160,0.3)'; }
+    if (cmp.has(i)) {
+      if (step.phase === 'swap') { fill = 'rgba(255,107,157,0.25)'; stroke = '#ff6b9d'; glow = 'rgba(255,107,157,0.4)'; }
+      else                       { fill = 'rgba(255,140,66,0.25)';  stroke = '#ff8c42'; glow = 'rgba(255,140,66,0.35)'; }
     }
-
-    let fillColor = '#1a2840';
-    let strokeColor = '#2a4060';
-    let glowColor = null;
-
-    if (sortedSet.has(i)) {
-      fillColor = 'rgba(6,214,160,0.2)';
-      strokeColor = '#06d6a0';
-      glowColor = 'rgba(6,214,160,0.3)';
+    if (glow) {
+      ctx.beginPath(); ctx.roundRect(x-3, y-3, barW+6, h+6, 6);
+      ctx.fillStyle = glow; ctx.fill();
     }
-    if (compareSet.has(i)) {
-      if (step.phase === 'swap') {
-        fillColor = 'rgba(255,107,157,0.25)';
-        strokeColor = '#ff6b9d';
-        glowColor = 'rgba(255,107,157,0.4)';
-      } else {
-        fillColor = 'rgba(255,140,66,0.25)';
-        strokeColor = '#ff8c42';
-        glowColor = 'rgba(255,140,66,0.35)';
-      }
-    }
+    ctx.beginPath(); ctx.roundRect(x, y, barW, h, [4,4,0,0]);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke();
 
-    // Glow
-    if (glowColor) {
-      ctx.beginPath();
-      ctx.roundRect(x - 3, y - 3, barW + 6, h + 6, 6);
-      ctx.fillStyle = glowColor;
-      ctx.fill();
-    }
-
-    // Bar
-    ctx.beginPath();
-    ctx.roundRect(x, y, barW, h, [4, 4, 0, 0]);
-    ctx.fillStyle = fillColor;
-    ctx.fill();
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Value label
-    ctx.fillStyle = compareSet.has(i) ? '#fff' : sortedSet.has(i) ? '#06d6a0' : '#4a6a9a';
-    ctx.font = `bold ${Math.min(11, barW - 2)}px JetBrains Mono`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    if (barW >= 18) ctx.fillText(val, x + barW / 2, y - 3);
-
-    // Index label
-    ctx.fillStyle = '#2a3d58';
-    ctx.font = '9px JetBrains Mono';
-    ctx.textBaseline = 'top';
-    ctx.fillText(i, x + barW / 2, H - 20);
+    ctx.fillStyle = cmp.has(i) ? '#fff' : srt.has(i) ? '#06d6a0' : '#4a6a9a';
+    ctx.font = `bold ${Math.min(11, barW-2)}px JetBrains Mono`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    if (barW >= 18) ctx.fillText(val, x + barW/2, y - 3);
+    ctx.fillStyle = '#2a3d58'; ctx.font = '9px JetBrains Mono'; ctx.textBaseline = 'top';
+    ctx.fillText(i, x + barW/2, H - 20);
   });
 }
 
 // ════════════════════════════════════════════════
-// STATE
+// CONTROLLER
 // ════════════════════════════════════════════════
 let steps = [];
 let arr = [64, 34, 25, 12, 22, 11, 90, 45, 7, 38];
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
 let introPlayed = false;
+let speedMult = 2;
 
-const page = new AlgoPage({
-  onRenderStep(step) {
-    // Cancel any ongoing animation
-    if (animRafId) {
-      cancelAnimationFrame(animRafId);
-      animRafId = null;
-    }
+const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
+function onSpeedChange(val) {
+  speedMult = parseInt(val);
+  document.getElementById('speedVal').textContent = val + '×';
+}
 
-    // Check if this step has swap animation and there's a previous step
-    if (step.swapAnim && step.prevArr && page.stepIdx > 0) {
-      const prevStep = steps[page.stepIdx - 1];
-      animateSwap(prevStep, step, () => {
-        drawBars(step);
-        // Update UI after animation completes
-        updateUI(step);
-      });
-    } else {
-      drawBars(step);
-      updateUI(step);
-    }
-  },
-  onReset() {
-    // Cancel any ongoing animation
-    if (animRafId) {
-      cancelAnimationFrame(animRafId);
-      animRafId = null;
-    }
-    // Draw the initial array state instead of null
-    if (steps.length > 0 && steps[0]) {
-      drawBars(steps[0]);
-    } else {
-      drawBars(null);
-    }
-    document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
-    document.getElementById('sPass').textContent = '0';
-    document.getElementById('sComps').textContent = '0';
-    document.getElementById('sSwaps').textContent = '0';
-    document.getElementById('statComps').textContent = '0';
-    document.getElementById('statSwaps').textContent = '0';
-    document.getElementById('statPasses').textContent = '0';
-    
-    // Play intro speech on reset
-    playIntroSpeech();
-  }
-});
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
 
-function updateUI(step) {
-  document.getElementById('sPass').textContent = step.pass || 0;
+function updateStatusBar(step, idx) {
+  document.getElementById('sPass').textContent  = step.pass  || 0;
   document.getElementById('sComps').textContent = step.comps || 0;
   document.getElementById('sSwaps').textContent = step.swaps || 0;
-  document.getElementById('statComps').textContent = step.comps || 0;
-  document.getElementById('statSwaps').textContent = step.swaps || 0;
-  document.getElementById('statPasses').textContent = step.pass || 0;
+  document.getElementById('statComps').textContent  = step.comps || 0;
+  document.getElementById('statSwaps').textContent  = step.swaps || 0;
+  document.getElementById('statPasses').textContent = step.pass  || 0;
   document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
 
-  // Highlight code line
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { active:['ph-active','Running'], compare:['ph-compare','Comparing'], swap:['ph-swap','Swapping'], done:['ph-done','Done'], idle:['ph-idle','Idle'] };
+  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
   for (let i = 1; i <= 10; i++) {
     const el = document.getElementById(`cl${i}`);
     if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
   }
 }
 
-function init() {
-  resizeCanvas();
-  document.getElementById('statN').textContent = arr.length;
-  steps = buildBubbleSortSteps(arr);
-  page.setSteps(steps);
-  // Draw the first step instead of null to show initial array
-  if (steps.length > 0) {
-    drawBars(steps[0]);
-    document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
-    
-    // Play intro speech on initial load, but only once
-    if (!introPlayed) {
-      setTimeout(() => {
-        playIntroSpeech();
-        introPlayed = true;
-      }, 500);
-    }
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  const afterDraw = () => {
+    updateNarration(step);
+    updateStatusBar(step, idx);
+    if (autoAdvance) scheduleNext(step);
+  };
+  if (step.swapAnim && step.prevArr && idx > 0) {
+    animateSwap(steps[idx - 1], step, () => { drawBars(step); afterDraw(); });
   } else {
-    drawBars(null);
-    document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
+    drawBars(step); afterDraw();
   }
 }
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+
+function nextStep() {
+  clearIntroTimeouts();
+  stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function resetAll() {
+  stopPlay();
+  introAborted = true;
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  drawBars(steps[0]);
+  document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
+  ['sPass','sComps','sSwaps','statComps','statSwaps','statPasses'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  for (let i = 1; i <= 10; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; }
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  if (voiceEnabled) playIntroSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
 
 function applyArray() {
   const raw = document.getElementById('arrInput').value;
   const parsed = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
   if (parsed.length < 2) { alert('Enter at least 2 valid positive numbers.'); return; }
   arr = parsed.slice(0, 20);
-  page.reset();
   init();
 }
 
 function randomize() {
   arr = Array.from({ length: 12 }, () => Math.floor(Math.random() * 90) + 5);
   document.getElementById('arrInput').value = arr.join(', ');
-  page.reset();
   init();
 }
 
-window.addEventListener('resize', () => { 
-  resizeCanvas(); 
-  if (page.stepIdx >= 0 && steps[page.stepIdx]) {
-    drawBars(steps[page.stepIdx]);
-  } else if (steps.length > 0 && steps[0]) {
-    // Show first step if no step is selected
-    drawBars(steps[0]);
-  } else {
-    drawBars(null);
+function init() {
+  resizeCanvas();
+
+  // Sync theme toggle label on load
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+
+  document.getElementById('statN').textContent = arr.length;
+  steps = buildBubbleSortSteps(arr);
+  stopPlay();
+  stepIdx = -1;
+  drawBars(steps[0]);
+  document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
   }
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) drawBars(steps[stepIdx]);
+  else if (steps.length > 0) drawBars(steps[0]);
 });
 
-// Initialize
 init();
 </script>
 </body>
