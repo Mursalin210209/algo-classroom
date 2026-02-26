@@ -5,127 +5,86 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Insertion Sort — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<!-- Using inline styles to avoid dependency on external main.css -->
+<link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0b0f17; font-family: 'Syne', sans-serif; color: #eef2fb; line-height: 1.6; }
-  :root {
-    --bg: #0b0f17;
-    --surface: #131a28;
-    --surface2: #1a2538;
-    --border: #25344f;
-    --text: #eef2fb;
-    --text-dim: #8a9fc0;
-    --teal: #00d4aa;
-    --blue: #3b7cff;
-    --bar-default: #1a2840;
-    --bar-default-stroke: #2a4060;
-    --bar-compare: #ff8c42;
-    --bar-swap: #ff6b9d;
-    --bar-sorted: #06d6a0;
-  }
-  .bg-grid { position: fixed; top:0; left:0; width:100%; height:100%; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.15; pointer-events: none; z-index: 0; }
-  .bg-glow { position: fixed; top:-20%; right:-10%; width:60%; height:80%; background: radial-gradient(circle at 70% 30%, rgba(0,212,170,0.08), transparent 70%); pointer-events: none; z-index: 0; }
-  .navbar { background: rgba(19,26,40,0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 0 24px; position: sticky; top:0; z-index: 10; }
-  .nav-inner { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:64px; }
-  .nav-logo { font-size:22px; font-weight:800; letter-spacing:-1px; color:var(--text); text-decoration:none; }
-  .logo-bracket { color:var(--teal); font-weight:300; }
-  .logo-dot { color:var(--teal); }
-  .nav-links a { color:var(--text-dim); text-decoration:none; margin-left:32px; font-size:14px; font-weight:500; transition:color .2s; }
-  .nav-links a:hover { color:var(--teal); }
-  .algo-page { max-width:1400px; margin:20px auto 60px; padding:0 24px; position:relative; z-index:2; }
-  .back-link { display:inline-block; color:var(--text-dim); text-decoration:none; font-size:14px; margin-bottom:16px; }
-  .back-link:hover { color:var(--teal); }
-  .complexity { display:flex; flex-wrap:wrap; gap:8px; }
-  .cplx-chip { background:var(--surface2); border:1px solid var(--border); border-radius:30px; padding:4px 12px; font-size:11px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; }
-  .cplx-chip span { color:var(--teal); font-weight:700; margin-left:4px; }
-  .card-difficulty { padding:4px 12px; border-radius:30px; font-size:12px; font-weight:600; background:rgba(0,212,170,0.15); border:1px solid rgba(0,212,170,0.3); color:var(--teal); }
-  .beginner { background:rgba(0,212,170,0.1); border-color:rgba(0,212,170,0.2); color:#00d4aa; }
-  .status-row { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 18px; margin-bottom:20px; display:flex; flex-wrap:wrap; align-items:center; gap:16px; }
-  .si { display:flex; align-items:center; gap:8px; }
-  .sl { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-family:var(--mono); }
-  .sv { font-size:20px; font-weight:800; font-family:var(--mono); color:var(--text); }
-  .sv.orange { color:var(--bar-compare); }
-  .phase-badge { padding:4px 12px; border-radius:30px; font-size:11px; font-weight:600; background:var(--surface2); color:var(--text-dim); border:1px solid var(--border); }
-  .ph-active { background:rgba(0,212,170,0.1); border-color:rgba(0,212,170,0.3); color:var(--teal); }
-  .ph-compare { background:rgba(255,140,66,0.1); border-color:rgba(255,140,66,0.3); color:#ff8c42; }
-  .ph-swap { background:rgba(255,107,157,0.1); border-color:rgba(255,107,157,0.3); color:#ff6b9d; }
-  .ph-done { background:rgba(6,214,160,0.1); border-color:rgba(6,214,160,0.3); color:#06d6a0; }
-  .divider-auto { flex:1; min-width:20px; }
-  .prog-wrap { width:140px; height:4px; background:var(--surface2); border-radius:4px; overflow:hidden; }
-  .prog-fill { height:100%; background:var(--teal); width:0%; transition:width .3s; }
-  .step-ctr { font-family:var(--mono); font-size:12px; color:var(--text-dim); }
-  .panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
-  .panel-hd { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--teal); margin-bottom:12px; }
-  .btn { background:transparent; border:1px solid var(--border); border-radius:8px; padding:8px 16px; font-family:var(--mono); font-size:12px; font-weight:600; color:var(--text); cursor:pointer; transition:.2s; }
-  .btn-primary { background:var(--teal); border-color:var(--teal); color:#0b0f17; }
-  .btn-danger { border-color:#ff6b9d; color:#ff6b9d; }
-  .btn:hover { background:rgba(0,212,170,0.1); border-color:var(--teal); }
-  .btn-primary:hover { background:#00bf99; border-color:#00bf99; }
-  .code-block { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.8; }
-  .code-line { display:block; color:var(--text-dim); }
-  .kw { color:#ff8c42; }
-  .fn { color:#06d6a0; }
-  .num { color:#ff6b9d; }
-  .c { color:#5a7195; font-style:italic; }
-  .speed-ctrl { display:flex; align-items:center; gap:8px; margin-left:auto; }
-  .speed-lbl { font-size:10px; color:var(--text-dim); font-family:var(--mono); }
-  .speed-val { font-size:12px; font-weight:700; color:var(--teal); min-width:30px; }
-  input[type=range] { width:80px; background:transparent; }
-  .two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
-  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
-  #vizCanvas { width: 100%; border-radius: 8px; background: transparent; display: block; }
-  .controls { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
-  .ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-  .input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-  .input-row label { font-size: 10px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
-  .arr-input { flex: 1; min-width: 200px; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px; outline: none; }
-  .arr-input:focus { border-color: var(--teal); }
-  .concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
-  .cc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
-  .cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
-  .cc-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--teal); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
-  .cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
-  .legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
-  .li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
-  .ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; text-align: center; }
-  .stat-box-n { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 800; color: var(--teal); }
-  .stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
-  .narration { background: var(--surface); border: 1px solid var(--border); border-radius: 40px; padding: 12px 24px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .teacher { font-size: 28px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
-  .narration-text { flex: 1; font-size: 14px; color: var(--text-dim); font-weight: 400; line-height: 1.6; }
-  .speak-bars { display: flex; align-items: center; gap: 3px; }
-  .speak-bars span { width: 3px; height: 16px; background: var(--text-dim); border-radius: 3px; transition: .2s; }
-  .speak-bars.on span { background: var(--teal); animation: sound 0.5s infinite alternate; }
-  @keyframes sound { 0% { height: 8px; } 100% { height: 20px; } }
-  .speak-bars.on span:nth-child(2) { animation-delay: 0.1s; }
-  .speak-bars.on span:nth-child(3) { animation-delay: 0.2s; }
-  .speak-bars.on span:nth-child(4) { animation-delay: 0.3s; }
-  .speak-bars.on span:nth-child(5) { animation-delay: 0.4s; }
-  .narration-text.intro-mode { color: var(--teal); font-weight: 600; animation: glowPulse 2s infinite; }
-  @keyframes glowPulse { 0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); } 50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); } 100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); } }
-  /* Voice toggle */
-  .voice-btn {
-    margin-left: auto; background: none;
-    border: 1px solid var(--border); border-radius: 7px;
-    padding: 4px 10px; cursor: pointer;
-    display: flex; align-items: center; gap: 6px;
-    font-family: var(--mono); font-size: 10px; color: var(--teal);
-    letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
-  }
-  .voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
-  .voice-btn.off { color: var(--text-dim); border-color: var(--border); }
-  .voice-btn.off:hover { background: rgba(74,106,154,0.1); }
-  .voice-icon { font-size: 14px; }
+:root {
+  --bar-default: #1a2840;
+  --bar-default-stroke: #2a4060;
+  --bar-compare: #ff8c42;
+  --bar-swap: #ff6b9d;
+  --bar-sorted: #06d6a0;
+}
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+#vizCanvas {
+  width: 100%; border-radius: 8px;
+  background: transparent; display: block;
+}
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+.arr-input {
+  flex: 1; min-width: 200px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.cc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; position: relative; overflow: hidden;
+  transition: border-color .3s, transform .3s;
+}
+.cc:hover { border-color: rgba(0,212,170,.3); transform: translateY(-2px); }
+.cc::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--teal),var(--blue)); opacity:0; transition:opacity .3s; }
+.cc:hover::after { opacity:1; }
+.cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
+.cc-title { font-family: var(--mono); font-size: 9px; color: var(--teal); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+.cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px; text-align: center;
+}
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+/* Voice toggle */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
-
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
 <!-- NAVBAR — identical to Insertion Sort, includes theme toggle -->
 <nav class="navbar">
   <div class="nav-inner">
@@ -146,16 +105,13 @@
     </button>
   </div>
 </nav>
-
 <div class="algo-page">
-
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
-
   <header style="margin-bottom:20px;">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
       <span style="font-size:40px;">📥</span>
       <div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Sorting Algorithm</div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Sorting Algorithm</div>
         <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Insertion Sort</h1>
       </div>
       <div style="margin-left:auto;"><span class="card-difficulty beginner">Beginner</span></div>
@@ -171,7 +127,6 @@
       <div class="cplx-chip">Stable: <span>✓ Yes</span></div>
     </div>
   </header>
-
   <!-- Concept cards -->
   <div class="concepts">
     <div class="cc"><span class="cc-icon">🃏</span><div class="cc-title">Like Playing Cards</div><div class="cc-desc">Think of sorting a hand of cards - you take one card and insert it into the correct position among the already-sorted cards.</div></div>
@@ -179,14 +134,12 @@
     <div class="cc"><span class="cc-icon">⚡</span><div class="cc-title">Adaptive</div><div class="cc-desc">For nearly-sorted arrays, insertion sort runs in nearly O(n) time - great for partially sorted data!</div></div>
     <div class="cc"><span class="cc-icon">📚</span><div class="cc-title">Online Algorithm</div><div class="cc-desc">Can sort elements as they arrive - you don't need the entire array upfront.</div></div>
   </div>
-
   <!-- Narration -->
   <div class="narration" id="narration">
-    <span class="teacher" id="teacher">🧑‍💻</span>
+    <span class="teacher" id="teacher">🧑‍🏫</span>
     <div class="narration-text" id="narText">Welcome to Insertion Sort! Let me explain how this algorithm works before we begin...</div>
     <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
   </div>
-
   <!-- Status bar -->
   <div class="status-row">
     <div class="si"><span class="sl">Pass</span><span class="sv orange" id="sPass">0</span></div>
@@ -197,16 +150,14 @@
     <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
     <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
   </div>
-
   <!-- Main layout -->
   <div class="two-col">
-
     <!-- LEFT: Canvas -->
     <div>
       <div class="panel">
         <div class="panel-hd">📊 Visualization</div>
         <div class="legend">
-          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Unsorted</div>
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
           <div class="li"><div class="ld" style="background:var(--bar-compare);"></div>Comparing</div>
           <div class="li"><div class="ld" style="background:var(--bar-swap);"></div>Swapping</div>
           <div class="li"><div class="ld" style="background:var(--bar-sorted);"></div>Sorted</div>
@@ -218,10 +169,8 @@
         <canvas id="vizCanvas" height="340"></canvas>
       </div>
     </div>
-
     <!-- RIGHT: Info panels -->
     <div style="display:flex;flex-direction:column;gap:14px;">
-
       <div class="panel">
         <div class="panel-hd">📈 Statistics</div>
         <div class="stats-grid">
@@ -231,31 +180,27 @@
           <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Size</div></div>
         </div>
       </div>
-
       <div class="panel">
         <div class="panel-hd">💻 Pseudocode</div>
         <div class="code-block">
 <span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">insertionSort</span>(arr):</span>
-<span id="cl2" class="code-line">  n = arr.<span class="fn">length</span></span>
-<span id="cl3" class="code-line">  <span class="kw">for</span> i = 1 <span class="kw">to</span> n-1:</span>
-<span id="cl4" class="code-line">    j = i</span>
-<span id="cl5" class="code-line">    <span class="kw">while</span> j > 0 <span class="kw">and</span> arr[j-1] > arr[j]:</span>
-<span id="cl6" class="code-line">      <span class="fn">swap</span>(arr[j-1], arr[j])</span>
-<span id="cl7" class="code-line">      j = j - 1</span>
-<span id="cl8" class="code-line">  <span class="kw">return</span> arr</span>
+<span id="cl2" class="code-line"> n = arr.<span class="fn">length</span></span>
+<span id="cl3" class="code-line"> <span class="kw">for</span> i = 1 <span class="kw">to</span> n-1:</span>
+<span id="cl4" class="code-line"> j = i</span>
+<span id="cl5" class="code-line"> <span class="kw">while</span> j > 0 <span class="kw">and</span> arr[j-1] > arr[j]:</span>
+<span id="cl6" class="code-line"> <span class="fn">swap</span>(arr[j-1], arr[j])</span>
+<span id="cl7" class="code-line"> j = j - 1</span>
+<span id="cl8" class="code-line"> <span class="kw">return</span> arr</span>
         </div>
       </div>
-
       <div class="panel">
         <div class="panel-hd">📋 Current Array</div>
-        <div id="arrDisplay" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">
           —
         </div>
       </div>
-
     </div>
   </div>
-
   <!-- Controls -->
   <div class="controls">
     <div class="ctrl-row">
@@ -265,7 +210,7 @@
       <button class="btn" onclick="randomize()">🎲 Random Array</button>
       <div class="speed-ctrl" id="speedWrap">
         <span class="speed-lbl">⚡ Speed</span>
-        <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="updateSpeed(this.value)">
+        <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
         <span class="speed-val" id="speedVal">2×</span>
       </div>
     </div>
@@ -275,9 +220,7 @@
       <button class="btn" onclick="applyArray()">Apply</button>
     </div>
   </div>
-
 </div><!-- .algo-page -->
-
 <script>
 // ════════════════════════════════════════════════
 // THEME TOGGLE
@@ -289,7 +232,6 @@ function toggleTheme() {
   document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
   localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
 }
-
 // Restore saved theme on load
 (function () {
   const saved = localStorage.getItem('theme');
@@ -298,33 +240,30 @@ function toggleTheme() {
     // label update happens after DOM ready — handled below in init
   }
 })();
-
 // ════════════════════════════════════════════════
 // WEB SPEECH API
 // ════════════════════════════════════════════════
 const synth = window.speechSynthesis;
 let ttsVoice = null;
-
 function loadVoices() {
   const voices = synth.getVoices();
   ttsVoice =
     voices.find(v => v.name.includes('Google UK English Female')) ||
-    voices.find(v => v.name.includes('Google US English'))       ||
-    voices.find(v => v.lang === 'en-US' && v.localService)       ||
-    voices.find(v => v.lang.startsWith('en'))                    ||
+    voices.find(v => v.name.includes('Google US English')) ||
+    voices.find(v => v.lang === 'en-US' && v.localService) ||
+    voices.find(v => v.lang.startsWith('en')) ||
     voices[0] || null;
 }
 loadVoices();
 if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
-
 function speak(text) {
   return new Promise(resolve => {
     if (!voiceEnabled || !synth) { resolve(); return; }
     synth.cancel();
     const utt = new SpeechSynthesisUtterance(text);
-    utt.voice  = ttsVoice;
-    utt.rate   = 0.88;
-    utt.pitch  = 1.05;
+    utt.voice = ttsVoice;
+    utt.rate = 0.88;
+    utt.pitch = 1.05;
     utt.volume = 1;
     utt.onstart = () => document.getElementById('speakBars').classList.add('on');
     utt.onend = utt.onerror = () => {
@@ -334,22 +273,19 @@ function speak(text) {
     synth.speak(utt);
   });
 }
-
 function stopSpeech() {
   synth && synth.cancel();
   document.getElementById('speakBars').classList.remove('on');
 }
-
 // ════════════════════════════════════════════════
 // VOICE TOGGLE — default OFF
 // ════════════════════════════════════════════════
 let voiceEnabled = false;
-
 function toggleVoice() {
   voiceEnabled = !voiceEnabled;
-  const btn   = document.getElementById('voiceToggle');
-  const icon  = document.getElementById('voiceIcon');
-  const lbl   = document.getElementById('voiceLabel');
+  const btn = document.getElementById('voiceToggle');
+  const icon = document.getElementById('voiceIcon');
+  const lbl = document.getElementById('voiceLabel');
   if (voiceEnabled) {
     icon.textContent = '🔊'; lbl.textContent = 'Voice On';
     btn.classList.remove('off');
@@ -363,7 +299,6 @@ function toggleVoice() {
     if (isPlaying) { stopPlay(); startPlay(); }
   }
 }
-
 // ------------------------------------------------
 // Helper: rounded rect
 // ------------------------------------------------
@@ -380,7 +315,6 @@ CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, radii) {
   this.quadraticCurveTo(x, y, x + radii[0], y);
   return this;
 };
-
 // ------------------------------------------------
 // Insertion Sort step generator (with swapAnim for each adjacent swap)
 // ------------------------------------------------
@@ -390,349 +324,63 @@ function buildInsertionSortSteps(arr) {
   const n = a.length;
   let totalComps = 0;
   let totalSwaps = 0;
-
   steps.push({
     arr: [...a], compare: [], sorted: [],
-    narration: `Starting Insertion Sort on [${a.join(', ')}]. We'll build a sorted prefix by inserting each element into its correct position.`,
+    narration: `Starting Insertion Sort on ${n} elements. We'll build a sorted prefix by inserting each element into its correct position.`,
     phase: 'active', pass: 0, comps: 0, swaps: 0, codeLine: 1,
   });
-
   for (let i = 1; i < n; i++) {
     const sorted = Array.from({ length: i }, (_, k) => k);
-
     steps.push({
       arr: [...a], compare: [], sorted,
-      narration: `Pass ${i}: Inserting a[${i}]=${a[i]} into the sorted prefix [0..${i-1}].`,
+      narration: `Starting pass ${i}. Inserting a[${i}]=${a[i]} into the sorted prefix [0..${i-1}].`,
       phase: 'active', pass: i, comps: totalComps, swaps: totalSwaps, codeLine: 3,
     });
-
     let j = i;
     while (j > 0) {
       totalComps++;
+      const needSwap = a[j - 1] > a[j];
       steps.push({
         arr: [...a], compare: [j - 1, j], sorted,
-        narration: `Compare a[${j-1}]=${a[j-1]} and a[${j}]=${a[j]}. ${a[j-1] > a[j] ? `${a[j-1]} > ${a[j]} — need to swap left!` : `${a[j-1]} ≤ ${a[j]} — found correct position.`}`,
+        narration: needSwap
+          ? `Comparing a[${j-1}]=${a[j-1]} and a[${j}]=${a[j]}. Since ${a[j-1]} > ${a[j]}, we need to swap and continue left.`
+          : `Comparing a[${j-1}]=${a[j-1]} and a[${j}]=${a[j]}. ${a[j-1]} ≤ ${a[j]} — found the correct position!`,
         phase: 'compare', pass: i, comps: totalComps, swaps: totalSwaps, codeLine: 5,
       });
-
-      if (a[j - 1] <= a[j]) {
-        steps.push({
-          arr: [...a], compare: [], sorted,
-          narration: `Element ${a[j]} is in the right place. Moving to next element.`,
-          phase: 'active', pass: i, comps: totalComps, swaps: totalSwaps, codeLine: 5,
-        });
+      if (!needSwap) {
         break;
       }
-
-      // Perform swap and record step with swapAnim
       const prevArr = [...a];
       [a[j - 1], a[j]] = [a[j], a[j - 1]];
       totalSwaps++;
-
       steps.push({
-        arr: [...a], 
-        compare: [j - 1, j], 
+        arr: [...a],
+        compare: [j - 1, j],
         sorted,
-        swapAnim: { idxA: j - 1, idxB: j }, 
-        narration: `Swapped ${a[j]} left! Array is now [${a.join(', ')}]. Total swaps: ${totalSwaps}.`,
-        phase: 'swap', 
-        pass: i, 
-        comps: totalComps, 
-        swaps: totalSwaps, 
+        swapAnim: { idxA: j - 1, idxB: j },
+        narration: `Swapped! ${a[j]} moved left. Total swaps: ${totalSwaps}.`,
+        phase: 'swap',
+        pass: i,
+        comps: totalComps,
+        swaps: totalSwaps,
         codeLine: 6,
-        prevArr: prevArr 
+        prevArr,
       });
-
       j--;
     }
   }
-
   steps.push({
     arr: [...a], compare: [], sorted: Array.from({ length: n }, (_, k) => k),
     narration: `Insertion Sort complete! Sorted array: [${a.join(', ')}]. Total: ${totalComps} comparisons, ${totalSwaps} swaps.`,
     phase: 'done', pass: n - 1, comps: totalComps, swaps: totalSwaps, codeLine: 8,
   });
-
   return steps;
 }
-
-// ------------------------------------------------
-// Canvas and animation state
-// ------------------------------------------------
-const canvas = document.getElementById('vizCanvas');
-const ctx = canvas.getContext('2d');
-let animRafId = null;
-
-function resizeCanvas() {
-  canvas.width = canvas.parentElement.clientWidth;
-}
-
-function getBarLayout(arr) {
-  const n = arr.length;
-  const W = canvas.width;
-  const barW = Math.max(6, (W - (n + 1) * 4) / n);
-  const gap = (W - n * barW) / (n + 1);
-  return { barW, gap };
-}
-
-// The provided sophisticated animateSwap function
-function animateSwap(prevStep, nextStep, onDone) {
-  if (animRafId) {
-    cancelAnimationFrame(animRafId);
-    animRafId = null;
-  }
-
-  const { idxA, idxB } = nextStep.swapAnim;
-  const { barW, gap } = getBarLayout(prevStep.arr);
-  const travelX = (barW + gap);
-
-  const DURATION = 420;
-  const start = performance.now();
-
-  const displayStep = { 
-    ...prevStep, 
-    phase: 'swap', 
-    compare: [idxA, idxB] 
-  };
-
-  function easeInOut(t) {
-    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-  }
-
-  function tick(now) {
-    const elapsed = now - start;
-    const rawT = Math.min(elapsed / DURATION, 1);
-    const t = easeInOut(rawT);
-
-    const arcHeight = Math.min(40, canvas.height * 0.12);
-    const xA = t * travelX;
-    const xB = -t * travelX;
-    const yA = -Math.sin(rawT * Math.PI) * arcHeight;
-    const yB =  Math.sin(rawT * Math.PI) * arcHeight;
-
-    const offsets = {};
-    offsets[idxA] = { x: xA, y: yA };
-    offsets[idxB] = { x: xB, y: yB };
-
-    drawBars(displayStep, offsets);
-
-    if (rawT < 1) {
-      animRafId = requestAnimationFrame(tick);
-    } else {
-      animRafId = null;
-      onDone();
-    }
-  }
-
-  animRafId = requestAnimationFrame(tick);
-}
-
-function drawBars(step, offsets = {}) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!step) return;
-
-  const arr = step.arr;
-  const n = arr.length;
-  const W = canvas.width;
-  const H = canvas.height;
-  const maxVal = Math.max(...arr);
-  const barW = Math.max(6, (W - (n + 1) * 4) / n);
-  const gap = (W - n * barW) / (n + 1);
-  const compareSet = new Set(step.compare || []);
-  const sortedSet = new Set(step.sorted || []);
-
-  arr.forEach((val, i) => {
-    const baseX = gap + i * (barW + gap);
-    const h = (val / maxVal) * (H - 50);
-    const baseY = H - h - 28;
-
-    let x = baseX;
-    let y = baseY;
-    if (offsets[i]) {
-      x += offsets[i].x;
-      y += offsets[i].y;
-    }
-
-    let fillColor = '#1a2840';
-    let strokeColor = '#2a4060';
-    let glowColor = null;
-
-    if (sortedSet.has(i)) {
-      fillColor = 'rgba(6,214,160,0.2)';
-      strokeColor = '#06d6a0';
-      glowColor = 'rgba(6,214,160,0.3)';
-    }
-    if (compareSet.has(i)) {
-      if (step.phase === 'swap') {
-        fillColor = 'rgba(255,107,157,0.25)';
-        strokeColor = '#ff6b9d';
-        glowColor = 'rgba(255,107,157,0.4)';
-      } else {
-        fillColor = 'rgba(255,140,66,0.25)';
-        strokeColor = '#ff8c42';
-        glowColor = 'rgba(255,140,66,0.35)';
-      }
-    }
-
-    if (glowColor) {
-      ctx.beginPath();
-      ctx.roundRect(x - 3, y - 3, barW + 6, h + 6, 6);
-      ctx.fillStyle = glowColor;
-      ctx.fill();
-    }
-
-    ctx.beginPath();
-    ctx.roundRect(x, y, barW, h, [4, 4, 0, 0]);
-    ctx.fillStyle = fillColor;
-    ctx.fill();
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    ctx.fillStyle = compareSet.has(i) ? '#fff' : sortedSet.has(i) ? '#06d6a0' : '#4a6a9a';
-    ctx.font = `bold ${Math.min(11, barW - 2)}px 'JetBrains Mono', monospace`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    if (barW >= 18) ctx.fillText(val, x + barW / 2, y - 3);
-
-    ctx.fillStyle = '#2a3d58';
-    ctx.font = '9px JetBrains Mono, monospace';
-    ctx.textBaseline = 'top';
-    ctx.fillText(i, x + barW / 2, H - 20);
-  });
-}
-
-// ------------------------------------------------
-// Main controller (AlgoPage-like manual implementation)
-// ------------------------------------------------
-let steps = [];
-let arr = [64, 34, 25, 12, 22, 11, 90, 45, 7, 38];
-let stepIdx = -1;
-let isPlaying = false;
-let playTimer = null;
-let introPlayed = false;
-let speedMult = 2;
+// ════════════════════════════════════════════════
+// INTRO SPEECH
+// ════════════════════════════════════════════════
 let introAborted = false;
-
-const SPEED_DELAYS = { 1:1400, 2:800, 3:450, 4:220, 5:90 };
-function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
-
-function updateSpeed(val) {
-  speedMult = parseInt(val);
-  document.getElementById('speedVal').textContent = speedMult + '×';
-}
-
-function updateUI(step) {
-  document.getElementById('sPass').textContent = step.pass || 0;
-  document.getElementById('sComps').textContent = step.comps || 0;
-  document.getElementById('sSwaps').textContent = step.swaps || 0;
-  document.getElementById('statComps').textContent = step.comps || 0;
-  document.getElementById('statSwaps').textContent = step.swaps || 0;
-  document.getElementById('statPasses').textContent = step.pass || 0;
-  document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
-
-  const phaseBadge = document.getElementById('phaseBadge');
-  if (step.phase === 'compare') {
-    phaseBadge.textContent = 'Comparing';
-    phaseBadge.className = 'phase-badge ph-compare';
-  } else if (step.phase === 'swap') {
-    phaseBadge.textContent = 'Swapping';
-    phaseBadge.className = 'phase-badge ph-swap';
-  } else if (step.phase === 'done') {
-    phaseBadge.textContent = 'Complete';
-    phaseBadge.className = 'phase-badge ph-done';
-  } else {
-    phaseBadge.textContent = 'Active';
-    phaseBadge.className = 'phase-badge ph-active';
-  }
-
-  for (let i = 1; i <= 8; i++) {
-    const el = document.getElementById(`cl${i}`);
-    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
-  }
-
-  const pct = steps.length > 1 ? ((stepIdx / (steps.length-1))*100).toFixed(1) : 0;
-  document.getElementById('progFill').style.width = pct + '%';
-  document.getElementById('stepCtr').textContent = `Step ${stepIdx+1} / ${steps.length}`;
-}
-
-function renderStep(idx, autoAdvance = false) {
-  if (idx < 0 || idx >= steps.length) return;
-  stepIdx = idx;
-  const step = steps[idx];
-  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
-
-  const afterDraw = () => {
-    document.getElementById('narText').textContent = step.narration;
-    updateUI(step);
-    if (autoAdvance) scheduleNext(step);
-  };
-
-  if (step.swapAnim && step.prevArr && idx > 0) {
-    const prevStep = steps[idx - 1];
-    animateSwap(prevStep, step, () => {
-      drawBars(step);
-      afterDraw();
-    });
-  } else {
-    drawBars(step);
-    afterDraw();
-  }
-}
-
-function scheduleNext(step) {
-  if (!isPlaying) return;
-  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
-  if (voiceEnabled) {
-    speak(step.narration).then(() => {
-      if (!isPlaying) return;
-      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
-    });
-  } else {
-    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
-  }
-}
-
-function stopPlay() {
-  isPlaying = false;
-  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
-  document.getElementById('btnPlay').textContent = '▶ Play';
-  stopSpeech();
-}
-
-function startPlay() {
-  if (stepIdx >= steps.length - 1) stepIdx = -1;
-  clearIntroTimeouts();
-  isPlaying = true;
-  document.getElementById('btnPlay').textContent = '⏸ Pause';
-  renderStep(stepIdx + 1, true);
-}
-
-function nextStep() {
-  clearIntroTimeouts();
-  stopPlay();
-  if (stepIdx + 1 < steps.length) renderStep(stepIdx + 1, false);
-}
-
-function resetToFirst() {
-  clearIntroTimeouts();
-  stopPlay();
-  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
-  stepIdx = -1;
-  if (steps.length > 0) {
-    drawBars(steps[0]);
-    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
-    updateUI(steps[0]);
-    document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
-  }
-  if (voiceEnabled) playIntroSpeech();
-}
-
-// ------------------------------------------------
-// Intro speech
-// ------------------------------------------------
 function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
-
 async function playIntroSpeech() {
   introAborted = false;
   stopSpeech();
@@ -741,7 +389,7 @@ async function playIntroSpeech() {
     "Think about how you sort a hand of playing cards. You pick up one card at a time and insert it into the correct position among the cards you're already holding.",
     "That's exactly how Insertion Sort works! It maintains a sorted subarray on the left, and repeatedly takes the next unsorted element and inserts it where it belongs.",
     "Here's the process: We start with the first element as our sorted portion. Then we look at the next element and compare it with elements to its left, shifting them right until we find its correct spot.",
-    "Watch the colors! Blue bars are unsorted. Green bars are already in their sorted positions. When we compare, bars turn orange. When we swap, they turn pink.",
+    "In the visualization, orange bars are being compared, pink bars are being swapped, and green bars are already in their sorted position.",
     "One of the coolest features: Insertion Sort is adaptive. If the array is already sorted or nearly sorted, it runs in nearly linear time — O(n) in the best case!",
     "Now, turn on Voice Mode and press Play. I will guide you through every single step."
   ];
@@ -759,64 +407,219 @@ async function playIntroSpeech() {
   document.getElementById('teacher').textContent = '🧑‍💻';
   if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
 }
-
-// ------------------------------------------------
-// Initialization and event listeners
-// ------------------------------------------------
-function init() {
-  resizeCanvas();
-  document.getElementById('statN').textContent = arr.length;
-  steps = buildInsertionSortSteps(arr);
-  stepIdx = -1;
-  if (steps.length > 0) {
-    drawBars(steps[0]);
-    document.getElementById('narText').textContent = steps[0].narration;
-    updateUI(steps[0]);
-    document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
+// ════════════════════════════════════════════════
+// CANVAS
+// ════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+function animateSwap(prevStep, nextStep, onDone) {
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  const { idxA, idxB } = nextStep.swapAnim;
+  const n = prevStep.arr.length, W = canvas.width;
+  const barW = Math.max(6, (W - (n + 1) * 4) / n);
+  const gap = (W - n * barW) / (n + 1);
+  const travelX = barW + gap;
+  const DURATION = 500, start = performance.now();
+  const displayStep = { ...prevStep, phase: 'swap', compare: [idxA, idxB] };
+  function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+  function tick(now) {
+    const rawT = Math.min((now - start) / DURATION, 1);
+    const t = ease(rawT);
+    const arc = Math.min(45, canvas.height * 0.13);
+    const offsets = {};
+    offsets[idxA] = { x: t * travelX, y: -Math.sin(rawT * Math.PI) * arc };
+    offsets[idxB] = { x: -t * travelX, y: Math.sin(rawT * Math.PI) * arc };
+    drawBars(displayStep, offsets);
+    if (rawT < 1) animRafId = requestAnimationFrame(tick);
+    else { animRafId = null; onDone(); }
   }
-  document.getElementById('progFill').style.width = '0%';
-  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
-  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
-
-  // Sync theme toggle label on load
-  const saved = localStorage.getItem('theme');
-  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
-
-  if (!introPlayed) {
-    introPlayed = true;
-    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
-    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  animRafId = requestAnimationFrame(tick);
+}
+function drawBars(step, offsets = {}) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!step) return;
+  const arr = step.arr, n = arr.length, W = canvas.width, H = canvas.height;
+  const maxVal = Math.max(...arr);
+  const barW = Math.max(6, (W - (n + 1) * 4) / n);
+  const gap = (W - n * barW) / (n + 1);
+  const cmp = new Set(step.compare || []);
+  const srt = new Set(step.sorted || []);
+  arr.forEach((val, i) => {
+    const bx = gap + i * (barW + gap);
+    const h = (val / maxVal) * (H - 50);
+    const by = H - h - 28;
+    const x = bx + (offsets[i]?.x || 0);
+    const y = by + (offsets[i]?.y || 0);
+    let fill = '#1a2840', stroke = '#2a4060', glow = null;
+    if (srt.has(i)) { fill = 'rgba(6,214,160,0.2)'; stroke = '#06d6a0'; glow = 'rgba(6,214,160,0.3)'; }
+    if (cmp.has(i)) {
+      if (step.phase === 'swap') { fill = 'rgba(255,107,157,0.25)'; stroke = '#ff6b9d'; glow = 'rgba(255,107,157,0.4)'; }
+      else { fill = 'rgba(255,140,66,0.25)'; stroke = '#ff8c42'; glow = 'rgba(255,140,66,0.35)'; }
+    }
+    if (glow) {
+      ctx.beginPath(); ctx.roundRect(x-3, y-3, barW+6, h+6, 6);
+      ctx.fillStyle = glow; ctx.fill();
+    }
+    ctx.beginPath(); ctx.roundRect(x, y, barW, h, [4,4,0,0]);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = cmp.has(i) ? '#fff' : srt.has(i) ? '#06d6a0' : '#4a6a9a';
+    ctx.font = `bold ${Math.min(11, barW-2)}px JetBrains Mono`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    if (barW >= 18) ctx.fillText(val, x + barW/2, y - 3);
+    ctx.fillStyle = '#2a3d58'; ctx.font = '9px JetBrains Mono'; ctx.textBaseline = 'top';
+    ctx.fillText(i, x + barW/2, H - 20);
+  });
+}
+// ════════════════════════════════════════════════
+// CONTROLLER
+// ════════════════════════════════════════════════
+let steps = [];
+let arr = [64, 34, 25, 12, 22, 11, 90, 45, 7, 38];
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
+function onSpeedChange(val) {
+  speedMult = parseInt(val);
+  document.getElementById('speedVal').textContent = val + '×';
+}
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
+function updateStatusBar(step, idx) {
+  document.getElementById('sPass').textContent = step.pass || 0;
+  document.getElementById('sComps').textContent = step.comps || 0;
+  document.getElementById('sSwaps').textContent = step.swaps || 0;
+  document.getElementById('statComps').textContent = step.comps || 0;
+  document.getElementById('statSwaps').textContent = step.swaps || 0;
+  document.getElementById('statPasses').textContent = step.pass || 0;
+  document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { active:['ph-active','Running'], compare:['ph-compare','Comparing'], swap:['ph-swap','Swapping'], done:['ph-done','Done'], idle:['ph-idle','Idle'] };
+  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+  for (let i = 1; i <= 8; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
   }
 }
-
-function applyArray() {
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  const afterDraw = () => {
+    updateNarration(step);
+    updateStatusBar(step, idx);
+    if (autoAdvance) scheduleNext(step);
+  };
+  if (step.swapAnim && step.prevArr && idx > 0) {
+    animateSwap(steps[idx - 1], step, () => { drawBars(step); afterDraw(); });
+  } else {
+    drawBars(step); afterDraw();
+  }
+}
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+function nextStep() {
   clearIntroTimeouts();
+  stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+function resetAll() {
+  stopPlay();
+  introAborted = true;
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  drawBars(steps[0]);
+  document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
+  ['sPass','sComps','sSwaps','statComps','statSwaps','statPasses'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  for (let i = 1; i <= 8; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; }
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  if (voiceEnabled) playIntroSpeech();
+}
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+function applyArray() {
   const raw = document.getElementById('arrInput').value;
   const parsed = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
   if (parsed.length < 2) { alert('Enter at least 2 valid positive numbers.'); return; }
   arr = parsed.slice(0, 20);
   init();
 }
-
 function randomize() {
-  clearIntroTimeouts();
   arr = Array.from({ length: 12 }, () => Math.floor(Math.random() * 90) + 5);
   document.getElementById('arrInput').value = arr.join(', ');
   init();
 }
-
-document.getElementById('btnPlay').addEventListener('click', () => {
-  if (isPlaying) stopPlay(); else startPlay();
-});
-document.getElementById('btnNext').addEventListener('click', nextStep);
-document.getElementById('btnReset').addEventListener('click', resetToFirst);
-
+function init() {
+  resizeCanvas();
+  // Sync theme toggle label on load
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+  document.getElementById('statN').textContent = arr.length;
+  steps = buildInsertionSortSteps(arr);
+  stopPlay();
+  stepIdx = -1;
+  drawBars(steps[0]);
+  document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
 window.addEventListener('resize', () => {
   resizeCanvas();
   if (stepIdx >= 0 && steps[stepIdx]) drawBars(steps[stepIdx]);
   else if (steps.length > 0) drawBars(steps[0]);
 });
-
 init();
 </script>
 </body>

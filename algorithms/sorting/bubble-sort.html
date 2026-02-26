@@ -41,18 +41,6 @@
 }
 .arr-input:focus { border-color: var(--teal); }
 
-.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
-.cc {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 14px; position: relative; overflow: hidden;
-  transition: border-color .3s, transform .3s;
-}
-.cc:hover { border-color: rgba(0,212,170,.3); transform: translateY(-2px); }
-.cc::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--teal),var(--blue)); opacity:0; transition:opacity .3s; }
-.cc:hover::after { opacity:1; }
-.cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
-.cc-title { font-family: var(--mono); font-size: 9px; color: var(--teal); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
-.cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
 
 .legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
 .li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
@@ -158,15 +146,7 @@
   </div>
 
   <!-- Status bar -->
-  <div class="status-row">
-    <div class="si"><span class="sl">Pass</span><span class="sv orange" id="sPass">0</span></div>
-    <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
-    <div class="si"><span class="sl">Swaps</span><span class="sv" id="sSwaps">0</span></div>
-    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
-    <div class="divider-auto"></div>
-    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
-    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
-  </div>
+
 
   <!-- Main layout -->
   <div class="two-col">
@@ -187,6 +167,35 @@
         </div>
         <canvas id="vizCanvas" height="340"></canvas>
       </div>
+
+        <div class="controls">
+    <div class="ctrl-row">
+      <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+      <button class="btn" id="btnNext">⏭ Next Step</button>
+      <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+      <button class="btn" onclick="randomize()">🎲 Random Array</button>
+      <div class="speed-ctrl" id="speedWrap">
+        <span class="speed-lbl">⚡ Speed</span>
+        <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+        <span class="speed-val" id="speedVal">2×</span>
+      </div>
+    </div>
+    <div class="input-row">
+      <label>Array (comma-separated):</label>
+      <input type="text" class="arr-input" id="arrInput" value="64, 34, 25, 12, 22, 11, 90, 45, 7, 38">
+      <button class="btn" onclick="applyArray()">Apply</button>
+    </div>
+  </div>
+
+    <div class="status-row">
+    <div class="si"><span class="sl">Pass</span><span class="sv orange" id="sPass">0</span></div>
+    <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
+    <div class="si"><span class="sl">Swaps</span><span class="sv" id="sSwaps">0</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
     </div>
 
     <!-- RIGHT: Info panels -->
@@ -223,26 +232,6 @@
         <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
       </div>
 
-    </div>
-  </div>
-
-  <!-- Controls -->
-  <div class="controls">
-    <div class="ctrl-row">
-      <button class="btn btn-primary" id="btnPlay">▶ Play</button>
-      <button class="btn" id="btnNext">⏭ Next Step</button>
-      <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
-      <button class="btn" onclick="randomize()">🎲 Random Array</button>
-      <div class="speed-ctrl" id="speedWrap">
-        <span class="speed-lbl">⚡ Speed</span>
-        <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
-        <span class="speed-val" id="speedVal">2×</span>
-      </div>
-    </div>
-    <div class="input-row">
-      <label>Array (comma-separated):</label>
-      <input type="text" class="arr-input" id="arrInput" value="64, 34, 25, 12, 22, 11, 90, 45, 7, 38">
-      <button class="btn" onclick="applyArray()">Apply</button>
     </div>
   </div>
 

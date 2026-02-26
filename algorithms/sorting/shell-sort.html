@@ -5,75 +5,752 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shell Sort — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="../../assets/css/main.css">
+
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+/* ── CSS Variables ── */
+:root {
+  --bg: #0a0f1a;
+  --surface: #111827;
+  --surface2: #0d1520;
+  --border: #1e2d45;
+  --text: #e2e8f0;
+  --text-dim: #64748b;
+  --teal: #00d4aa;
+  --blue: #4a9eff;
+  --orange: #ff8c42;
+  --pink: #ff6b9d;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+  --bar-default: #1a2840;
+  --bar-default-stroke: #2a4060;
+  --bar-compare: #ff8c42;
+  --bar-swap: #ff6b9d;
+  --bar-sorted: #06d6a0;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+[data-theme="light"] {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface2: #e8edf5;
+  --border: #c8d5e8;
+  --text: #1a2840;
+  --text-dim: #5a6a8a;
+  --bar-default: #c8d5e8;
+  --bar-default-stroke: #a0b4cc;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans); background: var(--bg); color: var(--text);
+  min-height: 100vh; overflow-x: hidden;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+/* BG effects */
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.bg-glow {
+  position: fixed; top: -200px; right: -200px; width: 600px; height: 600px;
+  border-radius: 50%; pointer-events: none; z-index: 0;
+  background: radial-gradient(circle, rgba(0,212,170,0.06) 0%, transparent 70%);
+}
+/* NAVBAR */
+
+
+
+/* Complexity chips */
+.complexity { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.cplx-chip {
+  font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px;
+}
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+/* Difficulty badge */
+.card-difficulty {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+  border-radius: 6px; padding: 4px 10px; font-weight: 700; text-transform: uppercase;
+}
+.intermediate { background: rgba(255,140,66,0.15); color: var(--orange); border: 1px solid rgba(255,140,66,0.3); }
+
+/* Narration */
+.narration {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 16px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.teacher { font-size: 24px; flex-shrink: 0; }
+.narration-text { font-size: 13px; color: var(--text); line-height: 1.6; flex: 1; }
+.speak-bars { display:flex; gap:3px; align-items:flex-end; height:18px; flex-shrink:0; }
+.speak-bars span {
+  width:3px; background:var(--teal); border-radius:2px; height:4px;
+  transition:height .1s;
+}
+.speak-bars.on span:nth-child(1){animation:bar1 .6s ease infinite}
+.speak-bars.on span:nth-child(2){animation:bar2 .6s ease infinite .1s}
+.speak-bars.on span:nth-child(3){animation:bar3 .6s ease infinite .2s}
+.speak-bars.on span:nth-child(4){animation:bar4 .6s ease infinite .15s}
+.speak-bars.on span:nth-child(5){animation:bar5 .6s ease infinite .05s}
+@keyframes bar1{0%,100%{height:4px}50%{height:14px}}
+@keyframes bar2{0%,100%{height:4px}50%{height:10px}}
+@keyframes bar3{0%,100%{height:4px}50%{height:16px}}
+@keyframes bar4{0%,100%{height:4px}50%{height:8px}}
+@keyframes bar5{0%,100%{height:4px}50%{height:12px}}
+/* Status row */
+.status-row {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.si { display:flex; flex-direction:column; align-items:center; }
+.sl { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; }
+.sv { font-family:var(--mono); font-size:16px; font-weight:800; color:var(--text); }
+.sv.orange { color: var(--orange); }
+.phase-badge {
+  font-family:var(--mono); font-size:9px; letter-spacing:1px;
+  padding:3px 8px; border-radius:5px; text-transform:uppercase; font-weight:700;
+}
+.ph-idle { background:rgba(100,116,139,0.15); color:var(--text-dim); border:1px solid var(--border); }
+.ph-active { background:rgba(74,158,255,0.15); color:var(--blue); border:1px solid rgba(74,158,255,0.3); }
+.ph-compare { background:rgba(255,140,66,0.15); color:var(--orange); border:1px solid rgba(255,140,66,0.3); }
+.ph-swap { background:rgba(255,107,157,0.15); color:var(--pink); border:1px solid rgba(255,107,157,0.3); }
+.ph-done { background:rgba(6,214,160,0.15); color:var(--teal); border:1px solid rgba(6,214,160,0.3); }
+.divider-auto { flex:1; }
+.prog-wrap { width:120px; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+.prog-fill { height:100%; background:linear-gradient(90deg,var(--teal),var(--blue)); border-radius:3px; transition:width .3s; width:0%; }
+.step-ctr { font-family:var(--mono); font-size:10px; color:var(--text-dim); white-space:nowrap; }
+/* Layout */
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+/* Panel */
+
+
+
+
+/* Code block */
+
+/* Controls */
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+.arr-input {
+  flex: 1; min-width: 200px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+/* Buttons */
+.btn {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
+  border-radius: 7px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text); transition: all .2s; white-space: nowrap;
+}
+.btn:hover { border-color: rgba(0,212,170,0.4); color: var(--teal); background: rgba(0,212,170,0.06); }
+.btn-primary { background: rgba(0,212,170,0.12); border-color: rgba(0,212,170,0.4); color: var(--teal); }
+.btn-danger { background: rgba(255,107,157,0.08); border-color: rgba(255,107,157,0.3); color: var(--pink); }
+/* Speed */
+.speed-ctrl { display:flex; align-items:center; gap:8px; }
+.speed-lbl { font-family:var(--mono); font-size:10px; color:var(--text-dim); }
+.speed-val { font-family:var(--mono); font-size:11px; color:var(--teal); min-width:22px; }
+input[type=range] { accent-color: var(--teal); cursor: pointer; }
+/* Voice btn */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-icon { font-size: 14px; }
+/* Gap display */
+.gap-info {
+  font-family: var(--mono); font-size: 12px; color: var(--orange);
+  background: rgba(255,140,66,0.08); border: 1px solid rgba(255,140,66,0.2);
+  border-radius: 6px; padding: 6px 10px; text-align: center; margin-top: 8px;
+}
+/* Intro mode */
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0%   { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50%  { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
+<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb"><span class="toggle-icon">🌙</span></div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🐚</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Sorting Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Shell Sort</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7;">
+      A generalization of Insertion Sort that sorts elements far apart first using a <em>gap sequence</em>, then progressively reduces the gap — making distant swaps cheap and final passes nearly sorted.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Best: <span>O(n log n)</span></div>
+      <div class="cplx-chip">Average: <span>O(n log² n)</span></div>
+      <div class="cplx-chip">Worst: <span>O(n²)</span></div>
+      <div class="cplx-chip">Space: <span>O(1)</span></div>
+      <div class="cplx-chip">Stable: <span>✗ No</span></div>
+    </div>
+  </header>
 
-  <div class="coming-soon">
-    <span class="cs-icon">🐚</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Shell Sort</h1>
-    <p class="cs-sub">Generalized insertion sort using gap sequences to move elements far apart.</p>
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">📐</span><div class="cc-title">Gap Sequence</div><div class="cc-desc">We use a shrinking gap (n/2, n/4, … 1). The gap controls how far apart elements are when compared and swapped.</div></div>
+    <div class="cc"><span class="cc-icon">🚀</span><div class="cc-title">Long-Distance Swaps</div><div class="cc-desc">Large gaps let small elements jump far left in one step — avoiding the slow one-at-a-time crawl of plain insertion sort.</div></div>
+    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Diminishing Passes</div><div class="cc-desc">Each pass (with a smaller gap) refines the order. By the time gap=1, the array is nearly sorted, so that pass is very fast.</div></div>
+    <div class="cc"><span class="cc-icon">📦</span><div class="cc-title">In-Place</div><div class="cc-desc">Like insertion sort, no extra memory is needed. All sorting happens within the original array — O(1) space.</div></div>
+  </div>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Gap sequence selection</li>
-        <li>Improves over insertion sort on large arrays</li>
-        <li>Hard-to-analyze complexity</li>
-      </ul>
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Shell Sort! Let me explain how this algorithm works before we begin...</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-row">
+    <div class="si"><span class="sl">Gap</span><span class="sv orange" id="sGap">—</span></div>
+    <div class="si"><span class="sl">Pass</span><span class="sv" id="sPass">0</span></div>
+    <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
+    <div class="si"><span class="sl">Swaps</span><span class="sv" id="sSwaps">0</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <!-- Main layout -->
+  <div class="two-col">
+    <!-- LEFT: Canvas -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:#ff8c42;"></div>Comparing</div>
+          <div class="li"><div class="ld" style="background:#ff6b9d;"></div>Swapping</div>
+          <div class="li"><div class="ld" style="background:#06d6a0;"></div>Sorted</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="340"></canvas>
+        <div class="gap-info" id="gapInfo">Current gap: —</div>
+      </div>
+
+        <!-- Controls -->
+  <div class="controls">
+    <div class="ctrl-row">
+      <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+      <button class="btn" id="btnNext">⏭ Next Step</button>
+      <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+      <button class="btn" onclick="randomize()">🎲 Random Array</button>
+      <div class="speed-ctrl" id="speedWrap">
+        <span class="speed-lbl">⚡ Speed</span>
+        <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+        <span class="speed-val" id="speedVal">2×</span>
+      </div>
+    </div>
+    <div class="input-row">
+      <label>Array (comma-separated):</label>
+      <input type="text" class="arr-input" id="arrInput" value="64, 34, 25, 12, 22, 11, 90, 45, 7, 38">
+      <button class="btn" onclick="applyArray()">Apply</button>
+    </div> 
+  </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">shellSort</span>(arr):</span>
+<span id="cl2" class="code-line"> n = arr.<span class="fn">length</span></span>
+<span id="cl3" class="code-line"> gap = <span class="fn">floor</span>(n / 2)</span>
+<span id="cl4" class="code-line"> <span class="kw">while</span> gap > 0:</span>
+<span id="cl5" class="code-line">   <span class="kw">for</span> i = gap <span class="kw">to</span> n-1:</span>
+<span id="cl6" class="code-line">     j = i</span>
+<span id="cl7" class="code-line">     <span class="kw">while</span> j >= gap <span class="kw">and</span> arr[j-gap] > arr[j]:</span>
+<span id="cl8" class="code-line">       <span class="fn">swap</span>(arr[j-gap], arr[j])</span>
+<span id="cl9" class="code-line">       j -= gap</span>
+<span id="cl10" class="code-line">   gap = <span class="fn">floor</span>(gap / 2)</span>
+<span id="cl11" class="code-line"> <span class="kw">return</span> arr</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Current Array</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
+            <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Comparisons</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSwaps">0</div><div class="stat-box-l">Swaps</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statGap">—</div><div class="stat-box-l">Current Gap</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Size</div></div>
+        </div>
+      </div>
     </div>
   </div>
+
+
 </div>
+
+<script>
+// ── Theme ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+// ── Speech ──
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English')) ||
+    voices.find(v => v.lang === 'en-US' && v.localService) ||
+    voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice = ttsVoice; utt.rate = 0.88; utt.pitch = 1.05; utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => { document.getElementById('speakBars').classList.remove('on'); resolve(); };
+    synth.speak(utt);
+  });
+}
+function stopSpeech() { synth && synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
+// ── Voice toggle ──
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const icon = document.getElementById('voiceIcon');
+  const lbl = document.getElementById('voiceLabel');
+  const btn = document.getElementById('voiceToggle');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On'; btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off'; btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+
+// ── Canvas helper ──
+CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, radii) {
+  if (!Array.isArray(radii)) radii = [radii, radii, radii, radii];
+  this.moveTo(x + radii[0], y);
+  this.lineTo(x + w - radii[1], y); this.quadraticCurveTo(x + w, y, x + w, y + radii[1]);
+  this.lineTo(x + w, y + h - radii[2]); this.quadraticCurveTo(x + w, y + h, x + w - radii[2], y + h);
+  this.lineTo(x + radii[3], y + h); this.quadraticCurveTo(x, y + h, x, y + h - radii[3]);
+  this.lineTo(x, y + radii[0]); this.quadraticCurveTo(x, y, x + radii[0], y);
+  return this;
+};
+
+// ═══════════════════════════════════════════════
+// SHELL SORT STEP GENERATOR
+// ═══════════════════════════════════════════════
+function buildShellSortSteps(arr) {
+  const steps = [];
+  const a = [...arr];
+  const n = a.length;
+  let totalComps = 0, totalSwaps = 0, pass = 0;
+
+  steps.push({
+    arr: [...a], compare: [], sorted: [], gap: null,
+    narration: `Starting Shell Sort on ${n} elements. We'll use a shrinking gap sequence: ${Math.floor(n/2)}, ${Math.floor(n/4)}, … 1.`,
+    phase: 'active', pass: 0, comps: 0, swaps: 0, codeLine: 1,
+  });
+
+  let gap = Math.floor(n / 2);
+  while (gap > 0) {
+    steps.push({
+      arr: [...a], compare: [], sorted: [], gap,
+      narration: `New gap = ${gap}. We'll now do a gapped insertion sort — comparing elements that are ${gap} positions apart.`,
+      phase: 'active', pass: ++pass, comps: totalComps, swaps: totalSwaps, codeLine: 4,
+    });
+
+    for (let i = gap; i < n; i++) {
+      let j = i;
+      while (j >= gap) {
+        totalComps++;
+        const needSwap = a[j - gap] > a[j];
+        steps.push({
+          arr: [...a], compare: [j - gap, j], sorted: [], gap,
+          narration: needSwap
+            ? `Gap=${gap}: Comparing a[${j-gap}]=${a[j-gap]} and a[${j}]=${a[j]}. ${a[j-gap]} > ${a[j]} → swap!`
+            : `Gap=${gap}: Comparing a[${j-gap}]=${a[j-gap]} and a[${j}]=${a[j]}. ${a[j-gap]} ≤ ${a[j]} → correct position.`,
+          phase: 'compare', pass, comps: totalComps, swaps: totalSwaps, codeLine: 7,
+        });
+        if (!needSwap) break;
+        const prevArr = [...a];
+        [a[j - gap], a[j]] = [a[j], a[j - gap]];
+        totalSwaps++;
+        steps.push({
+          arr: [...a], compare: [j - gap, j], sorted: [], gap,
+          swapAnim: { idxA: j - gap, idxB: j },
+          narration: `Swapped a[${j-gap}] and a[${j}]! (gap=${gap}) Total swaps: ${totalSwaps}.`,
+          phase: 'swap', pass, comps: totalComps, swaps: totalSwaps, codeLine: 8, prevArr,
+        });
+        j -= gap;
+      }
+    }
+    gap = Math.floor(gap / 2);
+    steps.push({
+      arr: [...a], compare: [], sorted: [], gap: gap || 0,
+      narration: gap > 0
+        ? `Finished pass with gap=${gap * 2}. Reducing gap to ${gap}.`
+        : `Finished final pass (gap=1). Array is now sorted!`,
+      phase: gap > 0 ? 'active' : 'done',
+      pass, comps: totalComps, swaps: totalSwaps, codeLine: 10,
+    });
+  }
+
+  steps.push({
+    arr: [...a], compare: [], sorted: Array.from({length: n}, (_, k) => k), gap: 0,
+    narration: `Shell Sort complete! Sorted: [${a.join(', ')}]. Total: ${totalComps} comparisons, ${totalSwaps} swaps.`,
+    phase: 'done', pass, comps: totalComps, swaps: totalSwaps, codeLine: 11,
+  });
+  return steps;
+}
+
+// ── Intro speech ──
+let introAborted = false;
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+async function playIntroSpeech() {
+  introAborted = false; stopSpeech();
+  const lines = [
+    "Hello! Today we're learning Shell Sort — a clever extension of Insertion Sort invented by Donald Shell in 1959.",
+    "The key idea: instead of always comparing adjacent elements, we start by comparing elements that are far apart, using a 'gap'.",
+    "Large gaps let small elements jump far to the left in one move, like teleportation. This avoids the slow one-step-at-a-time crawl of basic Insertion Sort.",
+    "We start with a gap of n divided by 2, then halve it each pass. Each pass is a gapped insertion sort — elements 'gap' positions apart are compared and swapped if out of order.",
+    "By the time we reach gap equals 1, the array is nearly sorted, so that final pass is extremely fast.",
+    "In the visualization, orange bars are being compared, pink bars are being swapped, and green bars mark fully sorted elements.",
+    "Turn on Voice Mode and press Play — I'll walk you through every comparison and swap!"
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < lines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = lines[i];
+    await speak(lines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+
+// ── Canvas ──
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+
+function animateSwap(prevStep, nextStep, onDone) {
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  const { idxA, idxB } = nextStep.swapAnim;
+  const n = prevStep.arr.length, W = canvas.width;
+  const barW = Math.max(6, (W - (n + 1) * 4) / n);
+  const gap = (W - n * barW) / (n + 1);
+  const travelX = (idxB - idxA) * (barW + gap);
+  const DURATION = 500, start = performance.now();
+  const displayStep = { ...prevStep, phase: 'swap', compare: [idxA, idxB] };
+  function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+  function tick(now) {
+    const rawT = Math.min((now - start) / DURATION, 1);
+    const t = ease(rawT);
+    const arc = Math.min(55, canvas.height * 0.16);
+    const offsets = {};
+    offsets[idxA] = { x: t * travelX, y: -Math.sin(rawT * Math.PI) * arc };
+    offsets[idxB] = { x: -t * travelX, y: Math.sin(rawT * Math.PI) * arc };
+    drawBars(displayStep, offsets);
+    if (rawT < 1) animRafId = requestAnimationFrame(tick);
+    else { animRafId = null; onDone(); }
+  }
+  animRafId = requestAnimationFrame(tick);
+}
+
+function drawBars(step, offsets = {}) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!step) return;
+  const arr = step.arr, n = arr.length, W = canvas.width, H = canvas.height;
+  const maxVal = Math.max(...arr);
+  const barW = Math.max(6, (W - (n + 1) * 4) / n);
+  const gapPx = (W - n * barW) / (n + 1);
+  const cmp = new Set(step.compare || []);
+  const srt = new Set(step.sorted || []);
+
+  // Draw gap connectors if comparing
+  if (step.compare && step.compare.length === 2 && step.gap > 0) {
+    const [ia, ib] = step.compare;
+    const xa = gapPx + ia * (barW + gapPx) + barW / 2;
+    const xb = gapPx + ib * (barW + gapPx) + barW / 2;
+    ctx.beginPath();
+    ctx.moveTo(xa + (offsets[ia]?.x || 0), H - 14);
+    ctx.lineTo(xb + (offsets[ib]?.x || 0), H - 14);
+    ctx.strokeStyle = 'rgba(255,140,66,0.3)';
+    ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  arr.forEach((val, i) => {
+    const bx = gapPx + i * (barW + gapPx);
+    const h = (val / maxVal) * (H - 50);
+    const by = H - h - 28;
+    const x = bx + (offsets[i]?.x || 0);
+    const y = by + (offsets[i]?.y || 0);
+    let fill = '#1a2840', stroke = '#2a4060', glow = null;
+    if (srt.has(i)) { fill = 'rgba(6,214,160,0.2)'; stroke = '#06d6a0'; glow = 'rgba(6,214,160,0.3)'; }
+    if (cmp.has(i)) {
+      if (step.phase === 'swap') { fill = 'rgba(255,107,157,0.25)'; stroke = '#ff6b9d'; glow = 'rgba(255,107,157,0.4)'; }
+      else { fill = 'rgba(255,140,66,0.25)'; stroke = '#ff8c42'; glow = 'rgba(255,140,66,0.35)'; }
+    }
+    if (glow) {
+      ctx.beginPath(); ctx.roundRect(x-3, y-3, barW+6, h+6, 6);
+      ctx.fillStyle = glow; ctx.fill();
+    }
+    ctx.beginPath(); ctx.roundRect(x, y, barW, h, [4,4,0,0]);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = cmp.has(i) ? '#fff' : srt.has(i) ? '#06d6a0' : '#4a6a9a';
+    ctx.font = `bold ${Math.min(11, barW-2)}px JetBrains Mono`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    if (barW >= 18) ctx.fillText(val, x + barW/2, y - 3);
+    ctx.fillStyle = '#2a3d58'; ctx.font = '9px JetBrains Mono'; ctx.textBaseline = 'top';
+    ctx.fillText(i, x + barW/2, H - 20);
+  });
+}
+
+// ── Controller ──
+let steps = [];
+let arr = [64, 34, 25, 12, 22, 11, 90, 45, 7, 38];
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
+function onSpeedChange(val) { speedMult = parseInt(val); document.getElementById('speedVal').textContent = val + '×'; }
+
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
+
+function updateStatusBar(step, idx) {
+  document.getElementById('sGap').textContent = step.gap != null ? step.gap : '—';
+  document.getElementById('sPass').textContent = step.pass || 0;
+  document.getElementById('sComps').textContent = step.comps || 0;
+  document.getElementById('sSwaps').textContent = step.swaps || 0;
+  document.getElementById('statComps').textContent = step.comps || 0;
+  document.getElementById('statSwaps').textContent = step.swaps || 0;
+  document.getElementById('statGap').textContent = step.gap != null ? step.gap : '—';
+  document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  document.getElementById('gapInfo').textContent = step.gap != null ? `Current gap: ${step.gap}` : 'Gap: —';
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { active:['ph-active','Running'], compare:['ph-compare','Comparing'], swap:['ph-swap','Swapping'], done:['ph-done','Done'], idle:['ph-idle','Idle'] };
+  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+  for (let i = 1; i <= 11; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
+  }
+}
+
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  const afterDraw = () => {
+    updateNarration(step);
+    updateStatusBar(step, idx);
+    if (autoAdvance) scheduleNext(step);
+  };
+  if (step.swapAnim && step.prevArr && idx > 0) {
+    animateSwap(steps[idx - 1], step, () => { drawBars(step); afterDraw(); });
+  } else {
+    drawBars(step); afterDraw();
+  }
+}
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+
+function nextStep() {
+  clearIntroTimeouts(); stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts(); isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function resetAll() {
+  stopPlay(); introAborted = true;
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  drawBars(steps[0]);
+  document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
+  ['sPass','sComps','sSwaps','statComps','statSwaps'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('sGap').textContent = '—';
+  document.getElementById('statGap').textContent = '—';
+  document.getElementById('gapInfo').textContent = 'Current gap: —';
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  for (let i = 1; i <= 11; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; }
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  if (voiceEnabled) playIntroSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+function applyArray() {
+  const raw = document.getElementById('arrInput').value;
+  const parsed = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+  if (parsed.length < 2) { alert('Enter at least 2 valid positive numbers.'); return; }
+  arr = parsed.slice(0, 20);
+  init();
+}
+
+function randomize() {
+  arr = Array.from({ length: 12 }, () => Math.floor(Math.random() * 90) + 5);
+  document.getElementById('arrInput').value = arr.join(', ');
+  init();
+}
+
+function init() {
+  resizeCanvas();
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+  document.getElementById('statN').textContent = arr.length;
+  steps = buildShellSortSteps(arr);
+  stopPlay(); stepIdx = -1;
+  drawBars(steps[0]);
+  document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) drawBars(steps[stepIdx]);
+  else if (steps.length > 0) drawBars(steps[0]);
+});
+
+init();
+</script>
 </body>
 </html>

@@ -189,20 +189,31 @@
         </div>
         <canvas id="vizCanvas" height="340"></canvas>
       </div>
+        <!-- Controls -->
+  <div class="controls">
+    <div class="ctrl-row">
+      <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+      <button class="btn" id="btnNext">⏭ Next Step</button>
+      <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+      <button class="btn" onclick="randomize()">🎲 Random Array</button>
+      <div class="speed-ctrl" id="speedWrap">
+        <span class="speed-lbl">⚡ Speed</span>
+        <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+        <span class="speed-val" id="speedVal">2×</span>
+      </div>
+    </div>
+    <div class="input-row">
+      <label>Array (comma-separated):</label>
+      <input type="text" class="arr-input" id="arrInput" value="64, 34, 25, 12, 22, 11, 90, 45, 7, 38">
+      <button class="btn" onclick="applyArray()">Apply</button>
+    </div>
+  </div>
     </div>
 
     <!-- RIGHT: Info panels -->
     <div style="display:flex;flex-direction:column;gap:14px;">
 
-      <div class="panel">
-        <div class="panel-hd">📈 Statistics</div>
-        <div class="stats-grid">
-          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Comparisons</div></div>
-          <div class="stat-box"><div class="stat-box-n" id="statSwaps">0</div><div class="stat-box-l">Swaps</div></div>
-          <div class="stat-box"><div class="stat-box-n" id="statPasses">0</div><div class="stat-box-l">Passes</div></div>
-          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Size</div></div>
-        </div>
-      </div>
+    
 
       <div class="panel">
         <div class="panel-hd">💻 Pseudocode</div>
@@ -224,29 +235,20 @@
         <div class="panel-hd">📋 Current Array</div>
         <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
       </div>
-
-    </div>
-  </div>
-
-  <!-- Controls -->
-  <div class="controls">
-    <div class="ctrl-row">
-      <button class="btn btn-primary" id="btnPlay">▶ Play</button>
-      <button class="btn" id="btnNext">⏭ Next Step</button>
-      <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
-      <button class="btn" onclick="randomize()">🎲 Random Array</button>
-      <div class="speed-ctrl" id="speedWrap">
-        <span class="speed-lbl">⚡ Speed</span>
-        <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
-        <span class="speed-val" id="speedVal">2×</span>
+        <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Comparisons</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSwaps">0</div><div class="stat-box-l">Swaps</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPasses">0</div><div class="stat-box-l">Passes</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Size</div></div>
+        </div>
       </div>
-    </div>
-    <div class="input-row">
-      <label>Array (comma-separated):</label>
-      <input type="text" class="arr-input" id="arrInput" value="64, 34, 25, 12, 22, 11, 90, 45, 7, 38">
-      <button class="btn" onclick="applyArray()">Apply</button>
+
     </div>
   </div>
+
+
 
 </div><!-- .algo-page -->
 
