@@ -7,73 +7,638 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+:root {
+  --bar-default: #1a2840;
+  --bar-default-stroke: #2a4060;
+  --bar-checked: #2a4060;
+  --bar-checked-stroke: #3a5070;
+  --bar-compare: #ff8c42;
+  --bar-found: #06d6a0;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+#vizCanvas {
+  width: 100%; border-radius: 8px;
+  background: transparent; display: block;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+
+.arr-input {
+  flex: 1; min-width: 200px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+
+.target-input {
+  width: 80px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.target-input:focus { border-color: var(--teal); }
+
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px; text-align: center;
+}
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+/* Voice toggle */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
+<!-- NAVBAR — identical to Insertion Sort, includes theme toggle -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
+
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">➡️</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Linear Search</h1>
-    <p class="cs-sub">Scan each element one by one until the target is found.</p>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🔍</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Searching Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Linear Search</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty beginner">Beginner</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      Sequentially checks each element in the list until a match is found or the whole list has been searched.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Best: <span>O(1)</span></div>
+      <div class="cplx-chip">Average: <span>O(n)</span></div>
+      <div class="cplx-chip">Worst: <span>O(n)</span></div>
+      <div class="cplx-chip">Space: <span>O(1)</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>O(n) worst case</li>
-        <li>Works on unsorted data</li>
-        <li>Sentinel optimization trick</li>
-      </ul>
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">➡️</span><div class="cc-title">Sequential Check</div><div class="cc-desc">Examines elements one by one starting from the beginning.</div></div>
+    <div class="cc"><span class="cc-icon">🛑</span><div class="cc-title">Early Exit</div><div class="cc-desc">Stops immediately upon finding the target element.</div></div>
+    <div class="cc"><span class="cc-icon">🔍</span><div class="cc-title">Exhaustive Search</div><div class="cc-desc">Checks every element if the target is not found early.</div></div>
+    <div class="cc"><span class="cc-icon">📚</span><div class="cc-title">Simple Implementation</div><div class="cc-desc">No need for sorted data or complex structures.</div></div>
+  </div>
+
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Linear Search! Let me explain how this algorithm works before we begin...</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-row">
+    <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
+    <div class="si"><span class="sl">Result</span><span class="sv" id="sResult">Not Found</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <!-- Main layout -->
+  <div class="two-col">
+
+    <!-- LEFT: Canvas -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:var(--bar-checked);border:1px solid var(--bar-checked-stroke);"></div>Checked</div>
+          <div class="li"><div class="ld" style="background:var(--bar-compare);"></div>Comparing</div>
+          <div class="li"><div class="ld" style="background:var(--bar-found);"></div>Found</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="400"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random Array</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Array (comma-separated):</label>
+          <input type="text" class="arr-input" id="arrInput" value="64,34,25,12,22,11,90,45,7,38,56,78,93,27,41,59,82,14,67,39,51,73,96,28,42,60,83,15,68,40,52,74,97,29,43,61,84,16,69,50">
+          <label>Target:</label>
+          <input type="text" class="target-input" id="targetInput" value="22">
+          <button class="btn" onclick="applyInputs()">Apply</button>
+        </div>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Comparisons</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPos">-1</div><div class="stat-box-l">Position</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Size</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">linearSearch</span>(arr, target):</span>
+<span id="cl2" class="code-line">  <span class="kw">for</span> i = 0 <span class="kw">to</span> arr.<span class="fn">length</span>-1:</span>
+<span id="cl3" class="code-line">    <span class="kw">if</span> arr[i] == target:</span>
+<span id="cl4" class="code-line">      <span class="kw">return</span> i</span>
+<span id="cl5" class="code-line">  <span class="kw">return</span> -1</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Current Array</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
+
     </div>
   </div>
-</div>
+
+</div><!-- .algo-page -->
+
+<script>
+// ════════════════════════════════════════════════
+// THEME TOGGLE
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+
+// Restore saved theme on load
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    // label update happens after DOM ready — handled below in init
+  }
+})();
+
+// ════════════════════════════════════════════════
+// WEB SPEECH API
+// ════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English'))       ||
+    voices.find(v => v.lang === 'en-US' && v.localService)       ||
+    voices.find(v => v.lang.startsWith('en'))                    ||
+    voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice  = ttsVoice;
+    utt.rate   = 0.88;
+    utt.pitch  = 1.05;
+    utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+
+function stopSpeech() {
+  synth && synth.cancel();
+  document.getElementById('speakBars').classList.remove('on');
+}
+
+// ════════════════════════════════════════════════
+// VOICE TOGGLE — default OFF
+// ════════════════════════════════════════════════
+let voiceEnabled = false;
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn   = document.getElementById('voiceToggle');
+  const icon  = document.getElementById('voiceIcon');
+  const lbl   = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+
+// ════════════════════════════════════════════════
+// LINEAR SEARCH — STEP GENERATOR
+// ════════════════════════════════════════════════
+function buildLinearSearchSteps(arr, target) {
+  const steps = [];
+  const a = [...arr];
+  const n = a.length;
+  let totalComps = 0;
+
+  steps.push({
+    arr: [...a], compare: [], found: -1,
+    narration: `Starting Linear Search for target ${target} in an array of ${n} elements. We'll check each element sequentially.`,
+    phase: 'active', comps: 0, codeLine: 1,
+  });
+
+  for (let i = 0; i < n; i++) {
+    totalComps++;
+    const match = a[i] === target;
+    steps.push({
+      arr: [...a], compare: [i], found: -1,
+      narration: match 
+        ? `Comparing element at index ${i} (${a[i]}) with target ${target}. It's a match!`
+        : `Comparing element at index ${i} (${a[i]}) with target ${target}. No match.`,
+      phase: 'compare', comps: totalComps, codeLine: 3,
+    });
+
+    if (match) {
+      steps.push({
+        arr: [...a], compare: [], found: i,
+        narration: `Match found! Target ${target} is at index ${i}. Search complete.`,
+        phase: 'found', comps: totalComps, codeLine: 4,
+      });
+      return steps;
+    }
+  }
+
+  steps.push({
+    arr: [...a], compare: [], found: -1,
+    narration: `Target ${target} not found after checking all ${n} elements.`,
+    phase: 'notfound', comps: totalComps, codeLine: 5,
+  });
+  return steps;
+}
+
+// ════════════════════════════════════════════════
+// INTRO SPEECH
+// ════════════════════════════════════════════════
+let introAborted = false;
+
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const introLines = [
+    "Hello! I am your algorithm teacher. Today we are learning Linear Search — the simplest searching algorithm.",
+    "Linear Search works by checking each element in sequence until we find the target or reach the end.",
+    "If we find a match, we return its position immediately.",
+    "If not, we conclude it's not in the array after checking everything.",
+    "In the visualization, gray cells are already checked, orange is being compared, and green is the found element.",
+    "Now, turn on Voice Mode and press Play. I will guide you through each comparison."
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < introLines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = introLines[i];
+    await speak(introLines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+
+// ════════════════════════════════════════════════
+// CANVAS
+// ════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+
+function drawGrid(step) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!step) return;
+  const arr = step.arr, n = arr.length, W = canvas.width, H = canvas.height;
+  const cols = 8;
+  const rows = Math.ceil(n / cols);
+  const cellH = 50;
+  const rowGap = 10;
+  const topMargin = (H - (rows * cellH + (rows - 1) * rowGap) - 30) / 2;
+  const cellW = Math.max(20, (W - (cols + 1) * 4) / cols);
+  const gap = (W - cols * cellW) / (cols + 1);
+  const cmp = new Set(step.compare || []);
+  arr.forEach((val, i) => {
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    const x = gap + col * (cellW + gap);
+    const y = topMargin + row * (cellH + rowGap);
+    let fill = '#1a2840', stroke = '#2a4060', glow = null;
+    if (step.found >= 0 && i === step.found) { 
+      fill = 'rgba(6,214,160,0.2)'; stroke = '#06d6a0'; glow = 'rgba(6,214,160,0.3)'; 
+    } else if (cmp.has(i)) { 
+      fill = 'rgba(255,140,66,0.25)'; stroke = '#ff8c42'; glow = 'rgba(255,140,66,0.35)'; 
+    } else if ((step.compare.length > 0 && i < step.compare[0]) || 
+               (step.found >= 0 && i < step.found) || 
+               step.phase === 'notfound') { 
+      fill = '#2a4060'; stroke = '#3a5070'; 
+    }
+    if (glow) {
+      ctx.beginPath(); ctx.roundRect(x-3, y-3, cellW+6, cellH+6, 6);
+      ctx.fillStyle = glow; ctx.fill();
+    }
+    ctx.beginPath(); ctx.roundRect(x, y, cellW, cellH, 4);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke();
+
+    ctx.fillStyle = cmp.has(i) ? '#fff' : (step.found >=0 && i === step.found) ? '#06d6a0' : '#4a6a9a';
+    ctx.font = `bold ${Math.min(18, cellW-4)}px JetBrains Mono`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (cellW >= 18) ctx.fillText(val, x + cellW/2, y + cellH/2);
+    ctx.fillStyle = '#2a3d58'; ctx.font = '9px JetBrains Mono'; ctx.textBaseline = 'top';
+    ctx.fillText(i, x + cellW/2, y + cellH + 5);
+  });
+}
+
+// ════════════════════════════════════════════════
+// CONTROLLER
+// ════════════════════════════════════════════════
+let steps = [];
+let arr = [64,34,25,12,22,11,90,45,7,38,56,78,93,27,41,59,82,14,67,39,51,73,96,28,42,60,83,15,68,40,52,74,97,29,43,61,84,16,69,50];
+let target = 22;
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+
+const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
+function onSpeedChange(val) {
+  speedMult = parseInt(val);
+  document.getElementById('speedVal').textContent = val + '×';
+}
+
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
+
+function updateStatusBar(step, idx) {
+  document.getElementById('sComps').textContent = step.comps || 0;
+  const resultEl = document.getElementById('sResult');
+  if (step.found >= 0) {
+    resultEl.textContent = step.found;
+    resultEl.className = 'sv green';
+  } else {
+    resultEl.textContent = 'Not Found';
+    resultEl.className = 'sv red';
+  }
+  document.getElementById('statComps').textContent = step.comps || 0;
+  document.getElementById('statPos').textContent = step.found >= 0 ? step.found : '-1';
+  document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { 
+    active: ['ph-active', 'Running'], 
+    compare: ['ph-compare', 'Comparing'], 
+    found: ['ph-found', 'Found'], 
+    notfound: ['ph-notfound', 'Not Found'], 
+    idle: ['ph-idle', 'Idle'] 
+  };
+  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle', 'Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
+  }
+}
+
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  const afterDraw = () => {
+    updateNarration(step);
+    updateStatusBar(step, idx);
+    if (autoAdvance) scheduleNext(step);
+  };
+  drawGrid(step); afterDraw();
+}
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+
+function nextStep() {
+  clearIntroTimeouts();
+  stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function resetAll() {
+  stopPlay();
+  introAborted = true;
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  drawGrid(steps[0]);
+  document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
+  ['sComps','statComps'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('sResult').textContent = 'Not Found';
+  document.getElementById('sResult').className = 'sv red';
+  document.getElementById('statPos').textContent = '-1';
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  for (let i = 1; i <= 5; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; }
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  if (voiceEnabled) playIntroSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+function applyInputs() {
+  const raw = document.getElementById('arrInput').value;
+  const parsed = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+  if (parsed.length < 2) { alert('Enter at least 2 valid positive numbers.'); return; }
+  arr = parsed.slice(0, 50);
+  const tgt = parseInt(document.getElementById('targetInput').value);
+  if (isNaN(tgt)) { alert('Enter a valid target number.'); return; }
+  target = tgt;
+  init();
+}
+
+function randomize() {
+  arr = Array.from({ length: 40 }, () => Math.floor(Math.random() * 90) + 5);
+  const inArr = Math.random() > 0.3;
+  target = inArr ? arr[Math.floor(Math.random() * arr.length)] : 999;
+  document.getElementById('arrInput').value = arr.join(', ');
+  document.getElementById('targetInput').value = target;
+  init();
+}
+
+function init() {
+  resizeCanvas();
+
+  // Sync theme toggle label on load
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+
+  document.getElementById('statN').textContent = arr.length;
+  steps = buildLinearSearchSteps(arr, target);
+  stopPlay();
+  stepIdx = -1;
+  drawGrid(steps[0]);
+  document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) drawGrid(steps[stepIdx]);
+  else if (steps.length > 0) drawGrid(steps[0]);
+});
+
+init();
+</script>
 </body>
 </html>
