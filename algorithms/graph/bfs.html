@@ -183,6 +183,7 @@
     <button class="preset-btn" onclick="loadPreset('grid')" id="p-grid">Grid</button>
     <button class="preset-btn" onclick="loadPreset('dense')" id="p-dense">Dense</button>
     <button class="preset-btn" onclick="loadPreset('cycle')" id="p-cycle">Cycle</button>
+    <button class="preset-btn" onclick="loadPreset('random')" id="p-random">Random</button>
   </div>
   <div class="input-row">
     <label>Start Node:</label>
@@ -217,7 +218,8 @@ const PRESETS = {
   cycle: {
     nodes: (()=>{const ns=[];for(let i=0;i<8;i++){const a=(i/8)*2*Math.PI-Math.PI/2;ns.push({id:i,x:.5+.38*Math.cos(a),y:.5+.42*Math.sin(a)});}ns.push({id:8,x:.5,y:.5});return ns;})(),
     edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,0],[0,8],[2,8],[4,8],[6,8]]
-  }
+  },
+  random: null
 };
 
 let currentPreset='simple',graph=null,steps=[],stepIdx=-1,isPlaying=false,playTimer=null,startNode=0,targetNode=6;
@@ -353,17 +355,114 @@ function resetAll(){
 }
 
 function setSpeed(v){document.getElementById('speedVal').textContent=`${v}×`;}
-function loadPreset(name){
-  currentPreset=name;
-  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('p-'+name).classList.add('active');
-  graph=buildGraph(PRESETS[name]);
-  const maxId=graph.nodes.length-1;
-  startNode=0;targetNode=Math.min(maxId,maxId===10?9:maxId);
-  document.getElementById('startInput').value=startNode;document.getElementById('targetInputEl').value=targetNode;
-  document.getElementById('sTarget').textContent=targetNode;
-  resizeCanvas();resetAll();
+
+function generateRandomGraph() {
+  // Configurable parameters
+  const nodeCount = Math.floor(Math.random() * 6) + 7;     // 7–12 nodes
+  const edgeProbability = 0.20 + Math.random() * 0.25;      // 20–45% chance per pair
+  
+  const nodes = [];
+  const edges = [];
+  
+  // Place nodes in a slightly noisy circle + some in center
+  for (let i = 0; i < nodeCount; i++) {
+    let x, y;
+    if (i < nodeCount * 0.7) {
+      // most nodes on "ring"
+      const angle = (i / nodeCount) * Math.PI * 2 + Math.random() * 0.4 - 0.2;
+      const radius = 0.38 + Math.random() * 0.08;
+      x = 0.5 + radius * Math.cos(angle);
+      y = 0.5 + radius * Math.sin(angle);
+    } else {
+      // few nodes more central
+      x = 0.45 + Math.random() * 0.3;
+      y = 0.45 + Math.random() * 0.3;
+    }
+    nodes.push({ id: i, x, y });
+  }
+
+  // Create undirected edges
+  for (let i = 0; i < nodeCount; i++) {
+    for (let j = i + 1; j < nodeCount; j++) {
+      if (Math.random() < edgeProbability) {
+        edges.push([i, j]);
+      }
+    }
+  }
+
+  // Guarantee connected graph (very simple union-find + connect components)
+  const parent = Array.from({length: nodeCount}, (_, i) => i);
+  function find(x) {
+    if (parent[x] !== x) parent[x] = find(parent[x]);
+    return parent[x];
+  }
+  function union(x, y) {
+    const px = find(x), py = find(y);
+    if (px !== py) parent[px] = py;
+  }
+
+  edges.forEach(([a, b]) => union(a, b));
+
+  // Find components
+  const components = {};
+  for (let i = 0; i < nodeCount; i++) {
+    const p = find(i);
+    if (!components[p]) components[p] = [];
+    components[p].push(i);
+  }
+
+  const compKeys = Object.keys(components);
+  if (compKeys.length > 1) {
+    // connect components in chain
+    for (let i = 1; i < compKeys.length; i++) {
+      const a = components[compKeys[i-1]][0];
+      const b = components[compKeys[i]][0];
+      edges.push([a, b]);
+    }
+  }
+
+  return { nodes, edges };
 }
+
+function loadPreset(name) {
+  currentPreset = name;
+  
+  // Visual feedback
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('p-' + name);
+  if (btn) btn.classList.add('active');
+
+  let presetData;
+
+  if (name === 'random') {
+    presetData = generateRandomGraph();
+  } else if (PRESETS[name]) {
+    presetData = PRESETS[name];
+  } else {
+    // fallback
+    presetData = PRESETS['simple'];
+    currentPreset = 'simple';
+    document.getElementById('p-simple').classList.add('active');
+  }
+
+  graph = buildGraph(presetData);
+  
+  // Choose sensible start & target
+  const allIds = graph.nodes.map(n => n.id);
+  const maxId = Math.max(...allIds);
+  startNode = 0;
+  // Try to pick something far-ish from start
+  targetNode = maxId >= 6 ? Math.floor(maxId * 0.7) : maxId;
+
+  // Update inputs
+  document.getElementById('startInput').value = startNode;
+  document.getElementById('targetInputEl').value = targetNode;
+  document.getElementById('sTarget').textContent = targetNode;
+
+  resizeCanvas();
+  resetAll();
+}
+
 function applyInputs(){
   const s=parseInt(document.getElementById('startInput').value),t=parseInt(document.getElementById('targetInputEl').value);
   const ids=graph.nodes.map(n=>n.id);
