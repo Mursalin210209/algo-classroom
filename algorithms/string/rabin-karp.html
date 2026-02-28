@@ -7,73 +7,805 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+:root {
+  --cell-default: #1a2840;
+  --cell-default-stroke: #2a4060;
+  --cell-process: #ff8c42;
+  --cell-match: #06d6a0;
+  --cell-mismatch: #ff6b9d;
+  --cell-box: rgba(6,214,160,0.1);
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+#vizCanvas {
+  width: 100%; border-radius: 8px;
+  background: transparent; display: block;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+
+.arr-input {
+  flex: 1; min-width: 200px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+
+
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px; text-align: center;
+}
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+/* Voice toggle */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
+<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
+
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">🎲</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Rabin-Karp</h1>
-    <p class="cs-sub">Rolling hash-based pattern matching for multiple patterns.</p>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🔒</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">String Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Rabin-Karp</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      String matching algorithm that uses hashing to efficiently search for a pattern in text by computing rolling hashes.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Time: <span>Avg O(n+m), Worst O(nm)</span></div>
+      <div class="cplx-chip">Space: <span>O(1)</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Rolling hash function</li>
-        <li>Collision handling</li>
-        <li>Multi-pattern search</li>
-      </ul>
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Rolling Hash</div><div class="cc-desc">Computes hash for sliding windows efficiently without recomputing from scratch.</div></div>
+    <div class="cc"><span class="cc-icon">📊</span><div class="cc-title">Pattern Hash</div><div class="cc-desc">Precomputed hash value for the entire pattern.</div></div>
+    <div class="cc"><span class="cc-icon">⚠️</span><div class="cc-title">Collision Check</div><div class="cc-desc">Verifies exact match when hashes collide to avoid false positives.</div></div>
+    <div class="cc"><span class="cc-icon">🚀</span><div class="cc-title">Efficient Search</div><div class="cc-desc">Average linear time for searching, suitable for multiple patterns.</div></div>
+  </div>
+
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Rabin-Karp! Let me explain how this algorithm works before we begin...</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="two-col">
+
+    <!-- LEFT: Canvas -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:var(--cell-process);"></div>Processing</div>
+          <div class="li"><div class="ld" style="background:var(--cell-match);"></div>Match</div>
+          <div class="li"><div class="ld" style="background:var(--cell-mismatch);"></div>Mismatch</div>
+          <div class="li"><div class="ld" style="background:var(--cell-box);border:1px solid var(--cell-match);"></div>Matched</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="340"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random</button>
+          <button class="btn" onclick="collisionExample()">💥 Collision Ex</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Text:</label>
+          <input type="text" class="arr-input" id="textInput" value="ABABDABACDABABCABAB">
+        </div>
+        <div class="input-row">
+          <label>Pattern:</label>
+          <input type="text" class="arr-input" id="patternInput" value="ABABCABAB">
+          <button class="btn" onclick="applyInputs()">Apply</button>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="si"><span class="sl">Position</span><span class="sv orange" id="sPass">0</span></div>
+        <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
+        <div class="si"><span class="sl">Slides</span><span class="sv" id="sSwaps">0</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="divider-auto"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Comparisons</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSwaps">0</div><div class="stat-box-l">Slides</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPasses">0</div><div class="stat-box-l">Matches Found</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Text Length</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">rabinKarp</span>(text, pattern, q):</span>
+<span id="cl2" class="code-line">  d = 256  <span class="cm">// base</span></span>
+<span id="cl3" class="code-line">  n = text.<span class="fn">length</span></span>
+<span id="cl4" class="code-line">  m = pattern.<span class="fn">length</span></span>
+<span id="cl5" class="code-line">  p = 0  <span class="cm">// pattern hash</span></span>
+<span id="cl6" class="code-line">  t = 0  <span class="cm">// text hash</span></span>
+<span id="cl7" class="code-line">  h = 1</span>
+<span id="cl8" class="code-line">  <span class="kw">for</span> i = 1 <span class="kw">to</span> m-1:</span>
+<span id="cl9" class="code-line">    h = (h * d) % q</span>
+<span id="cl10" class="code-line">  <span class="kw">for</span> i = 0 <span class="kw">to</span> m-1:</span>
+<span id="cl11" class="code-line">    p = (d * p + ord(pattern[i])) % q</span>
+<span id="cl12" class="code-line">    t = (d * t + ord(text[i])) % q</span>
+<span id="cl13" class="code-line">  <span class="kw">for</span> s = 0 <span class="kw">to</span> n-m:</span>
+<span id="cl14" class="code-line">    <span class="kw">if</span> p == t:</span>
+<span id="cl15" class="code-line">      match = <span class="kw">true</span></span>
+<span id="cl16" class="code-line">      <span class="kw">for</span> j = 0 <span class="kw">to</span> m-1:</span>
+<span id="cl17" class="code-line">        <span class="kw">if</span> text[s+j] != pattern[j]:</span>
+<span id="cl18" class="code-line">          match = <span class="kw">false</span>; <span class="kw">break</span></span>
+<span id="cl19" class="code-line">      <span class="kw">if</span> match: found at s</span>
+<span id="cl20" class="code-line">    <span class="kw">if</span> s < n-m:</span>
+<span id="cl21" class="code-line">      t = (d * (t - ord(text[s]) * h) + ord(text[s+m])) % q</span>
+<span id="cl22" class="code-line">      <span class="kw">if</span> t < 0: t += q</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Current Hash (t)</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
+
     </div>
   </div>
-</div>
+
+</div><!-- .algo-page -->
+
+<script>
+// ════════════════════════════════════════════════
+// THEME TOGGLE
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+
+// Restore saved theme on load
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+
+// ════════════════════════════════════════════════
+ // WEB SPEECH API
+// ════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English'))       ||
+    voices.find(v => v.lang === 'en-US' && v.localService)       ||
+    voices.find(v => v.lang.startsWith('en'))                    ||
+    voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice  = ttsVoice;
+    utt.rate   = 0.88;
+    utt.pitch  = 1.05;
+    utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+
+function stopSpeech() {
+  synth && synth.cancel();
+  document.getElementById('speakBars').classList.remove('on');
+}
+
+// ════════════════════════════════════════════════
+// VOICE TOGGLE — default OFF
+// ════════════════════════════════════════════════
+let voiceEnabled = false;
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn   = document.getElementById('voiceToggle');
+  const icon  = document.getElementById('voiceIcon');
+  const lbl   = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+
+// ════════════════════════════════════════════════
+ // RABIN-KARP — STEP GENERATOR
+// ════════════════════════════════════════════════
+function buildRabinKarpSteps(text, pattern) {
+  const steps = [];
+  const n = text.length;
+  const m = pattern.length;
+  const d = 256; // base
+  const q = 101; // small prime for demo
+  let p = 0; // pattern hash
+  let t = 0; // text hash
+  let h = 1;
+  let totalComps = 0;
+  let totalSlides = 0;
+  let matches = [];
+
+  steps.push({
+    text, pattern, phase: 'start', s: -1, j: -1, p, t, h, compare: [], matches: [], narration: `Starting Rabin-Karp on text "${text}" (length ${n}) and pattern "${pattern}" (length ${m}). Base d=${d}, modulus q=${q}.`,
+    position: 0, comps: 0, slides: 0, codeLine: 1,
+  });
+
+  // Compute h = d^(m-1) % q
+  steps.push({
+    text, pattern, phase: 'compute_h_start', s: -1, j: -1, p, t, h, compare: [], matches: [], narration: `Computing h = d^(m-1) % q for rolling hash.`,
+    position: 0, comps: totalComps, slides: totalSlides, codeLine: 7,
+  });
+
+  for (let i = 0; i < m - 1; i++) {
+    const oldH = h;
+    h = (h * d) % q;
+    steps.push({
+      text, pattern, phase: 'compute_h', s: -1, j: -1, p, t, h, compare: [], matches: [], narration: `Update h = (${oldH} * ${d}) % ${q} = ${h}.`,
+      position: i + 1, comps: totalComps, slides: totalSlides, codeLine: 9,
+    });
+  }
+
+  steps.push({
+    text, pattern, phase: 'compute_h_done', s: -1, j: -1, p, t, h, compare: [], matches: [], narration: `h computed as ${h}. Now computing initial hashes.`,
+    position: 0, comps: totalComps, slides: totalSlides, codeLine: 10,
+  });
+
+  // Compute initial p and t
+  for (let i = 0; i < m; i++) {
+    const charP = pattern.charCodeAt(i);
+    const charT = text.charCodeAt(i);
+    const oldP = p;
+    const oldT = t;
+    p = (d * p + charP) % q;
+    t = (d * t + charT) % q;
+    totalComps++;
+    steps.push({
+      text, pattern, phase: 'compute_initial_hash', s: -1, j: -1, p, t, h, compare: [i], matches: [], narration: `Update pattern hash p = (${oldP} * ${d} + ${charP}) % ${q} = ${p}. Text hash t = (${oldT} * ${d} + ${charT}) % ${q} = ${t}.`,
+      position: i, comps: totalComps, slides: totalSlides, codeLine: 11,
+    });
+  }
+
+  steps.push({
+    text, pattern, phase: 'initial_hash_done', s: -1, j: -1, p, t, h, compare: [], matches: [], narration: `Initial hashes: pattern p=${p}, text window t=${t}. Starting search.`,
+    position: 0, comps: totalComps, slides: totalSlides, codeLine: 13,
+  });
+
+  // Search loop
+  for (let s = 0; s <= n - m; s++) {
+    steps.push({
+      text, pattern, phase: 'check_hash', s, j: -1, p, t, h, compare: [], matches: [...matches], narration: `At shift s=${s}, compare hashes p=${p} and t=${t}.`,
+      position: s, comps: totalComps, slides: totalSlides, codeLine: 14,
+    });
+    totalComps++;
+
+    if (p === t) {
+      steps.push({
+        text, pattern, phase: 'hash_match', s, j: -1, p, t, h, compare: [], matches: [...matches], narration: `Hashes match! Checking characters for exact match.`,
+        position: s, comps: totalComps, slides: totalSlides, codeLine: 14,
+      });
+
+      let match = true;
+      for (let j = 0; j < m; j++) {
+        totalComps++;
+        if (text[s + j] !== pattern[j]) {
+          match = false;
+          steps.push({
+            text, pattern, phase: 'char_mismatch', s, j, p, t, h, compare: [s + j, j], match: false, matches: [...matches], narration: `Mismatch at j=${j}: text[${s + j}]='${text[s + j]}' != pattern[${j}]='${pattern[j]}'. False positive.`,
+            position: s, comps: totalComps, slides: totalSlides, codeLine: 17,
+          });
+          break;
+        } else {
+          steps.push({
+            text, pattern, phase: 'char_match', s, j, p, t, h, compare: [s + j, j], match: true, matches: [...matches], narration: `Match at j=${j}: text[${s + j}]='${text[s + j]}' == pattern[${j}]='${pattern[j]}'.`,
+            position: s, comps: totalComps, slides: totalSlides, codeLine: 16,
+          });
+        }
+      }
+
+      if (match) {
+        matches.push(s);
+        steps.push({
+          text, pattern, phase: 'match_found', s, j: -1, p, t, h, compare: [], matches: [...matches], narration: `Exact match found at position ${s}!`,
+          position: s, comps: totalComps, slides: totalSlides, codeLine: 19,
+        });
+      }
+    } else {
+      steps.push({
+        text, pattern, phase: 'hash_mismatch', s, j: -1, p, t, h, compare: [], matches: [...matches], narration: `Hashes do not match. Slide window.`,
+        position: s, comps: totalComps, slides: totalSlides, codeLine: 14,
+      });
+    }
+
+    if (s < n - m) {
+      const oldT = t;
+      const outChar = text.charCodeAt(s);
+      const inChar = text.charCodeAt(s + m);
+      t = (d * (t - outChar * h) + inChar) % q;
+      if (t < 0) t += q;
+      totalSlides++;
+      steps.push({
+        text, pattern, phase: 'slide_window', s: s + 1, j: -1, p, t, h, compare: [s, s + m], matches: [...matches], narration: `Slide window: t = (${d} * (${oldT} - ${outChar} * ${h}) + ${inChar}) % ${q} = ${t}.`,
+        position: s + 1, comps: totalComps, slides: totalSlides, codeLine: 21,
+      });
+    }
+  }
+
+  steps.push({
+    text, pattern, phase: 'done', s: -1, j: -1, p, t, h, compare: [], matches: [...matches], narration: `Rabin-Karp complete! Matches found at positions [${matches.join(', ')}]. Total comparisons: ${totalComps}, slides: ${totalSlides}.`,
+    position: n, comps: totalComps, slides: totalSlides, codeLine: 22,
+  });
+
+  return {steps, matchesCount: matches.length};
+}
+
+// ════════════════════════════════════════════════
+// INTRO SPEECH
+// ════════════════════════════════════════════════
+let introAborted = false;
+
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const introLines = [
+    "Hello! I am your algorithm teacher. Today we are learning the Rabin-Karp algorithm — a hashing-based string matching technique.",
+    "Rabin-Karp uses rolling hashes to quickly compare substrings of the text with the pattern.",
+    "It precomputes the hash of the pattern and the initial window of the text, then slides the window updating the hash efficiently.",
+    "When hashes match, it checks character by character to confirm, handling potential collisions.",
+    "In the visualization, orange is processing, green for matches, pink for mismatches, and light green for matched regions.",
+    "The algorithm runs in average O(n + m) time, but worst-case O(nm) due to collisions.",
+    "Now, turn on Voice Mode and press Play. I will guide you through every single step."
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < introLines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = introLines[i];
+    await speak(introLines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+
+// ════════════════════════════════════════════════
+// CANVAS
+// ════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+
+function drawRabinKarp(step) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!step) return;
+  const text = step.text, pattern = step.pattern, phase = step.phase;
+  const n = text.length, m = pattern.length, W = canvas.width, H = canvas.height;
+  const cellW = Math.max(20, Math.min(40, W / Math.max(n, m)));
+  const gap = (W - Math.max(n, m) * cellW) / (Math.max(n, m) + 1);
+  const cellH = 35;
+  const patternY = 20;
+  const hashBaseY = H - 30;
+  const textY = 90;
+  const alignedY = textY + cellH + 10;
+  const cmp = step.compare || [];
+  const s = step.s;
+  const j = step.j;
+  const matches = step.matches || [];
+  const isMismatch = phase.includes('mismatch');
+  const isComputeH = phase.startsWith('compute_h');
+  const isInitialHash = phase === 'compute_initial_hash';
+  const isSearch = phase.startsWith('check') || phase.startsWith('hash') || phase.startsWith('char') || phase === 'match_found' || phase === 'slide_window' || phase === 'done';
+
+  // Draw pattern cells
+  pattern.split('').forEach((char, idx) => {
+    const x = gap + idx * (cellW + gap);
+    let fill = '#1a2840', stroke = '#2a4060', textColor = '#4a6a9a';
+    if (isSearch && s >= 0 && idx === j) { fill = 'rgba(255,140,66,0.25)'; stroke = '#ff8c42'; textColor = '#fff'; }
+    if (cmp[1] === idx) {
+      if (isMismatch) { fill = 'rgba(255,107,157,0.25)'; stroke = '#ff6b9d'; textColor = '#fff'; }
+      else { fill = 'rgba(6,214,160,0.25)'; stroke = '#06d6a0'; textColor = '#fff'; }
+    }
+    ctx.beginPath(); ctx.roundRect(x, patternY, cellW, cellH, 4);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke();
+
+    ctx.fillStyle = textColor;
+    ctx.font = `bold ${Math.min(18, cellW-4)}px JetBrains Mono`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(char.toUpperCase(), x + cellW/2, patternY + cellH/2);
+
+    ctx.fillStyle = '#2a3d58'; ctx.font = '9px JetBrains Mono'; ctx.textBaseline = 'top';
+    ctx.fillText(idx, x + cellW/2, patternY + cellH + 4);
+  });
+
+  // Draw hash labels
+  ctx.fillStyle = '#2a3d58'; ctx.font = '12px JetBrains Mono';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(`Pattern Hash (p): ${step.p}`, 10, hashBaseY - 30);
+  ctx.fillText(`Window Hash (t): ${step.t}`, 10, hashBaseY - 10);
+
+  // Draw text cells
+  text.split('').forEach((char, idx) => {
+    const x = gap + idx * (cellW + gap);
+    let fill = '#1a2840', stroke = '#2a4060', textColor = '#4a6a9a';
+    if (isSearch && s >= 0 && idx >= s && idx < s + m) {
+      fill = 'rgba(255,140,66,0.25)'; stroke = '#ff8c42'; textColor = '#fff';
+    }
+    if (cmp[0] === idx) {
+      if (isMismatch) { fill = 'rgba(255,107,157,0.25)'; stroke = '#ff6b9d'; textColor = '#fff'; }
+      else { fill = 'rgba(6,214,160,0.25)'; stroke = '#06d6a0'; textColor = '#fff'; }
+    }
+    if (matches.some(pos => idx >= pos && idx < pos + m)) { fill = 'rgba(6,214,160,0.1)'; stroke = '#06d6a0'; }
+    if (phase === 'slide_window' && (idx === s || idx === s + m - 1)) { fill = 'rgba(255,140,66,0.25)'; stroke = '#ff8c42'; textColor = '#fff'; }
+    ctx.beginPath(); ctx.roundRect(x, textY, cellW, cellH, 4);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke();
+
+    ctx.fillStyle = textColor;
+    ctx.font = `bold ${Math.min(18, cellW-4)}px JetBrains Mono`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(char.toUpperCase(), x + cellW/2, textY + cellH/2);
+
+    ctx.fillStyle = '#2a3d58'; ctx.font = '9px JetBrains Mono'; ctx.textBaseline = 'top';
+    ctx.fillText(idx, x + cellW/2, textY + cellH + 4);
+  });
+
+  // Draw aligned pattern during search
+  if (isSearch && s >= 0) {
+    pattern.split('').forEach((char, jdx) => {
+      if (s + jdx >= n) return;
+      const x = gap + (s + jdx) * (cellW + gap);
+      let fill = '#1a2840', stroke = '#2a4060', textColor = '#4a6a9a';
+      if (phase === 'hash_match' || phase === 'char_match') { fill = 'rgba(6,214,160,0.25)'; stroke = '#06d6a0'; textColor = '#fff'; }
+      if (phase === 'char_mismatch') { fill = 'rgba(255,107,157,0.25)'; stroke = '#ff6b9d'; textColor = '#fff'; }
+      if (phase === 'match_found') { fill = 'rgba(6,214,160,0.25)'; stroke = '#06d6a0'; textColor = '#fff'; }
+      if (jdx === j) {
+        if (isMismatch) { fill = 'rgba(255,107,157,0.25)'; stroke = '#ff6b9d'; textColor = '#fff'; }
+        else if (phase === 'char_match') { fill = 'rgba(6,214,160,0.25)'; stroke = '#06d6a0'; textColor = '#fff'; }
+        else { fill = 'rgba(255,140,66,0.25)'; stroke = '#ff8c42'; textColor = '#fff'; }
+      }
+      ctx.beginPath(); ctx.roundRect(x, alignedY, cellW, cellH, 4);
+      ctx.fillStyle = fill; ctx.fill();
+      ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke();
+
+      ctx.fillStyle = textColor;
+      ctx.font = `bold ${Math.min(18, cellW-4)}px JetBrains Mono`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(char.toUpperCase(), x + cellW/2, alignedY + cellH/2);
+    });
+  }
+}
+
+// ════════════════════════════════════════════════
+// CONTROLLER
+// ════════════════════════════════════════════════
+let steps = [];
+let textStr = 'ABABDABACDABABCABAB';
+let patternStr = 'ABABCABAB';
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+let matchesCount = 0;
+
+const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
+function onSpeedChange(val) {
+  speedMult = parseInt(val);
+  document.getElementById('speedVal').textContent = val + '×';
+}
+
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
+
+function updateStatusBar(step, idx) {
+  document.getElementById('sPass').textContent  = step.position  || 0;
+  document.getElementById('sComps').textContent = step.comps || 0;
+  document.getElementById('sSwaps').textContent = step.slides || 0;
+  document.getElementById('statComps').textContent  = step.comps || 0;
+  document.getElementById('statSwaps').textContent  = step.slides || 0;
+  document.getElementById('statPasses').textContent = matchesCount;
+  document.getElementById('arrDisplay').textContent = `${step.t}`;
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { 
+    start:['ph-idle','Start'], 
+    compute_h_start:['ph-active','Compute h'], 
+    compute_h:['ph-active','Updating h'], 
+    compute_h_done:['ph-done','h Done'], 
+    compute_initial_hash:['ph-active','Initial Hash'], 
+    initial_hash_done:['ph-done','Hashes Done'], 
+    check_hash:['ph-compare','Check Hash'], 
+    hash_match:['ph-compare','Hash Match'], 
+    hash_mismatch:['ph-swap','Hash Mismatch'], 
+    char_match:['ph-compare','Char Match'], 
+    char_mismatch:['ph-swap','Char Mismatch'], 
+    match_found:['ph-done','Match Found'], 
+    slide_window:['ph-active','Slide Window'], 
+    done:['ph-done','Done'], 
+    idle:['ph-idle','Idle'] 
+  };
+  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  for (let i = 1; i <= 22; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
+  }
+}
+
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  drawRabinKarp(step);
+  updateNarration(step);
+  updateStatusBar(step, idx);
+  if (autoAdvance) scheduleNext(step);
+}
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+
+function nextStep() {
+  clearIntroTimeouts();
+  stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function resetAll() {
+  stopPlay();
+  introAborted = true;
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  drawRabinKarp(steps[0]);
+  document.getElementById('arrDisplay').textContent = `${steps[0].t}`;
+  ['sPass','sComps','sSwaps','statComps','statSwaps','statPasses'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  for (let i = 1; i <= 22; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; }
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  if (voiceEnabled) playIntroSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+function applyInputs() {
+  const rawText = document.getElementById('textInput').value.trim();
+  const rawPattern = document.getElementById('patternInput').value.trim();
+  if (rawPattern.length < 2 || rawText.length < rawPattern.length) { alert('Pattern at least 2 chars, text longer than pattern.'); return; }
+  textStr = rawText.slice(0, 30);
+  patternStr = rawPattern.slice(0, 20);
+  init();
+}
+
+function randomize() {
+  const alphabet = 'ABCD';
+  const patLen = Math.floor(Math.random() * 5) + 5;
+  const textLen = patLen * 3 + Math.floor(Math.random() * 10);
+  const pattern = Array.from({length: patLen}, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+  let text = '';
+  for (let i = 0; i < 3; i++) {
+    const randSeg = Array.from({length: Math.floor(Math.random() * 5) + 3}, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+    text += randSeg + (Math.random() > 0.3 ? pattern : pattern.split('').map(c => Math.random() > 0.8 ? alphabet[Math.floor(Math.random() * alphabet.length)] : c).join(''));
+  }
+  text = text.slice(0, textLen);
+  document.getElementById('textInput').value = text;
+  document.getElementById('patternInput').value = pattern;
+  init();
+}
+
+function collisionExample() {
+  document.getElementById('textInput').value = "ABCACAAAHDEF";
+  document.getElementById('patternInput').value = "AAH";
+  applyInputs();
+}
+
+function init() {
+  resizeCanvas();
+
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+
+  document.getElementById('statN').textContent = textStr.length;
+  const {steps: newSteps, matchesCount: newMatchesCount} = buildRabinKarpSteps(textStr, patternStr);
+  steps = newSteps;
+  matchesCount = newMatchesCount;
+  stopPlay();
+  stepIdx = -1;
+  drawRabinKarp(steps[0]);
+  document.getElementById('arrDisplay').textContent = `${steps[0].t}`;
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) drawRabinKarp(steps[stepIdx]);
+  else if (steps.length > 0) drawRabinKarp(steps[0]);
+});
+
+init();
+</script>
 </body>
 </html>

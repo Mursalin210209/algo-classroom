@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interval Scheduling</title>
+<style>
+body { font-family: Arial; background:#0f172a; color:white; padding:40px; }
+h1 { color:#00d4aa; }
+code { background:#1e293b; padding:10px; display:block; margin-top:15px; }
+</style>
+</head>
+<body>
+<h1>Interval Scheduling</h1>
+<p>This is a demo implementation page for Interval Scheduling using Greedy strategy.</p>
+
+<h2>Demo Pseudocode</h2>
+<code>
+Step 1: Sort input based on greedy condition.<br>
+Step 2: Pick best available choice.<br>
+Step 3: Repeat until solution is complete.
+</code>
+
+<h2>JavaScript Demo (Simple Example)</h2>
+<code>
+function greedyDemo(arr) {
+  arr.sort((a,b) => a-b);
+  return arr;
+}
+
+console.log(greedyDemo([5,3,8,1]));
+</code>
+
+</body>
+</html>
