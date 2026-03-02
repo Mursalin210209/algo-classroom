@@ -3,77 +3,966 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stack — AlgoClassroom</title>
+<title>Stack Operations — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/css/main.css">
+
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+/* ── CSS RESET & VARIABLES ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #07101f;
+  --surface:  #0d1b2e;
+  --surface2: #111f35;
+  --border:   #1e3352;
+  --text:     #c9d8ef;
+  --text-dim: #4a6a9a;
+  --teal:     #00d4aa;
+  --orange:   #ff8c42;
+  --pink:     #ff6b9d;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Syne', sans-serif;
+
+  --clr-push:   #ff8c42;
+  --clr-pop:    #ff6b9d;
+  --clr-peek:   #7eb8ff;
+  --clr-empty:  #1a2840;
+  --clr-sorted: #06d6a0;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+
+[data-theme="light"] {
+  --bg:       #f0f4fb;
+  --surface:  #ffffff;
+  --surface2: #e8eef8;
+  --border:   #cdd8ee;
+  --text:     #162032;
+  --text-dim: #5a7a9a;
+  --teal:     #009e7e;
+  --clr-empty: #d0ddef;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+
+/* ── BACKGROUND ── */
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.bg-glow {
+  position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 600px; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse at center, rgba(0,212,170,0.06) 0%, transparent 70%);
+}
+
+/* ── NAVBAR ── */
+/* ── PAGE WRAPPER ── */
+.algo-page {
+  max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px;
+  position: relative; z-index: 1;
+}
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+  text-decoration: none; margin-bottom: 18px;
+  transition: color .2s;
+}
+.back-link:hover { color: var(--teal); }
+
+/* ── HEADER ── */
+.card-difficulty {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+  border: 1px solid;
+}
+.beginner { color: #06d6a0; border-color: rgba(6,214,160,.3); background: rgba(6,214,160,.08); }
+.complexity { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.cplx-chip {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+}
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+
+/* ── CONCEPT CARDS ── */
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.cc {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; transition: border-color .2s;
+}
+.cc:hover { border-color: rgba(0,212,170,.3); }
+.cc-icon { font-size: 22px; display: block; margin-bottom: 8px; }
+.cc-title { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 5px; }
+.cc-desc { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+
+/* ── NARRATION ── */
+.narration {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 16px;
+}
+.teacher { font-size: 24px; flex-shrink: 0; }
+.narration-text { font-size: 13px; color: var(--text); line-height: 1.65; flex: 1; }
+.speak-bars { display: flex; align-items: flex-end; gap: 2px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+.speak-bars span {
+  width: 3px; background: var(--teal); border-radius: 2px; height: 4px;
+  animation: none; opacity: .3;
+}
+.speak-bars.on span { animation: barPulse 0.5s ease-in-out infinite alternate; opacity: 1; }
+.speak-bars.on span:nth-child(2) { animation-delay: .1s; }
+.speak-bars.on span:nth-child(3) { animation-delay: .2s; }
+.speak-bars.on span:nth-child(4) { animation-delay: .3s; }
+.speak-bars.on span:nth-child(5) { animation-delay: .4s; }
+@keyframes barPulse { from { height: 3px; } to { height: 14px; } }
+
+/* ── PANEL ── */
+.panel {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 18px; margin-bottom: 0;
+}
+.panel-hd {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 12px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── CONTROLS ── */
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;
+  margin-top: 14px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+.arr-input {
+  flex: 1; min-width: 160px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+.btn {
+  padding: 7px 14px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text); font-family: var(--mono);
+  font-size: 11px; cursor: pointer; transition: background .2s, border-color .2s, color .2s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface); border-color: var(--text-dim); }
+.btn-primary { background: rgba(0,212,170,.12); border-color: rgba(0,212,170,.3); color: var(--teal); }
+.btn-primary:hover { background: rgba(0,212,170,.2); }
+.btn-danger { background: rgba(255,107,157,.1); border-color: rgba(255,107,157,.3); color: var(--pink); }
+.btn-danger:hover { background: rgba(255,107,157,.2); }
+.btn-push { background: rgba(255,140,66,.1); border-color: rgba(255,140,66,.3); color: var(--orange); }
+.btn-push:hover { background: rgba(255,140,66,.2); }
+.btn-pop  { background: rgba(255,107,157,.1); border-color: rgba(255,107,157,.3); color: var(--pink); }
+.btn-pop:hover  { background: rgba(255,107,157,.2); }
+.speed-ctrl { display: flex; align-items: center; gap: 7px; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+.speed-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 20px; }
+input[type=range] { accent-color: var(--teal); cursor: pointer; }
+
+/* ── STATUS ROW ── */
+.status-row {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 10px 14px; margin-top: 12px;
+}
+.si { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sl { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+.sv { font-family: var(--mono); font-size: 14px; font-weight: 800; color: var(--teal); }
+.orange { color: var(--orange) !important; }
+.phase-badge {
+  font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 5px;
+  border: 1px solid; font-weight: 700; letter-spacing: 1px;
+}
+.ph-idle    { color: var(--text-dim); border-color: var(--border); background: transparent; }
+.ph-push    { color: var(--orange);   border-color: rgba(255,140,66,.3); background: rgba(255,140,66,.1); }
+.ph-pop     { color: var(--pink);     border-color: rgba(255,107,157,.3); background: rgba(255,107,157,.1); }
+.ph-peek    { color: #7eb8ff;         border-color: rgba(126,184,255,.3); background: rgba(126,184,255,.1); }
+.ph-done    { color: var(--teal);     border-color: rgba(0,212,170,.3); background: rgba(0,212,170,.1); }
+.ph-empty   { color: var(--text-dim); border-color: var(--border); background: var(--surface2); }
+.divider-auto { flex: 1; }
+.prog-wrap {
+  width: 100px; height: 4px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; overflow: hidden;
+}
+.prog-fill { height: 100%; background: var(--teal); border-radius: 4px; width: 0%; transition: width .3s; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+
+/* ── LEGEND ── */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+.li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+.ld { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+.voice-btn {
+  margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,.08); border-color: rgba(0,212,170,.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+
+/* ── TWO COLUMN LAYOUT ── */
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── STACK CANVAS ── */
+#vizCanvas { width: 100%; border-radius: 8px; background: transparent; display: block; }
+
+/* ── STATS GRID ── */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; text-align: center; }
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+/* ── CODE BLOCK ── */
+
+
+/* ── OP LOG ── */
+.op-log {
+  max-height: 180px; overflow-y: auto; font-family: var(--mono); font-size: 11px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.log-entry {
+  padding: 5px 9px; border-radius: 5px; border: 1px solid var(--border);
+  background: var(--surface2); display: flex; align-items: center; gap: 8px;
+  animation: fadeIn .3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.log-tag {
+  font-size: 9px; padding: 2px 6px; border-radius: 4px; border: 1px solid;
+  font-weight: 800; letter-spacing: 1px; flex-shrink: 0;
+}
+.log-push { color: var(--orange); border-color: rgba(255,140,66,.4); background: rgba(255,140,66,.1); }
+.log-pop  { color: var(--pink);   border-color: rgba(255,107,157,.4); background: rgba(255,107,157,.1); }
+.log-peek { color: #7eb8ff; border-color: rgba(126,184,255,.4); background: rgba(126,184,255,.1); }
+.log-init { color: var(--teal);   border-color: rgba(0,212,170,.4); background: rgba(0,212,170,.1); }
+.log-msg { color: var(--text-dim); }
+
+.narration-text.intro-mode { color: var(--teal); font-weight: 600; }
+
+/* ── INTERACTIVE OP BUTTONS ── */
+.op-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  margin-top: 14px;
+}
+.op-panel-hd { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+.op-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.push-val {
+  width: 80px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 10px; color: var(--text); font-family: var(--mono);
+  font-size: 12px; text-align: center; outline: none; transition: border-color .2s;
+}
+.push-val:focus { border-color: var(--orange); }
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
+<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
-    <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <a href="#" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="#">Sorting</a>
+      <a href="#">Searching</a>
+      <a href="#">Graph</a>
+      <a href="#">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+      <span id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
-  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">📚</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Stack</h1>
-    <p class="cs-sub">LIFO data structure — push, pop, peek with call stack simulation.</p>
+  <a href="#" class="back-link">← Back to All Algorithms</a>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Push, pop, peek operations</li>
-        <li>Call stack visualization</li>
-        <li>Balanced parentheses application</li>
-      </ul>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">📦</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Data Structure</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Stack Operations</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty beginner">Beginner</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      A Stack is a <strong>Last-In, First-Out (LIFO)</strong> data structure. Elements are added and removed from the same end — the <em>top</em>. Visualize Push, Pop, Peek, and isEmpty operations step by step.
+    </p>
+    <div class="complexity">
+      <div class="cplx-chip">Push: <span>O(1)</span></div>
+      <div class="cplx-chip">Pop: <span>O(1)</span></div>
+      <div class="cplx-chip">Peek: <span>O(1)</span></div>
+      <div class="cplx-chip">Search: <span>O(n)</span></div>
+      <div class="cplx-chip">Space: <span>O(n)</span></div>
+    </div>
+  </header>
+
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">➕</span><div class="cc-title">Push</div><div class="cc-desc">Add an element to the top of the stack. The new element becomes the new top.</div></div>
+    <div class="cc"><span class="cc-icon">➖</span><div class="cc-title">Pop</div><div class="cc-desc">Remove and return the top element. The element below it becomes the new top.</div></div>
+    <div class="cc"><span class="cc-icon">👁️</span><div class="cc-title">Peek / Top</div><div class="cc-desc">Look at the top element without removing it. Useful for checking what comes next.</div></div>
+    <div class="cc"><span class="cc-icon">📋</span><div class="cc-title">LIFO Principle</div><div class="cc-desc">Last In, First Out — like a stack of plates. The last plate added is the first one removed.</div></div>
+  </div>
+
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Stack Operations! A stack works like a pile of books — you can only add or remove from the top. Let's explore it step by step.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Main two-col layout -->
+  <div class="two-col">
+
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:var(--clr-push);"></div>Pushed</div>
+          <div class="li"><div class="ld" style="background:var(--clr-pop);"></div>Popping</div>
+          <div class="li"><div class="ld" style="background:var(--clr-peek);"></div>Peeking</div>
+          <div class="li"><div class="ld" style="background:var(--clr-sorted);"></div>Top</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="380"></canvas>
+      </div>
+
+      <!-- Controls: Auto-play sequence -->
+      <div class="controls">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;">AUTO DEMO</div>
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play Demo</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomizeDemo()">🎲 New Demo</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive operations -->
+      <div class="op-panel">
+        <div class="op-panel-hd">⚡ Interactive Operations</div>
+        <div class="op-row">
+          <input type="number" class="push-val" id="pushVal" value="42" min="1" max="999" placeholder="Value">
+          <button class="btn btn-push" onclick="interactivePush()">📥 Push</button>
+          <button class="btn btn-pop" onclick="interactivePop()">📤 Pop</button>
+          <button class="btn" style="color:#7eb8ff;border-color:rgba(126,184,255,.3);background:rgba(126,184,255,.08);" onclick="interactivePeek()">👁️ Peek</button>
+          <button class="btn" onclick="interactiveIsEmpty()">❓ isEmpty</button>
+          <button class="btn" onclick="clearStack()">🗑️ Clear Stack</button>
+        </div>
+      </div>
+
+      <!-- Status row -->
+      <div class="status-row">
+        <div class="si"><span class="sl">Size</span><span class="sv orange" id="sSize">0</span></div>
+        <div class="si"><span class="sl">Pushes</span><span class="sv" id="sPushes">0</span></div>
+        <div class="si"><span class="sl">Pops</span><span class="sv" id="sPops">0</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="divider-auto"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1"  class="code-line"><span class="kw">class</span> <span class="fn">Stack</span>:</span>
+<span id="cl2"  class="code-line">  stack = []</span>
+<span id="cl3"  class="code-line"> </span>
+<span id="cl4"  class="code-line">  <span class="kw">def</span> <span class="fn">push</span>(val):</span>
+<span id="cl5"  class="code-line">    stack.<span class="fn">append</span>(val)</span>
+<span id="cl6"  class="code-line"> </span>
+<span id="cl7"  class="code-line">  <span class="kw">def</span> <span class="fn">pop</span>():</span>
+<span id="cl8"  class="code-line">    <span class="kw">if</span> <span class="fn">isEmpty</span>(): <span class="kw">return</span> <span class="num">null</span></span>
+<span id="cl9"  class="code-line">    <span class="kw">return</span> stack.<span class="fn">pop</span>()</span>
+<span id="cl10" class="code-line"> </span>
+<span id="cl11" class="code-line">  <span class="kw">def</span> <span class="fn">peek</span>():</span>
+<span id="cl12" class="code-line">    <span class="kw">if</span> <span class="fn">isEmpty</span>(): <span class="kw">return</span> <span class="num">null</span></span>
+<span id="cl13" class="code-line">    <span class="kw">return</span> stack[stack.length - <span class="num">1</span>]</span>
+<span id="cl14" class="code-line"> </span>
+<span id="cl15" class="code-line">  <span class="kw">def</span> <span class="fn">isEmpty</span>():</span>
+<span id="cl16" class="code-line">    <span class="kw">return</span> stack.length == <span class="num">0</span></span>
+        </div>
+      </div>
+
+            <div class="panel">
+        <div class="panel-hd">📋 Operation Log</div>
+        <div class="op-log" id="opLog">
+          <div class="log-entry"><span class="log-tag log-init">INIT</span><span class="log-msg">Stack initialized (empty)</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statSize">0</div><div class="stat-box-l">Stack Size</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statTop">—</div><div class="stat-box-l">Top Element</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPushes">0</div><div class="stat-box-l">Total Pushes</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPops">0</div><div class="stat-box-l">Total Pops</div></div>
+        </div>
+      </div>
+
+
+
+
     </div>
   </div>
+
 </div>
+
+<script>
+// ──────────────────────────────────────────────
+// THEME
+// ──────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const light = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', light ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = light ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  if (currentStep) drawCanvas(currentStep);
+}
+(function() {
+  const s = localStorage.getItem('theme');
+  if (s === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('toggleLabel').textContent = 'Dark mode';
+  }
+})();
+
+// ──────────────────────────────────────────────
+// SPEECH
+// ──────────────────────────────────────────────
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const v = synth.getVoices();
+  ttsVoice = v.find(x=>x.name.includes('Google UK English Female'))
+           || v.find(x=>x.name.includes('Google US English'))
+           || v.find(x=>x.lang==='en-US'&&x.localService)
+           || v.find(x=>x.lang.startsWith('en')) || v[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = ttsVoice; u.rate = 0.88; u.pitch = 1.05; u.volume = 1;
+    u.onstart = () => document.getElementById('speakBars').classList.add('on');
+    u.onend = u.onerror = () => { document.getElementById('speakBars').classList.remove('on'); resolve(); };
+    synth.speak(u);
+  });
+}
+function stopSpeech() { synth&&synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const icon = document.getElementById('voiceIcon'), lbl = document.getElementById('voiceLabel');
+  const btn = document.getElementById('voiceToggle');
+  if (voiceEnabled) { icon.textContent='🔊'; lbl.textContent='Voice On'; btn.classList.remove('off'); document.getElementById('speedWrap').style.display='none'; }
+  else              { icon.textContent='🔇'; lbl.textContent='Voice Off'; btn.classList.add('off'); stopSpeech(); document.getElementById('speedWrap').style.display=''; }
+}
+
+// ──────────────────────────────────────────────
+// STEP BUILDER
+// ──────────────────────────────────────────────
+// Each step: { stack:[], highlight: null | {idx,type:'push'|'pop'|'peek'}, narration, phase, codeLine, pushes, pops, op? }
+
+function buildSteps(operations) {
+  const steps = [];
+  const s = [];
+  let pushes = 0, pops = 0;
+
+  steps.push({
+    stack: [...s], highlight: null,
+    narration: 'Stack initialized. It is empty. The stack follows the LIFO principle — Last In, First Out.',
+    phase: 'idle', codeLine: 1, pushes, pops
+  });
+
+  for (const op of operations) {
+    if (op.type === 'push') {
+      steps.push({
+        stack: [...s], highlight: null,
+        narration: `Calling push(${op.val}). We will add ${op.val} to the top of the stack.`,
+        phase: 'push', codeLine: 4, pushes, pops, op
+      });
+      s.push(op.val); pushes++;
+      steps.push({
+        stack: [...s], highlight: { idx: s.length-1, type: 'push' },
+        narration: `Pushed ${op.val} onto the stack. It is now the top element. Stack size is now ${s.length}.`,
+        phase: 'push', codeLine: 5, pushes, pops, op
+      });
+    } else if (op.type === 'pop') {
+      if (s.length === 0) {
+        steps.push({
+          stack: [...s], highlight: null,
+          narration: 'Calling pop() — but the stack is empty! We return null. This is called a stack underflow.',
+          phase: 'idle', codeLine: 8, pushes, pops, op
+        });
+      } else {
+        const topVal = s[s.length-1];
+        steps.push({
+          stack: [...s], highlight: { idx: s.length-1, type: 'pop' },
+          narration: `Calling pop(). The top element is ${topVal}. We will remove it and return its value.`,
+          phase: 'pop', codeLine: 7, pushes, pops, op
+        });
+        s.pop(); pops++;
+        steps.push({
+          stack: [...s], highlight: null,
+          narration: `Popped ${topVal} from the stack. Stack size is now ${s.length}.${s.length>0?' New top is '+s[s.length-1]+'.':' Stack is now empty.'}`,
+          phase: 'pop', codeLine: 9, pushes, pops, op
+        });
+      }
+    } else if (op.type === 'peek') {
+      if (s.length === 0) {
+        steps.push({
+          stack: [...s], highlight: null,
+          narration: 'Calling peek() — but the stack is empty! We return null.',
+          phase: 'idle', codeLine: 12, pushes, pops, op
+        });
+      } else {
+        const topVal = s[s.length-1];
+        steps.push({
+          stack: [...s], highlight: { idx: s.length-1, type: 'peek' },
+          narration: `Calling peek(). Looking at the top element — it is ${topVal}. We do NOT remove it.`,
+          phase: 'peek', codeLine: 11, pushes, pops, op
+        });
+        steps.push({
+          stack: [...s], highlight: { idx: s.length-1, type: 'peek-done' },
+          narration: `Peek returned ${topVal}. The stack is unchanged. Stack size is still ${s.length}.`,
+          phase: 'peek', codeLine: 13, pushes, pops, op
+        });
+      }
+    } else if (op.type === 'isEmpty') {
+      const empty = s.length === 0;
+      steps.push({
+        stack: [...s], highlight: null,
+        narration: `Calling isEmpty(). Stack length is ${s.length}, so isEmpty returns ${empty}. ${empty?'The stack has no elements.':'The stack has elements.'}`,
+        phase: empty ? 'idle' : 'peek', codeLine: 15, pushes, pops, op
+      });
+    }
+  }
+
+  steps.push({
+    stack: [...s], highlight: null,
+    narration: `Demo complete! Stack has ${s.length} element${s.length!==1?'s':''}, ${pushes} push${pushes!==1?'es':''} and ${pops} pop${pops!==1?'s':''} were performed.`,
+    phase: 'done', codeLine: null, pushes, pops
+  });
+  return steps;
+}
+
+// ──────────────────────────────────────────────
+// DEFAULT DEMO
+// ──────────────────────────────────────────────
+function makeDefaultOps() {
+  return [
+    { type:'push', val:5 },
+    { type:'push', val:13 },
+    { type:'push', val:8 },
+    { type:'peek' },
+    { type:'push', val:21 },
+    { type:'pop' },
+    { type:'pop' },
+    { type:'push', val:7 },
+    { type:'isEmpty' },
+    { type:'push', val:42 },
+    { type:'pop' },
+    { type:'isEmpty' },
+  ];
+}
+function randomOps() {
+  const ops = [];
+  const pool = [7,14,22,3,55,88,11,37,60,9,27,44];
+  let size = 0;
+  for (let i = 0; i < 14; i++) {
+    const canPop = size > 0;
+    const r = Math.random();
+    if (r < 0.55 || !canPop) {
+      const v = pool[Math.floor(Math.random()*pool.length)];
+      ops.push({ type:'push', val:v }); size++;
+    } else if (r < 0.75) {
+      ops.push({ type:'pop' }); size--;
+    } else if (r < 0.88) {
+      ops.push({ type:'peek' });
+    } else {
+      ops.push({ type:'isEmpty' });
+    }
+  }
+  ops.push({ type:'isEmpty' });
+  return ops;
+}
+
+// ──────────────────────────────────────────────
+// CANVAS DRAWING
+// ──────────────────────────────────────────────
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+const MAX_DISPLAY = 10;
+
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+
+function drawCanvas(step, animOffset) {
+  resizeCanvas();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const W = canvas.width, H = canvas.height;
+  const hl = step.highlight;
+  const stack = step.stack;
+
+  // Stack container outline
+  const sw = Math.min(220, W * 0.55), sh = H - 60;
+  const sx = (W - sw) / 2, sy = 20;
+
+  // Bottom line
+  ctx.strokeStyle = '#2a5080';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(sx, sy+sh); ctx.lineTo(sx+sw, sy+sh); ctx.stroke();
+  // Left wall
+  ctx.beginPath(); ctx.moveTo(sx, sy+sh-4); ctx.lineTo(sx, sy+20); ctx.stroke();
+  // Right wall
+  ctx.beginPath(); ctx.moveTo(sx+sw, sy+sh-4); ctx.lineTo(sx+sw, sy+20); ctx.stroke();
+
+  // "BOTTOM" label
+  ctx.fillStyle = '#2a4060';
+  ctx.font = '9px JetBrains Mono';
+  ctx.textAlign = 'center';
+  ctx.fillText('⬇ BOTTOM', sx + sw/2, sy+sh+16);
+
+  // "TOP" label
+  ctx.fillStyle = '#2a4060';
+  ctx.fillText('TOP ⬆', sx + sw/2, sy+8);
+
+  // Arrow pointer
+  const arrH = 50, cellH = Math.min(arrH, (sh - 30) / MAX_DISPLAY);
+  const totalVisible = Math.min(stack.length, MAX_DISPLAY);
+  const startIdx = stack.length - totalVisible;
+
+  for (let di = 0; di < totalVisible; di++) {
+    const realIdx = startIdx + di;
+    const val = stack[realIdx];
+    const cy = sy + sh - cellH * (di + 1) - 2;
+    const cx = sx + 2, cw = sw - 4, ch = cellH - 3;
+
+    let fillColor = 'rgba(26,40,64,0.8)', strokeColor = '#2a4060', glowColor = null, textColor = '#4a6a9a';
+    const isTop = realIdx === stack.length - 1;
+
+    if (isTop) { fillColor = 'rgba(6,214,160,0.12)'; strokeColor = '#06d6a0'; textColor = '#06d6a0'; }
+    if (hl && hl.idx === realIdx) {
+      if (hl.type === 'push') { fillColor='rgba(255,140,66,0.2)'; strokeColor='#ff8c42'; glowColor='rgba(255,140,66,0.3)'; textColor='#ff8c42'; }
+      else if (hl.type === 'pop') { fillColor='rgba(255,107,157,0.2)'; strokeColor='#ff6b9d'; glowColor='rgba(255,107,157,0.3)'; textColor='#ff6b9d'; }
+      else { fillColor='rgba(126,184,255,0.15)'; strokeColor='#7eb8ff'; glowColor='rgba(126,184,255,0.3)'; textColor='#7eb8ff'; }
+    }
+
+    let drawCy = cy;
+    if (animOffset && hl && hl.idx === realIdx) {
+      drawCy += animOffset;
+    }
+
+    if (glowColor) {
+      ctx.beginPath(); ctx.roundRect(cx-3, drawCy-3, cw+6, ch+6, 5);
+      ctx.fillStyle = glowColor; ctx.fill();
+    }
+    ctx.beginPath(); ctx.roundRect(cx, drawCy, cw, ch, [4,4,0,0]);
+    ctx.fillStyle = fillColor; ctx.fill();
+    ctx.strokeStyle = strokeColor; ctx.lineWidth = 1.5; ctx.stroke();
+
+    // Value
+    ctx.fillStyle = textColor;
+    ctx.font = `bold ${Math.min(14, cellH * 0.5)}px JetBrains Mono`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(val, cx + cw/2, drawCy + ch/2);
+
+    // Index label (right side)
+    ctx.fillStyle = '#2a4060';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(`[${realIdx}]`, cx + cw + 6, drawCy + ch/2 + 4);
+
+    // TOP arrow
+    if (isTop) {
+      ctx.fillStyle = '#06d6a0';
+      ctx.font = 'bold 10px JetBrains Mono';
+      ctx.textAlign = 'right';
+      ctx.fillText('◀ TOP', cx - 6, drawCy + ch/2 + 4);
+    }
+  }
+
+  // Empty stack hint
+  if (stack.length === 0) {
+    ctx.fillStyle = '#2a4060';
+    ctx.font = '13px JetBrains Mono';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('[ EMPTY STACK ]', sx + sw/2, sy + sh/2);
+  }
+
+  // Size badge top-right
+  ctx.fillStyle = '#162032';
+  ctx.font = '10px JetBrains Mono';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+  const sizeText = `size: ${stack.length}`;
+  const tw = ctx.measureText(sizeText).width + 16;
+  ctx.beginPath(); ctx.roundRect(W - tw - 10, 10, tw, 22, 5);
+  ctx.fillStyle = 'rgba(0,212,170,0.08)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,212,170,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#00d4aa'; ctx.font = '10px JetBrains Mono';
+  ctx.fillText(sizeText, W - 10 - 8, 16);
+}
+
+// ──────────────────────────────────────────────
+// OP LOG
+// ──────────────────────────────────────────────
+function addLog(type, msg) {
+  const log = document.getElementById('opLog');
+  const tagClass = { push:'log-push', pop:'log-pop', peek:'log-peek', isEmpty:'log-peek', init:'log-init' }[type] || 'log-init';
+  const tag = type.toUpperCase();
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-tag ${tagClass}">${tag}</span><span class="log-msg">${msg}</span>`;
+  log.insertBefore(entry, log.firstChild);
+  while (log.children.length > 20) log.removeChild(log.lastChild);
+}
+
+// ──────────────────────────────────────────────
+// CONTROLLER (Auto Demo)
+// ──────────────────────────────────────────────
+let steps = [], stepIdx = -1, isPlaying = false, playTimer = null, speedMult = 2;
+let currentStep = null;
+let liveStack = []; // for interactive mode
+let totalPushes = 0, totalPops = 0;
+
+const SPEED_DELAYS = { 1:1600, 2:900, 3:500, 4:250, 5:100 };
+function getDelay() { return SPEED_DELAYS[speedMult]||900; }
+function onSpeedChange(v) { speedMult=parseInt(v); document.getElementById('speedVal').textContent=v+'×'; }
+
+function updateUI(step, idx) {
+  currentStep = step;
+  document.getElementById('narText').textContent = step.narration;
+  document.getElementById('narText').classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+
+  const sz = step.stack.length;
+  document.getElementById('sSize').textContent   = sz;
+  document.getElementById('sPushes').textContent = step.pushes;
+  document.getElementById('sPops').textContent   = step.pops;
+  document.getElementById('statSize').textContent   = sz;
+  document.getElementById('statTop').textContent    = sz > 0 ? step.stack[sz-1] : '—';
+  document.getElementById('statPushes').textContent = step.pushes;
+  document.getElementById('statPops').textContent   = step.pops;
+
+  document.getElementById('stepCtr').textContent = `Step ${idx+1} / ${steps.length}`;
+  const pct = steps.length>1 ? (idx/(steps.length-1)*100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { push:['ph-push','Push'], pop:['ph-pop','Pop'], peek:['ph-peek','Peek'], done:['ph-done','Done'], idle:['ph-idle','Idle'] };
+  const [cls, lbl] = phaseMap[step.phase]||['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  for (let i=1;i<=16;i++) { const el=document.getElementById(`cl${i}`); if(el) el.style.background=''; }
+  if (step.codeLine) { const el=document.getElementById(`cl${step.codeLine}`); if(el) el.style.background='rgba(0,212,170,0.12)'; }
+
+  drawCanvas(step);
+}
+
+function renderStep(idx, autoAdv=false) {
+  if (idx<0||idx>=steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  updateUI(step, idx);
+  if (autoAdv) scheduleNext(step);
+}
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length-1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(()=>{ if(isPlaying) playTimer=setTimeout(()=>{ if(isPlaying) renderStep(stepIdx+1,true); },400); });
+  } else {
+    playTimer = setTimeout(()=>{ if(isPlaying) renderStep(stepIdx+1,true); }, getDelay());
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length-1) stepIdx=-1;
+  isPlaying=true;
+  document.getElementById('btnPlay').textContent='⏸ Pause';
+  renderStep(stepIdx+1, true);
+}
+function stopPlay() {
+  isPlaying=false;
+  if(playTimer){clearTimeout(playTimer);playTimer=null;}
+  document.getElementById('btnPlay').textContent='▶ Play Demo';
+  stopSpeech();
+}
+
+function nextStep() {
+  stopPlay();
+  if (stepIdx+1 < steps.length) {
+    renderStep(stepIdx+1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function resetAll() {
+  stopPlay();
+  steps = buildSteps(currentOps);
+  stepIdx = -1;
+  liveStack = [...steps[0].stack];
+  totalPushes = 0; totalPops = 0;
+  updateUI(steps[0], 0);
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('opLog').innerHTML = '<div class="log-entry"><span class="log-tag log-init">INIT</span><span class="log-msg">Stack reset</span></div>';
+}
+
+let currentOps = makeDefaultOps();
+function randomizeDemo() { currentOps = randomOps(); resetAll(); }
+
+document.getElementById('btnPlay').addEventListener('click', ()=>{ isPlaying?stopPlay():startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+// ──────────────────────────────────────────────
+// INTERACTIVE MODE
+// ──────────────────────────────────────────────
+function syncInteractiveUI() {
+  const sz = liveStack.length;
+  document.getElementById('sSize').textContent   = sz;
+  document.getElementById('sPushes').textContent = totalPushes;
+  document.getElementById('sPops').textContent   = totalPops;
+  document.getElementById('statSize').textContent   = sz;
+  document.getElementById('statTop').textContent    = sz>0?liveStack[sz-1]:'—';
+  document.getElementById('statPushes').textContent = totalPushes;
+  document.getElementById('statPops').textContent   = totalPops;
+}
+
+function interactivePush() {
+  stopPlay(); stepIdx=-1;
+  const raw = document.getElementById('pushVal').value;
+  const val = parseInt(raw);
+  if (isNaN(val)) { alert('Enter a valid number.'); return; }
+  liveStack.push(val); totalPushes++;
+  const step = { stack:[...liveStack], highlight:{idx:liveStack.length-1,type:'push'}, narration:`Pushed ${val} onto the stack. Stack size: ${liveStack.length}.`, phase:'push', codeLine:5, pushes:totalPushes, pops:totalPops };
+  updateUI(step, 0);
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('stepCtr').textContent='Interactive';
+  addLog('push', `Pushed ${val} → stack size: ${liveStack.length}`);
+  if (voiceEnabled) speak(step.narration);
+}
+
+function interactivePop() {
+  stopPlay(); stepIdx=-1;
+  if (liveStack.length===0) {
+    const step = { stack:[], highlight:null, narration:'Pop called on empty stack! Returns null. This is a stack underflow error.', phase:'idle', codeLine:8, pushes:totalPushes, pops:totalPops };
+    updateUI(step, 0);
+    addLog('pop', 'Pop on empty stack → null (underflow)');
+    if (voiceEnabled) speak(step.narration);
+    return;
+  }
+  const val = liveStack[liveStack.length-1];
+  const step1 = { stack:[...liveStack], highlight:{idx:liveStack.length-1,type:'pop'}, narration:`Popping ${val} from the top of the stack.`, phase:'pop', codeLine:7, pushes:totalPushes, pops:totalPops };
+  updateUI(step1, 0);
+  setTimeout(()=>{
+    liveStack.pop(); totalPops++;
+    const step2 = { stack:[...liveStack], highlight:null, narration:`Popped ${val}. Stack size: ${liveStack.length}.${liveStack.length>0?' New top: '+liveStack[liveStack.length-1]+'.':' Stack is now empty.'}`, phase:'pop', codeLine:9, pushes:totalPushes, pops:totalPops };
+    updateUI(step2, 0);
+    syncInteractiveUI();
+    addLog('pop', `Popped ${val} → stack size: ${liveStack.length}`);
+    if (voiceEnabled) speak(step2.narration);
+  }, voiceEnabled ? 1200 : 600);
+  document.getElementById('stepCtr').textContent='Interactive';
+}
+
+function interactivePeek() {
+  stopPlay(); stepIdx=-1;
+  if (liveStack.length===0) {
+    const step = { stack:[], highlight:null, narration:'Peek called on empty stack! Returns null.', phase:'idle', codeLine:12, pushes:totalPushes, pops:totalPops };
+    updateUI(step, 0);
+    addLog('peek', 'Peek on empty stack → null');
+    if (voiceEnabled) speak(step.narration);
+    return;
+  }
+  const val = liveStack[liveStack.length-1];
+  const step = { stack:[...liveStack], highlight:{idx:liveStack.length-1,type:'peek'}, narration:`Peek: top element is ${val}. The stack remains unchanged.`, phase:'peek', codeLine:13, pushes:totalPushes, pops:totalPops };
+  updateUI(step, 0);
+  addLog('peek', `Peek → top is ${val}`);
+  if (voiceEnabled) speak(step.narration);
+  document.getElementById('stepCtr').textContent='Interactive';
+}
+
+function interactiveIsEmpty() {
+  stopPlay(); stepIdx=-1;
+  const empty = liveStack.length===0;
+  const step = { stack:[...liveStack], highlight:null, narration:`isEmpty() → ${empty}. Stack length is ${liveStack.length}.`, phase: empty?'idle':'peek', codeLine:16, pushes:totalPushes, pops:totalPops };
+  updateUI(step, 0);
+  addLog('isEmpty', `isEmpty() → ${empty} (size: ${liveStack.length})`);
+  if (voiceEnabled) speak(step.narration);
+  document.getElementById('stepCtr').textContent='Interactive';
+}
+
+function clearStack() {
+  stopPlay(); stepIdx=-1;
+  liveStack=[];
+  const step = { stack:[], highlight:null, narration:'Stack cleared. All elements removed. Stack is now empty.', phase:'idle', codeLine:null, pushes:totalPushes, pops:totalPops };
+  updateUI(step, 0);
+  addLog('init', 'Stack cleared');
+  if (voiceEnabled) speak(step.narration);
+  document.getElementById('stepCtr').textContent='Interactive';
+}
+
+// ──────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────
+function init() {
+  resizeCanvas();
+  steps = buildSteps(currentOps);
+  stepIdx = -1;
+  liveStack = [];
+  totalPushes = 0; totalPops = 0;
+  updateUI(steps[0], 0);
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+}
+
+window.addEventListener('resize', ()=>{
+  resizeCanvas();
+  if (currentStep) drawCanvas(currentStep);
+});
+
+init();
+</script>
 </body>
 </html>

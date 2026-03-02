@@ -3,77 +3,772 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Radix Sort — AlgoClassroom</title>
+<title>Radix Sort (LSD) — block array · fixed containers</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+:root {
+  --container-border: #2a4060;
+  --container-bg: #1a2840;
+  --digit-highlight: #ff8c42;
+  --placing-highlight: #ff6b9d;
+  --sorted-color: #06d6a0;
+  --block-bg: #1e2c42;
+  --block-text: #eef4ff;
+  --block-border: #3e5570;
+  --current-array-highlight: #ffd166;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
+
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+#vizCanvas {
+  width: 100%; border-radius: 8px;
+  background: transparent; display: block;
+}
+
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+
+.arr-input {
+  flex: 1; min-width: 200px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px; text-align: center;
+}
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
+
+.digit-badge {
+  background: var(--surface2);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
-}
-.preview-box {
-  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+
+/* ===== CONTAINER VISUALIZATION ===== */
+.containers-wrapper {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  padding: 8px;
+  background: var(--surface2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.container {
+  flex: 1;
+  background: var(--container-bg);
+  border: 1px solid var(--container-border);
+  border-radius: 4px;
+  min-height: 96px;           /* fixed height – no scroll needed */
+  max-height: 96px;           /* lock height – containers never overflow */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.container-label {
+  text-align: center;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  padding: 2px 0;
+  border-bottom: 1px solid var(--container-border);
+  background: rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+
+.container-items {
+  flex: 1;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px 2px;
+  overflow: visible;           /* NO scroll */
+  max-height: 72px;            /* room for ~5 blocks, but limited by fixed container */
+}
+
+/* block style — square per element */
+.container-item {
+  width: 24px;
+  height: 24px;
+  background: var(--block-bg);
+  border: 1px solid var(--block-border);
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: var(--mono);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+  color: var(--block-text);
+  font-weight: 600;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+  transition: all 0.15s;
+}
+
+.container-item.highlight {
+  background: var(--digit-highlight);
+  color: black;
+  border-color: white;
+  font-weight: 800;
+  transform: scale(1.05);
+  box-shadow: 0 0 8px gold;
+}
+
+.container-item.placing {
+  background: var(--placing-highlight);
+  color: black;
+  border-color: white;
+  animation: pulse 1s;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); background: #ff9ebb; }
+  100% { transform: scale(1); }
+}
+
+/* Array display blocks (current array) */
+.array-blocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+  min-height: 50px;
+}
+.array-block {
+  width: 40px;
+  height: 40px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--teal);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transition: all 0.2s ease;
+}
+.array-block.sorted {
+  background: rgba(6,214,160,0.25);
+  border-color: var(--sorted-color);
+  color: var(--sorted-color);
+}
+.array-block.current-highlight {
+  background: var(--current-array-highlight);
+  border-color: white;
+  color: black;
+  font-weight: 800;
+  transform: scale(1.15);
+  box-shadow: 0 0 15px gold;
+  z-index: 10;
+}
+
+/* count badge */
+.count-badge {
+  background: var(--surface);
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 9px;
+  border: 1px solid var(--border);
+}
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
+<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
+
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">📻</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Radix Sort</h1>
-    <p class="cs-sub">Sort integers digit by digit using a stable subroutine like counting sort.</p>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🗂️</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Sorting Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Radix Sort (LSD) · Square Blocks</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      Each number becomes a <strong>square block</strong>. Fixed‑height containers (no scroll). Sort digit by digit using 10 buckets. <span style="color:#ffd166; font-weight:bold;">Current element highlighted in yellow</span>
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Best: <span>O(n × k)</span></div>
+      <div class="cplx-chip">Average: <span>O(n × k)</span></div>
+      <div class="cplx-chip">Worst: <span>O(n × k)</span></div>
+      <div class="cplx-chip">Space: <span>O(n + k)</span></div>
+      <div class="cplx-chip">Stable: <span>✓ Yes</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>LSD vs MSD radix sort</li>
-        <li>O(nk) time complexity</li>
-        <li>Integer and string sorting</li>
-      </ul>
+  <!-- Concept cards (short) -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">🗂️</span><div class="cc-title">10 Containers</div><div class="cc-desc">Fixed height, blocks show numbers.</div></div>
+    <div class="cc"><span class="cc-icon">📥</span><div class="cc-title">Distribute & Collect</div><div class="cc-desc">Digit → container → collect.</div></div>
+    <div class="cc"><span class="cc-icon">⬛</span><div class="cc-title">Square blocks</div><div class="cc-desc">Each element = one block.</div></div>
+  </div>
+
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome! Blocks replace numbers – containers have fixed height. Current array element is highlighted in yellow.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-row">
+    <div class="si"><span class="sl">Digit Place</span><span class="sv orange" id="sDigitPlace">1's</span></div>
+    <div class="si"><span class="sl">Pass</span><span class="sv" id="sPass">0/0</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <!-- Main two‑col -->
+  <div class="two-col">
+
+    <!-- LEFT: containers + array blocks -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📦 10 Containers (fixed height, square blocks)</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--container-bg);border:1px solid var(--container-border);"></div>Container</div>
+          <div class="li"><div class="ld" style="background:var(--digit-highlight);"></div>Current Digit</div>
+          <div class="li"><div class="ld" style="background:var(--placing-highlight);"></div>Placing</div>
+          <div class="li"><div class="ld" style="background:var(--current-array-highlight);"></div>Current Element</div>
+          <div class="li"><div class="ld" style="background:var(--sorted-color);"></div>Sorted</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        
+        <!-- Container visualization (fixed height, no scroll) -->
+        <div id="containersView" class="containers-wrapper"></div>
+        
+        <!-- Current array as square blocks with current element highlighted -->
+        <div style="margin-top: 18px; padding: 10px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border);">
+          <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px; font-family: var(--mono);">
+            📋 CURRENT ARRAY (square blocks): <span style="color:#ffd166;">yellow = current element</span>
+          </div>
+          <div id="arrayBlocksContainer" class="array-blocks"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random Array</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Array (comma-separated):</label>
+          <input type="text" class="arr-input" id="arrInput" value="170, 45, 75, 90, 2, 802, 24, 66, 108, 3">
+          <button class="btn" onclick="applyArray()">Apply</button>
+        </div>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT panels (unchanged) -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statPass">0</div><div class="stat-box-l">Current Pass</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statTotalPasses">0</div><div class="stat-box-l">Total Passes</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statMaxDigits">0</div><div class="stat-box-l">Max Digits</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Size</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">radixSort</span>(arr):</span>
+<span id="cl2" class="code-line">  maxVal = <span class="fn">max</span>(arr)</span>
+<span id="cl3" class="code-line">  digits = <span class="fn">floor</span>(log10(maxVal)) + 1</span>
+<span id="cl4" class="code-line">  place = 1</span>
+<span id="cl5" class="code-line">  <span class="kw">for</span> i = 0 <span class="kw">to</span> digits-1:</span>
+<span id="cl6" class="code-line">    <span class="fn">containers</span> = [[], [], [], [], [], [], [], [], [], []]</span>
+<span id="cl7" class="code-line">    <span class="kw">for</span> num <span class="kw">in</span> arr:</span>
+<span id="cl8" class="code-line">      digit = <span class="fn">floor</span>(num / place) % 10</span>
+<span id="cl9" class="code-line">      containers[digit].<span class="fn">push</span>(num)</span>
+<span id="cl10" class="code-line">    arr = [].<span class="fn">concat</span>(...containers)</span>
+<span id="cl11" class="code-line">    place *= 10</span>
+<span id="cl12" class="code-line">  <span class="kw">return</span> arr</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📊 Container Contents</div>
+        <div id="containerContents" style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.8;">—</div>
+      </div>
+
     </div>
   </div>
+
 </div>
+
+<script>
+// ==================== THEME ====================
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+// ==================== SPEECH ====================
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice = voices.find(v => v.name.includes('Google UK English Female')) ||
+             voices.find(v => v.name.includes('Google US English')) ||
+             voices.find(v => v.lang === 'en-US' && v.localService) ||
+             voices.find(v => v.lang.startsWith('en')) ||
+             voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice = ttsVoice;
+    utt.rate = 0.88;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+function stopSpeech() { synth && synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
+// ==================== VOICE TOGGLE ====================
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('voiceToggle');
+  const icon = document.getElementById('voiceIcon');
+  const lbl = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+
+// ==================== STEP GENERATOR (with highlightIndex for current array element) ====================
+function buildRadixSortSteps(initialArr) {
+  const steps = [];
+  const arr = [...initialArr];
+  const maxVal = Math.max(...arr);
+  const maxDigits = maxVal.toString().length;
+
+  // initial idle step
+  steps.push({ 
+    arr: [...arr], 
+    containers: [[],[],[],[],[],[],[],[],[],[]], 
+    phase:'idle', 
+    pass:0, 
+    totalPasses:maxDigits, 
+    digitPlace:1, 
+    digitName:'1\'s', 
+    maxDigits, 
+    highlightDigit:null, 
+    highlightIndex:null,      // no array highlight
+    currentNum:null,
+    narration:'Radix sort ready.', 
+    codeLine:1 
+  });
+
+  let currentArr = [...arr];
+  
+  for (let digit = 0; digit < maxDigits; digit++) {
+    const place = Math.pow(10, digit);
+    const digitName = place === 1 ? '1\'s' : place === 10 ? '10\'s' : place === 100 ? '100\'s' : `${place}'s`;
+    let containers = [[],[],[],[],[],[],[],[],[],[]];
+
+    // start of pass
+    steps.push({ 
+      arr:[...currentArr], 
+      containers:JSON.parse(JSON.stringify(containers)), 
+      phase:'new-pass', 
+      pass:digit+1, 
+      totalPasses:maxDigits, 
+      digitPlace:place, 
+      digitName, 
+      maxDigits, 
+      highlightDigit:null,
+      highlightIndex:null, 
+      narration:`Pass ${digit+1}: ${digitName} place`, 
+      codeLine:5 
+    });
+
+    // distribute each element – highlight current array element
+    for (let i = 0; i < currentArr.length; i++) {
+      const num = currentArr[i];
+      const digitVal = Math.floor(num / place) % 10;
+      containers[digitVal].push(num);
+      steps.push({ 
+        arr:[...currentArr], 
+        containers:JSON.parse(JSON.stringify(containers)), 
+        phase:'distribute', 
+        pass:digit+1, 
+        totalPasses:maxDigits, 
+        digitPlace:place, 
+        digitName, 
+        maxDigits, 
+        highlightDigit:digitVal,
+        highlightIndex:i,                     // ← current element index in array
+        currentNum:num, 
+        currentDigit:digitVal, 
+        narration:`${num} → container ${digitVal}`, 
+        codeLine:8 
+      });
+    }
+
+    // distribution complete
+    steps.push({ 
+      arr:[...currentArr], 
+      containers:JSON.parse(JSON.stringify(containers)), 
+      phase:'distribute-complete', 
+      pass:digit+1, 
+      totalPasses:maxDigits, 
+      digitPlace:place, 
+      digitName, 
+      maxDigits, 
+      highlightDigit:null,
+      highlightIndex:null, 
+      narration:`Distribution done. Collecting.`, 
+      codeLine:9 
+    });
+
+    // collect from containers
+    const newArr = [];
+    for (let d = 0; d < 10; d++) {
+      if (containers[d].length) {
+        steps.push({ 
+          arr:[...newArr], 
+          containers:JSON.parse(JSON.stringify(containers)), 
+          phase:'collect', 
+          pass:digit+1, 
+          totalPasses:maxDigits, 
+          digitPlace:place, 
+          digitName, 
+          maxDigits, 
+          collectingDigit:d, 
+          highlightDigit:d,
+          highlightIndex:null,                  // during collect, no specific array element highlighted
+          narration:`Collect container ${d}`, 
+          codeLine:10 
+        });
+        newArr.push(...containers[d]);
+      }
+    }
+    
+    currentArr = [...newArr];
+    
+    // pass complete
+    steps.push({ 
+      arr:[...currentArr], 
+      containers:[[],[],[],[],[],[],[],[],[],[]], 
+      phase:'pass-complete', 
+      pass:digit+1, 
+      totalPasses:maxDigits, 
+      digitPlace:place, 
+      digitName, 
+      maxDigits, 
+      highlightDigit:null,
+      highlightIndex:null, 
+      narration:`Pass ${digit+1} done`, 
+      codeLine:11 
+    });
+  }
+  
+  // final sorted
+  steps.push({ 
+    arr:[...currentArr], 
+    containers:[[],[],[],[],[],[],[],[],[],[]], 
+    phase:'done', 
+    sorted:true, 
+    pass:maxDigits, 
+    totalPasses:maxDigits, 
+    maxDigits, 
+    highlightDigit:null,
+    highlightIndex:null, 
+    narration:`Sorted!`, 
+    codeLine:12 
+  });
+  
+  return steps;
+}
+
+// ==================== RENDER (blocks + fixed containers + current array highlight) ====================
+function renderContainers(step) {
+  const containersView = document.getElementById('containersView');
+  const containerContents = document.getElementById('containerContents');
+  if (!step || !step.containers) return;
+
+  let html = '';
+  for (let d = 0; d < 10; d++) {
+    const items = step.containers[d] || [];
+    const isHighlight = step.highlightDigit === d;
+    const isCollecting = step.collectingDigit === d;
+    html += `<div class="container"><div class="container-label">${d}</div><div class="container-items">`;
+    items.forEach((item, idx) => {
+      const isCurrent = step.phase === 'distribute' && step.currentNum === item && isHighlight && idx === items.length-1;
+      let cls = 'container-item';
+      if (isCurrent) cls += ' highlight';
+      else if (isCollecting) cls += ' placing';
+      html += `<div class="${cls}">${item}</div>`;
+    });
+    html += `</div></div>`;
+  }
+  containersView.innerHTML = html;
+
+  let text = '';
+  for (let d=0; d<10; d++) if(step.containers[d].length) text += `[${d}]:${step.containers[d].join(',')}  `;
+  containerContents.textContent = text || 'All empty';
+
+  // render array as square blocks with current element highlighted
+  const arrayBlocks = document.getElementById('arrayBlocksContainer');
+  let blocksHtml = '';
+  step.arr.forEach((val, idx) => {
+    const sortedClass = step.phase === 'done' ? 'sorted' : '';
+    // highlight if this index matches highlightIndex (current element being processed)
+    const highlightClass = (step.highlightIndex === idx && step.phase === 'distribute') ? 'current-highlight' : '';
+    blocksHtml += `<div class="array-block ${sortedClass} ${highlightClass}">${val}</div>`;
+  });
+  arrayBlocks.innerHTML = blocksHtml || '<span style="color:gray;">—</span>';
+}
+
+// ==================== CONTROLLER ====================
+let steps = [], arr = [170,45,75,90,2,802,24,66,108,3];
+let stepIdx = -1, isPlaying = false, playTimer = null, introPlayed = false, speedMult = 2;
+const SPEED_DELAYS = {1:2000,2:1200,3:700,4:350,5:150};
+function getDelay() { return SPEED_DELAYS[speedMult]; }
+function onSpeedChange(v) { speedMult=parseInt(v); document.getElementById('speedVal').textContent=v+'×'; }
+
+function updateNarration(step) {
+  document.getElementById('narText').textContent = step.narration;
+  document.getElementById('teacher').textContent = '🧑‍💻';
+}
+function updateStatusBar(step, idx) {
+  document.getElementById('sDigitPlace').textContent = step.digitName || '1\'s';
+  document.getElementById('sPass').textContent = `${step.pass||0}/${step.totalPasses||0}`;
+  document.getElementById('statPass').textContent = step.pass||0;
+  document.getElementById('statTotalPasses').textContent = step.totalPasses||0;
+  document.getElementById('statMaxDigits').textContent = step.maxDigits||0;
+  document.getElementById('statN').textContent = step.arr.length;
+  document.getElementById('stepCtr').textContent = `Step ${idx+1} / ${steps.length}`;
+  const pct = steps.length>1 ? ((idx/(steps.length-1))*100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+  const badge = document.getElementById('phaseBadge');
+  const map = { 
+    'idle':['ph-idle','Idle'], 
+    'new-pass':['ph-active','New Pass'], 
+    'distribute':['ph-compare','Distribute'], 
+    'distribute-complete':['ph-compare','Distributed'], 
+    'collect':['ph-swap','Collect'], 
+    'pass-complete':['ph-active','Pass Complete'], 
+    'done':['ph-done','Done'] 
+  };
+  const [cls, lbl] = map[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`;
+  badge.textContent = lbl;
+  for (let i=1;i<=12;i++) {
+    const el = document.getElementById(`cl${i}`);
+    if(el) el.style.background = step.codeLine===i ? 'rgba(0,212,170,0.12)' : '';
+  }
+}
+
+function renderStep(idx, autoAdvance = false) {
+  if (idx<0 || idx>=steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  renderContainers(step);
+  updateNarration(step);
+  updateStatusBar(step, idx);
+  if (autoAdvance) scheduleNext(step);
+}
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length-1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx+1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx+1, true); }, getDelay());
+  }
+}
+
+function nextStep() {
+  stopPlay();
+  if (stepIdx+1 < steps.length) {
+    renderStep(stepIdx+1, false);
+    if (voiceEnabled) speak(steps[stepIdx+1].narration);
+  }
+}
+function startPlay() {
+  if (stepIdx >= steps.length-1) stepIdx = -1;
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx+1, true);
+}
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+function resetAll() {
+  stopPlay();
+  stepIdx = -1;
+  renderContainers(steps[0]);
+  // also update array blocks
+  document.getElementById('arrayBlocksContainer').innerHTML = steps[0].arr.map(v=>`<div class="array-block">${v}</div>`).join('');
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  for (let i=1;i<=12;i++) { const el = document.getElementById(`cl${i}`); if(el) el.style.background=''; }
+  document.getElementById('narText').textContent = 'Ready. Press Play.';
+}
+document.getElementById('btnPlay').addEventListener('click', ()=> isPlaying ? stopPlay() : startPlay());
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+function applyArray() {
+  const raw = document.getElementById('arrInput').value;
+  const parsed = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n>=0);
+  if (parsed.length<2) { alert('Enter at least 2 non‑negative numbers'); return; }
+  arr = parsed.slice(0, 15);
+  document.getElementById('arrInput').value = arr.join(', ');
+  init();
+}
+function randomize() {
+  arr = Array.from({ length: 8 }, () => Math.floor(Math.random() * 999));
+  document.getElementById('arrInput').value = arr.join(', ');
+  init();
+}
+function init() {
+  steps = buildRadixSortSteps(arr);
+  stopPlay();
+  stepIdx = -1;
+  renderContainers(steps[0]);
+  document.getElementById('arrayBlocksContainer').innerHTML = steps[0].arr.map(v=>`<div class="array-block">${v}</div>`).join('');
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+  document.getElementById('narText').textContent = 'Square blocks – containers fixed height, no scroll. Yellow = current element.';
+}
+init();
+</script>
 </body>
 </html>

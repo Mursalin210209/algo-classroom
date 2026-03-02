@@ -8,12 +8,16 @@
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
 :root {
-  --node-default: #1a2840;
-  --node-default-stroke: #2a4060;
-  --node-compare: #ff8c42;
-  --node-place: #ff6b9d;
-  --node-sorted: #06d6a0;
-  --node-merge: #3a5078;
+  --bar-default: #1a2840;
+  --bar-default-stroke: #2a4060;
+  --bar-compare: #ff8c42;
+  --bar-swap: #ff6b9d;
+  --bar-sorted: #06d6a0;
+  --unsorted: rgba(167,128,255,0.2);
+  --unsorted-stroke: #a78bfa;
+  --sorted: rgba(6,214,160,0.2);
+  --sorted-stroke: #06d6a0;
+  --current-stroke: #ff8c42;
 }
 
 .two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
@@ -30,30 +34,7 @@
   display: flex; flex-direction: column; gap: 12px;
 }
 .ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
-
-.arr-input {
-  flex: 1; min-width: 200px;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 7px; padding: 7px 11px;
-  color: var(--text); font-family: var(--mono); font-size: 11px;
-  outline: none; transition: border-color .2s;
-}
-.arr-input:focus { border-color: var(--teal); }
-
-.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
-.cc {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 14px; position: relative; overflow: hidden;
-  transition: border-color .3s, transform .3s;
-}
-.cc:hover { border-color: rgba(0,212,170,.3); transform: translateY(-2px); }
-.cc::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--teal),var(--blue)); opacity:0; transition:opacity .3s; }
-.cc:hover::after { opacity:1; }
-.cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
-.cc-title { font-family: var(--mono); font-size: 9px; color: var(--teal); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
-.cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.input-row { display: none; } /* Hide input since fixed array */
 
 .legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
 .li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
@@ -97,7 +78,7 @@
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
-<!-- NAVBAR — identical to Insertion Sort, includes theme toggle -->
+<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
@@ -132,7 +113,7 @@
       <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
     </div>
     <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
-      Recursively divide the array into halves, sort each half, and merge the sorted halves back together while maintaining order.
+      A divide-and-conquer algorithm that recursively divides the array into halves, sorts the halves, and merges them back into a sorted array.
     </p>
     <div class="complexity" style="margin-top:10px;">
       <div class="cplx-chip">Best: <span>O(n log n)</span></div>
@@ -145,10 +126,10 @@
 
   <!-- Concept cards -->
   <div class="concepts">
-    <div class="cc"><span class="cc-icon">🔪</span><div class="cc-title">Divide & Conquer</div><div class="cc-desc">Recursively split the array into smaller subarrays until base case.</div></div>
-    <div class="cc"><span class="cc-icon">🔀</span><div class="cc-title">Merge Step</div><div class="cc-desc">Combine two sorted subarrays by comparing and picking smaller elements.</div></div>
-    <div class="cc"><span class="cc-icon">📚</span><div class="cc-title">Stable Sort</div><div class="cc-desc">Preserves relative order of equal elements, useful for multi-key sorts.</div></div>
-    <div class="cc"><span class="cc-icon">💾</span><div class="cc-title">Auxiliary Space</div><div class="cc-desc">Requires O(n) extra space for temporary storage during merging.</div></div>
+    <div class="cc"><span class="cc-icon">🔀</span><div class="cc-title">Divide & Conquer</div><div class="cc-desc">Breaks the array into smaller subproblems, solves them recursively, and combines the solutions.</div></div>
+    <div class="cc"><span class="cc-icon">🌳</span><div class="cc-title">Recursion Tree</div><div class="cc-desc">The process forms a binary tree of divisions down to base cases, then merges up.</div></div>
+    <div class="cc"><span class="cc-icon">⚡</span><div class="cc-title">Efficient Merging</div><div class="cc-desc">Combines two sorted halves in linear time using two pointers.</div></div>
+    <div class="cc"><span class="cc-icon">📚</span><div class="cc-title">Stable Sort</div><div class="cc-desc">Preserves the relative order of equal elements, useful for sorting by multiple keys.</div></div>
   </div>
 
   <!-- Narration -->
@@ -160,9 +141,9 @@
 
   <!-- Status bar -->
   <div class="status-row">
-    <div class="si"><span class="sl">Depth</span><span class="sv orange" id="sDepth">0</span></div>
+    <div class="si"><span class="sl">Depth</span><span class="sv orange" id="sPass">0</span></div>
     <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
-    <div class="si"><span class="sl">Writes</span><span class="sv" id="sWrites">0</span></div>
+    <div class="si"><span class="sl">Swaps</span><span class="sv" id="sSwaps">0</span></div>
     <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
     <div class="divider-auto"></div>
     <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
@@ -177,16 +158,28 @@
       <div class="panel">
         <div class="panel-hd">📊 Visualization</div>
         <div class="legend">
-          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
-          <div class="li"><div class="ld" style="background:var(--node-compare);"></div>Comparing</div>
-          <div class="li"><div class="ld" style="background:var(--node-place);"></div>Placing</div>
-          <div class="li"><div class="ld" style="background:var(--node-sorted);"></div>Sorted</div>
+          <div class="li"><div class="ld" style="background:var(--unsorted);border:1px solid var(--unsorted-stroke);"></div>Unsorted</div>
+          <div class="li"><div class="ld" style="background:var(--sorted);border:1px solid var(--sorted-stroke);"></div>Sorted</div>
+          <div class="li"><div class="ld" style="background:var(--bar-compare);"></div>Current</div>
           <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
             <span class="voice-icon" id="voiceIcon">🔇</span>
             <span id="voiceLabel">Voice Off</span>
           </button>
         </div>
-        <canvas id="vizCanvas" height="340"></canvas>
+        <canvas id="vizCanvas" height="500"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -197,8 +190,8 @@
         <div class="panel-hd">📈 Statistics</div>
         <div class="stats-grid">
           <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Comparisons</div></div>
-          <div class="stat-box"><div class="stat-box-n" id="statWrites">0</div><div class="stat-box-l">Writes</div></div>
-          <div class="stat-box"><div class="stat-box-n" id="statDepth">0</div><div class="stat-box-l">Depth</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSwaps">0</div><div class="stat-box-l">Swaps</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPasses">0</div><div class="stat-box-l">Depth</div></div>
           <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Size</div></div>
         </div>
       </div>
@@ -206,26 +199,12 @@
       <div class="panel">
         <div class="panel-hd">💻 Pseudocode</div>
         <div class="code-block">
-<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">mergeSort</span>(arr, left, right):</span>
-<span id="cl2" class="code-line">  <span class="kw">if</span> left >= right: <span class="kw">return</span></span>
-<span id="cl3" class="code-line">  mid = floor((left + right) / 2)</span>
-<span id="cl4" class="code-line">  <span class="fn">mergeSort</span>(arr, left, mid)</span>
-<span id="cl5" class="code-line">  <span class="fn">mergeSort</span>(arr, mid + 1, right)</span>
-<span id="cl6" class="code-line">  <span class="fn">merge</span>(arr, left, mid, right)</span>
-<span id="cl7" class="code-line"><span class="kw">function</span> <span class="fn">merge</span>(arr, left, mid, right):</span>
-<span id="cl8" class="code-line">  aux = new Array(right - left + 1)</span>
-<span id="cl9" class="code-line">  <span class="kw">for</span> k = left <span class="kw">to</span> right:</span>
-<span id="cl10" class="code-line">    aux[k] = arr[k]</span>
-<span id="cl11" class="code-line">  i = left, j = mid + 1, k = left</span>
-<span id="cl12" class="code-line">  <span class="kw">while</span> i <= mid <span class="kw">and</span> j <= right:</span>
-<span id="cl13" class="code-line">    <span class="kw">if</span> aux[i] <= aux[j]:</span>
-<span id="cl14" class="code-line">      arr[k] = aux[i]</span>
-<span id="cl15" class="code-line">      i++, k++</span>
-<span id="cl16" class="code-line">    <span class="kw">else</span>:</span>
-<span id="cl17" class="code-line">      arr[k] = aux[j]</span>
-<span id="cl18" class="code-line">      j++, k++</span>
-<span id="cl19" class="code-line">  <span class="kw">while</span> i <= mid: arr[k] = aux[i]; i++, k++</span>
-<span id="cl20" class="code-line">  <span class="kw">while</span> j <= right: arr[k] = aux[j]; j++, k++</span>
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">mergeSort</span>(arr):</span>
+<span id="cl2" class="code-line">  <span class="kw">if</span> arr.length <= 1: <span class="kw">return</span> arr</span>
+<span id="cl3" class="code-line">  mid = floor(arr.length / 2)</span>
+<span id="cl4" class="code-line">  left = mergeSort(arr.slice(0, mid))</span>
+<span id="cl5" class="code-line">  right = mergeSort(arr.slice(mid))</span>
+<span id="cl6" class="code-line">  <span class="kw">return</span> merge(left, right)</span>
         </div>
       </div>
 
@@ -237,32 +216,10 @@
     </div>
   </div>
 
-  <!-- Controls -->
-  <div class="controls">
-    <div class="ctrl-row">
-      <button class="btn btn-primary" id="btnPlay">▶ Play</button>
-      <button class="btn" id="btnNext">⏭ Next Step</button>
-      <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
-      <button class="btn" onclick="randomize()">🎲 Random Array</button>
-      <div class="speed-ctrl" id="speedWrap">
-        <span class="speed-lbl">⚡ Speed</span>
-        <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
-        <span class="speed-val" id="speedVal">2×</span>
-      </div>
-    </div>
-    <div class="input-row">
-      <label>Array (comma-separated):</label>
-      <input type="text" class="arr-input" id="arrInput" value="64, 34, 25, 12, 22, 11, 90, 45, 7, 38">
-      <button class="btn" onclick="applyArray()">Apply</button>
-    </div>
-  </div>
-
 </div><!-- .algo-page -->
 
 <script>
-// ════════════════════════════════════════════════
 // THEME TOGGLE
-// ════════════════════════════════════════════════
 function toggleTheme() {
   const html = document.documentElement;
   const isNowLight = html.getAttribute('data-theme') !== 'light';
@@ -271,28 +228,21 @@ function toggleTheme() {
   localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
 }
 
-// Restore saved theme on load
 (function () {
   const saved = localStorage.getItem('theme');
   if (saved === 'light') {
     document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('toggleLabel').textContent = 'Dark mode';
   }
 })();
 
-// ════════════════════════════════════════════════
 // WEB SPEECH API
-// ════════════════════════════════════════════════
 const synth = window.speechSynthesis;
 let ttsVoice = null;
 
 function loadVoices() {
   const voices = synth.getVoices();
-  ttsVoice =
-    voices.find(v => v.name.includes('Google UK English Female')) ||
-    voices.find(v => v.name.includes('Google US English'))       ||
-    voices.find(v => v.lang === 'en-US' && v.localService)       ||
-    voices.find(v => v.lang.startsWith('en'))                    ||
-    voices[0] || null;
+  ttsVoice = voices.find(v => v.name.includes('Google UK English Female')) || voices.find(v => v.name.includes('Google US English')) || voices.find(v => v.lang === 'en-US' && v.localService) || voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
 }
 loadVoices();
 if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
@@ -302,9 +252,9 @@ function speak(text) {
     if (!voiceEnabled || !synth) { resolve(); return; }
     synth.cancel();
     const utt = new SpeechSynthesisUtterance(text);
-    utt.voice  = ttsVoice;
-    utt.rate   = 0.88;
-    utt.pitch  = 1.05;
+    utt.voice = ttsVoice;
+    utt.rate = 0.88;
+    utt.pitch = 1.05;
     utt.volume = 1;
     utt.onstart = () => document.getElementById('speakBars').classList.add('on');
     utt.onend = utt.onerror = () => {
@@ -320,16 +270,14 @@ function stopSpeech() {
   document.getElementById('speakBars').classList.remove('on');
 }
 
-// ════════════════════════════════════════════════
-// VOICE TOGGLE — default OFF
-// ════════════════════════════════════════════════
+// VOICE TOGGLE
 let voiceEnabled = false;
 
 function toggleVoice() {
   voiceEnabled = !voiceEnabled;
-  const btn   = document.getElementById('voiceToggle');
-  const icon  = document.getElementById('voiceIcon');
-  const lbl   = document.getElementById('voiceLabel');
+  const btn = document.getElementById('voiceToggle');
+  const icon = document.getElementById('voiceIcon');
+  const lbl = document.getElementById('voiceLabel');
   if (voiceEnabled) {
     icon.textContent = '🔊'; lbl.textContent = 'Voice On';
     btn.classList.remove('off');
@@ -344,128 +292,21 @@ function toggleVoice() {
   }
 }
 
-// ════════════════════════════════════════════════
-// MERGE SORT — STEP GENERATOR
-// ════════════════════════════════════════════════
-function buildMergeSortSteps(arr) {
-  const steps = [];
-  const a = [...arr];
-  const n = a.length;
-  let totalComps = 0;
-  let totalWrites = 0;
-  const aux = new Array(n);
-
-  steps.push({
-    arr: [...a], compare: [], mergeRange: null, sorted: false,
-    narration: `Starting Merge Sort on ${n} elements. We recursively divide the array into halves until single elements, then merge back.`,
-    phase: 'active', level: 0, comps: 0, writes: 0, codeLine: 1,
-  });
-
-  function mergeSortSteps(left, right, level) {
-    if (left >= right) {
-      steps.push({
-        arr: [...a], compare: [], mergeRange: [left, right], sorted: false,
-        narration: `Base case: subarray from ${left} to ${right} has one or zero elements, already sorted.`,
-        phase: 'divide', level: level, comps: totalComps, writes: totalWrites, codeLine: 2,
-      });
-      return;
-    }
-    const mid = Math.floor((left + right) / 2);
-    steps.push({
-      arr: [...a], compare: [], mergeRange: [left, right], sorted: false,
-      narration: `Dividing subarray from ${left} to ${right} (size ${right - left + 1}) at mid ${mid}.`,
-      phase: 'divide', level: level, comps: totalComps, writes: totalWrites, codeLine: 3,
-    });
-
-    mergeSortSteps(left, mid, level + 1);
-    mergeSortSteps(mid + 1, right, level + 1);
-
-    steps.push({
-      arr: [...a], compare: [], mergeRange: [left, right], sorted: false,
-      narration: `Now merging sorted subarrays ${left}-${mid} and ${mid + 1}-${right}.`,
-      phase: 'merge', level: level, comps: totalComps, writes: totalWrites, codeLine: 6,
-    });
-
-    for (let k = left; k <= right; k++) {
-      aux[k] = a[k];
-    }
-
-    let i = left, j = mid + 1, k = left;
-    while (i <= mid && j <= right) {
-      totalComps++;
-      steps.push({
-        arr: [...a], compare: [i, j], mergeRange: [left, right], sorted: false,
-        narration: `Comparing aux[${i}] = ${aux[i]} and aux[${j}] = ${aux[j]}.`,
-        phase: 'compare', level: level, comps: totalComps, writes: totalWrites, codeLine: 12,
-      });
-
-      if (aux[i] <= aux[j]) {
-        a[k] = aux[i];
-        totalWrites++;
-        steps.push({
-          arr: [...a], compare: [i], mergeRange: [left, right], sorted: false,
-          narration: `${aux[i]} <= ${aux[j]}, placing ${aux[i]} at position ${k}.`,
-          phase: 'place', level: level, comps: totalComps, writes: totalWrites, codeLine: 13,
-        });
-        i++;
-      } else {
-        a[k] = aux[j];
-        totalWrites++;
-        steps.push({
-          arr: [...a], compare: [j], mergeRange: [left, right], sorted: false,
-          narration: `${aux[j]} < ${aux[i]}, placing ${aux[j]} at position ${k}.`,
-          phase: 'place', level: level, comps: totalComps, writes: totalWrites, codeLine: 16,
-        });
-        j++;
-      }
-      k++;
-    }
-
-    while (i <= mid) {
-      a[k] = aux[i];
-      totalWrites++;
-      steps.push({
-        arr: [...a], compare: [i], mergeRange: [left, right], sorted: false,
-        narration: `Copying remaining left element aux[${i}] = ${aux[i]} to position ${k}.`,
-        phase: 'place', level: level, comps: totalComps, writes: totalWrites, codeLine: 19,
-      });
-      i++;
-      k++;
-    }
-
-    while (j <= right) {
-      a[k] = aux[j];
-      totalWrites++;
-      steps.push({
-        arr: [...a], compare: [j], mergeRange: [left, right], sorted: false,
-        narration: `Copying remaining right element aux[${j}] = ${aux[j]} to position ${k}.`,
-        phase: 'place', level: level, comps: totalComps, writes: totalWrites, codeLine: 20,
-      });
-      j++;
-      k++;
-    }
-
-    steps.push({
-      arr: [...a], compare: [], mergeRange: [left, right], sorted: false,
-      narration: `Merge complete for subarray ${left} to ${right}.`,
-      phase: 'merge', level: level, comps: totalComps, writes: totalWrites, codeLine: 20,
-    });
+// NODE CLASS
+class Node {
+  constructor(values, level) {
+    this.values = values;
+    this.level = level;
+    this.left = null;
+    this.right = null;
+    this.sorted = null;
+    this.comps = 0;
+    this.swaps = 0;
+    this.x = 0;
   }
-
-  mergeSortSteps(0, n - 1, 0);
-
-  steps.push({
-    arr: [...a], compare: [], mergeRange: null, sorted: true,
-    narration: `Merge Sort is complete! The array is fully sorted with ${totalComps} comparisons and ${totalWrites} writes.`,
-    phase: 'done', level: 0, comps: totalComps, writes: totalWrites, codeLine: 20,
-  });
-
-  return steps;
 }
 
-// ════════════════════════════════════════════════
 // INTRO SPEECH
-// ════════════════════════════════════════════════
 let introAborted = false;
 
 function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
@@ -474,13 +315,13 @@ async function playIntroSpeech() {
   introAborted = false;
   stopSpeech();
   const introLines = [
-    "Hello! I am your algorithm teacher. Today we are learning Merge Sort — a classic divide-and-conquer sorting algorithm.",
-    "Merge Sort recursively divides the array into two halves until we reach single elements or empty subarrays.",
-    "Then, it merges the sorted subarrays back together by comparing elements from each half and placing the smaller one first.",
-    "It is stable, meaning equal elements keep their relative order, and has consistent O(n log n) time complexity.",
-    "However, it requires O(n) additional space for the temporary array during merging.",
-    "In the visualization, orange nodes are being compared, pink nodes are being placed, and green nodes are sorted.",
-    "Now, turn on Voice Mode and press Play. I will guide you through every single step."
+    "Hello! I am your algorithm teacher. Today we are learning Merge Sort — an efficient divide-and-conquer sorting algorithm.",
+    "Merge Sort works by repeatedly splitting the array into two halves until we reach small subarrays that are easy to sort.",
+    "Then, we merge the sorted subarrays back together, comparing elements from each half and building a larger sorted array.",
+    "In the visualization, purple boxes represent unsorted subarrays during the divide phase, and green boxes show sorted subarrays during the merge phase.",
+    "An arrow in a green base pair indicates a swap was needed to sort it.",
+    "Merge Sort is stable and has consistent O(n log n) performance, making it great for large datasets.",
+    "Now, turn on Voice Mode and press Play. I will guide you through every step of the division and merging."
   ];
   const narText = document.getElementById('narText');
   narText.classList.add('intro-mode');
@@ -497,125 +338,211 @@ async function playIntroSpeech() {
   if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
 }
 
-// ════════════════════════════════════════════════
 // CANVAS
-// ════════════════════════════════════════════════
 const canvas = document.getElementById('vizCanvas');
 const ctx = canvas.getContext('2d');
 let animRafId = null;
-let positions = {};
 
 function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
-
-function calculatePositions(i, x, y, offset, left, right) {
-  if (left > right) return;
-  positions[i] = {x, y, range: [left, right]};
-  if (left === right) return;
-  const mid = Math.floor((left + right) / 2);
-  calculatePositions(2 * i + 1, x - offset, y + 80, offset / 2, left, mid);
-  calculatePositions(2 * i + 2, x + offset, y + 80, offset / 2, mid + 1, right);
-}
 
 function drawTree(step) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!step) return;
-  const arr = step.arr, W = canvas.width, H = canvas.height;
-  const cmp = new Set(step.compare || []);
-  const mergeRange = step.mergeRange;
-  const isSorted = step.sorted;
 
-  // Draw lines
-  ctx.strokeStyle = '#2a3d58';
-  ctx.lineWidth = 1.5;
-  Object.keys(positions).forEach(key => {
-    const i = parseInt(key);
-    const pos = positions[i];
-    const l = 2 * i + 1;
-    if (positions[l]) {
-      const childPos = positions[l];
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-      ctx.lineTo(childPos.x, childPos.y);
-      ctx.stroke();
-    }
-    const r = 2 * i + 2;
-    if (positions[r]) {
-      const childPos = positions[r];
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-      ctx.lineTo(childPos.x, childPos.y);
-      ctx.stroke();
-    }
-  });
+  const rowHeight = 70;
+  const boxHeight = 30;
+  const charWidth = 18;
+  const padding = 12;
+  const radius = 5;
 
-  // Draw nodes
-  const radius = 20;
-  Object.keys(positions).forEach(key => {
-    const i = parseInt(key);
-    const pos = positions[i];
-    const [left, right] = pos.range;
-    let isCmp = false;
-    for (let c of cmp) {
-      if (left <= c && c <= right) {
-        isCmp = true;
-        break;
-      }
+  const visibleGreen = new Set();
+  for (let k = 0; k <= stepIdx; k++) {
+    if (steps[k].subphase === 'merge') {
+      visibleGreen.add(steps[k].node);
     }
-    let isMerge = false;
-    if (mergeRange && left === mergeRange[0] && right === mergeRange[1]) isMerge = true;
+  }
 
-    let fill = '#1a2840', stroke = '#2a4060', glow = null;
-    if (isSorted) { fill = 'rgba(6,214,160,0.2)'; stroke = '#06d6a0'; glow = 'rgba(6,214,160,0.3)'; }
-    else if (isCmp) {
-      if (step.phase === 'place') { fill = 'rgba(255,107,157,0.25)'; stroke = '#ff6b9d'; glow = 'rgba(255,107,157,0.4)'; }
-      else { fill = 'rgba(255,140,66,0.25)'; stroke = '#ff8c42'; glow = 'rgba(255,140,66,0.35)'; }
-    } else if (isMerge) {
-      fill = 'rgba(58,80,120,0.3)'; stroke = '#4a6a9a'; glow = 'rgba(58,80,120,0.2)';
-    }
-    if (glow) {
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, radius + 3, 0, 2 * Math.PI);
-      ctx.fillStyle = glow;
-      ctx.fill();
-    }
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = fill;
-    ctx.fill();
-    ctx.strokeStyle = stroke;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    ctx.fillStyle = isCmp ? '#fff' : isSorted ? '#06d6a0' : '#4a6a9a';
-    ctx.font = 'bold 10px JetBrains Mono';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    let text;
-    if (right - left + 1 > 3) {
-      text = `[${left}-${right}]`;
-    } else {
-      text = arr.slice(left, right + 1).join(' ');
-    }
-    ctx.fillText(text, pos.x, pos.y);
-  });
+  drawNodeTree(divideRoot, false, step, visibleGreen, rowHeight, boxHeight, charWidth, padding, radius);
+  drawNodeTree(mergeRoot, true, step, visibleGreen, rowHeight, boxHeight, charWidth, padding, radius);
 }
 
-// ════════════════════════════════════════════════
+function drawNodeTree(node, isGreen, step, visibleGreen, rowHeight, boxHeight, charWidth, padding, radius) {
+  if (!node) return;
+  if (isGreen && !visibleGreen.has(node)) return;
+
+  drawNodeTree(node.left, isGreen, step, visibleGreen, rowHeight, boxHeight, charWidth, padding, radius);
+  drawNodeTree(node.right, isGreen, step, visibleGreen, rowHeight, boxHeight, charWidth, padding, radius);
+
+  const values = isGreen ? node.sorted : node.values;
+  const text = values.join(' ');
+  const boxWidth = Math.max(50, text.length * charWidth + padding);
+  const x = node.x - boxWidth / 2;
+  const invertedLevel = maxLevel - node.level;
+  const y = isGreen ? (maxLevel + 1 + invertedLevel) * rowHeight + 20 : node.level * rowHeight + 20;
+
+  let fill = isGreen ? 'var(--sorted)' : 'var(--unsorted)';
+  let stroke = isGreen ? 'var(--sorted-stroke)' : 'var(--unsorted-stroke)';
+
+  const isCurrent = step.node === node && ((isGreen && step.subphase === 'merge') || (!isGreen && step.subphase !== 'merge'));
+  if (isCurrent) {
+    stroke = 'var(--current-stroke)';
+    fill = isGreen ? 'rgba(6,214,160,0.4)' : 'rgba(167,128,255,0.4)';
+  }
+
+  ctx.beginPath();
+  ctx.roundRect(x, y, boxWidth, boxHeight, radius);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.fillStyle = stroke;
+  ctx.font = 'bold 12px JetBrains Mono';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, node.x, y + boxHeight / 2);
+
+  if (isGreen && !node.left && !node.right && node.swaps > 0) {
+    const arrowHeight = 15;
+    const startX = x + boxWidth - 15;
+    const startY = y + boxHeight / 2 - 5;
+    const endX = x + 15;
+    const endY = startY;
+    const controlX = node.x;
+    const controlY = startY - arrowHeight;
+
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+    ctx.strokeStyle = 'var(--sorted-stroke)';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    const angle = Math.atan2(endY - controlY, endX - controlX);
+    const headLen = 8;
+    ctx.beginPath();
+    ctx.moveTo(endX, endY);
+    ctx.lineTo(endX - headLen * Math.cos(angle - Math.PI / 6), endY - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.moveTo(endX, endY);
+    ctx.lineTo(endX - headLen * Math.cos(angle + Math.PI / 6), endY - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.stroke();
+  }
+
+  if (node.left && node.right) {
+    const childLeftY = isGreen ? (maxLevel + 1 + (maxLevel - node.left.level)) * rowHeight + 20 : node.left.level * rowHeight + 20;
+    const childRightY = isGreen ? (maxLevel + 1 + (maxLevel - node.right.level)) * rowHeight + 20 : node.right.level * rowHeight + 20;
+    const parentY = y + boxHeight;
+    const childBottomY = childLeftY + boxHeight;
+    if (!isGreen || (isGreen && visibleGreen.has(node.left) && visibleGreen.has(node.right))) {
+      drawStraightArrow(node.x, isGreen ? childBottomY : parentY, node.left.x, isGreen ? y : childLeftY);
+      drawStraightArrow(node.x, isGreen ? childBottomY : parentY, node.right.x, isGreen ? y : childRightY);
+    }
+  }
+}
+
+function drawStraightArrow(fromX, fromY, toX, toY) {
+  ctx.beginPath();
+  ctx.moveTo(fromX, fromY);
+  ctx.lineTo(toX, toY);
+  ctx.strokeStyle = '#2a4060';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+  const headLen = 8;
+  ctx.beginPath();
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(toX - headLen * Math.cos(angle - Math.PI / 6), toY - headLen * Math.sin(angle - Math.PI / 6));
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(toX - headLen * Math.cos(angle + Math.PI / 6), toY - headLen * Math.sin(angle + Math.PI / 6));
+  ctx.stroke();
+}
+
 // CONTROLLER
-// ════════════════════════════════════════════════
 let steps = [];
-let arr = [64, 34, 25, 12, 22, 11, 90, 45, 7, 38];
 let stepIdx = -1;
 let isPlaying = false;
 let playTimer = null;
 let introPlayed = false;
 let speedMult = 2;
+let totalComps = 0;
+let totalSwaps = 0;
+let divideRoot = null;
+let mergeRoot = null;
+let divideLeaves = [];
+let mergeLeaves = [];
+let maxLevel = 0;
 
 const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
 function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
 function onSpeedChange(val) {
   speedMult = parseInt(val);
   document.getElementById('speedVal').textContent = val + '×';
+}
+
+function getLeaves(node) {
+  if (!node.left && !node.right) return [node];
+  let leaves = [];
+  if (node.left) leaves = leaves.concat(getLeaves(node.left));
+  if (node.right) leaves = leaves.concat(getLeaves(node.right));
+  return leaves;
+}
+
+function assignPositions(root, leaves) {
+  const W = canvas.width;
+  const numLeaves = leaves.length;
+  const spacing = W / (numLeaves + 1);
+  leaves.forEach((leaf, i) => {
+    leaf.x = spacing * (i + 1);
+  });
+  function assignX(node) {
+    if (!node.left && !node.right) return;
+    assignX(node.left);
+    assignX(node.right);
+    node.x = (node.left.x + node.right.x) / 2;
+  }
+  assignX(root);
+}
+
+function updateMaxLevel(node) {
+  if (!node) return;
+  maxLevel = Math.max(maxLevel, node.level);
+  if (node.left) updateMaxLevel(node.left);
+  if (node.right) updateMaxLevel(node.right);
+}
+
+function generateSteps(node, currentDepth = 0) {
+  const stepBase = {node, depth: currentDepth, comps: totalComps, swaps: totalSwaps, phase: 'active'};
+  let narration = `Splitting the subarray [${node.values.join(' ')}] into two halves.`;
+  steps.push({...stepBase, subphase: 'divide', narration, codeLine: 3});
+
+  if (node.left && node.right) {
+    generateSteps(node.left, currentDepth + 1);
+    generateSteps(node.right, currentDepth + 1);
+  } else {
+    let narration = '';
+    if (node.values.length === 1) {
+      narration = `Base case: single element ${node.values[0]} is already sorted.`;
+    } else {
+      const a = node.values[0], b = node.values[1];
+      narration = `Base case: comparing ${a} and ${b}.`;
+      totalComps += 1;
+      if (a > b) {
+        narration += ` Since ${a} > ${b}, swapping them.`;
+        totalSwaps += 1;
+      } else {
+        narration += ' Already in order, no swap needed.';
+      }
+      stepBase.comps = totalComps;
+      stepBase.swaps = totalSwaps;
+    }
+    steps.push({...stepBase, subphase: 'base', narration, codeLine: 2});
+  }
+
+  let mergeNar = `Merging the sorted halves into [${node.sorted.join(' ')}].`;
+  totalComps += node.comps;
+  steps.push({...stepBase, subphase: 'merge', narration: mergeNar, comps: totalComps, swaps: totalSwaps, codeLine: 6});
 }
 
 function updateNarration(step) {
@@ -626,23 +553,23 @@ function updateNarration(step) {
 }
 
 function updateStatusBar(step, idx) {
-  document.getElementById('sDepth').textContent  = step.level  || 0;
+  document.getElementById('sPass').textContent = step.depth || 0;
   document.getElementById('sComps').textContent = step.comps || 0;
-  document.getElementById('sWrites').textContent = step.writes || 0;
-  document.getElementById('statComps').textContent  = step.comps || 0;
-  document.getElementById('statWrites').textContent  = step.writes || 0;
-  document.getElementById('statDepth').textContent = step.level  || 0;
-  document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
+  document.getElementById('sSwaps').textContent = step.swaps || 0;
+  document.getElementById('statComps').textContent = step.comps || 0;
+  document.getElementById('statSwaps').textContent = step.swaps || 0;
+  document.getElementById('statPasses').textContent = step.depth || 0;
+  document.getElementById('arrDisplay').textContent = `[${step.node ? step.node.values.join(', ') : [7,3,2,16,24,4,11,9].join(', ')}]`;
   document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
   const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
   document.getElementById('progFill').style.width = pct + '%';
 
   const badge = document.getElementById('phaseBadge');
-  const phaseMap = { active:['ph-active','Running'], divide:['ph-active','Dividing'], merge:['ph-merge','Merging'], compare:['ph-compare','Comparing'], place:['ph-swap','Placing'], done:['ph-done','Done'], idle:['ph-idle','Idle'] };
-  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
+  const phaseMap = { divide: ['ph-compare', 'Dividing'], base: ['ph-swap', 'Base Case'], merge: ['ph-active', 'Merging'], done: ['ph-done', 'Done'], idle: ['ph-idle', 'Idle'] };
+  const [cls, lbl] = phaseMap[step.subphase] || ['ph-idle', 'Idle'];
   badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
 
-  for (let i = 1; i <= 20; i++) {
+  for (let i = 1; i <= 6; i++) {
     const el = document.getElementById(`cl${i}`);
     if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
   }
@@ -702,13 +629,13 @@ function resetAll() {
   if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
   stepIdx = -1;
   drawTree(steps[0]);
-  document.getElementById('arrDisplay').textContent = `[${arr.join(', ')}]`;
-  ['sDepth','sComps','sWrites','statComps','statWrites','statDepth'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('arrDisplay').textContent = `[7, 3, 2, 16, 24, 4, 11, 9]`;
+  ['sPass','sComps','sSwaps','statComps','statSwaps','statPasses'].forEach(id => document.getElementById(id).textContent = '0');
   document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
   document.getElementById('phaseBadge').textContent = 'Idle';
-  for (let i = 1; i <= 20; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; }
+  for (let i = 1; i <= 6; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; }
   document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
   if (voiceEnabled) playIntroSpeech();
 }
@@ -717,36 +644,47 @@ document.getElementById('btnPlay').addEventListener('click', () => { if (isPlayi
 document.getElementById('btnNext').addEventListener('click', nextStep);
 document.getElementById('btnReset').addEventListener('click', resetAll);
 
-function applyArray() {
-  const raw = document.getElementById('arrInput').value;
-  const parsed = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
-  if (parsed.length < 2) { alert('Enter at least 2 valid positive numbers.'); return; }
-  arr = parsed.slice(0, 20);
-  init();
-}
-
-function randomize() {
-  arr = Array.from({ length: 12 }, () => Math.floor(Math.random() * 90) + 5);
-  document.getElementById('arrInput').value = arr.join(', ');
-  init();
-}
-
 function init() {
   resizeCanvas();
 
-  // Sync theme toggle label on load
-  const saved = localStorage.getItem('theme');
-  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+  document.getElementById('statN').textContent = 8;
+  totalComps = 0;
+  totalSwaps = 0;
 
-  positions = {};
-  calculatePositions(0, canvas.width / 2, 60, canvas.width / 4, 0, arr.length - 1);
+  // Simple hardcoded tree
+  divideRoot = new Node([7,3,2,16,24,4,11,9], 0);
+  divideRoot.left = new Node([7,3,2,16], 1);
+  divideRoot.right = new Node([24,4,11,9], 1);
+  divideRoot.left.left = new Node([7,3], 2);
+  divideRoot.left.right = new Node([2,16], 2);
+  divideRoot.right.left = new Node([24,4], 2);
+  divideRoot.right.right = new Node([11,9], 2);
 
-  document.getElementById('statN').textContent = arr.length;
-  steps = buildMergeSortSteps(arr);
+  divideRoot.left.left.sorted = [3,7]; divideRoot.left.left.comps = 1; divideRoot.left.left.swaps = 1;
+  divideRoot.left.right.sorted = [2,16]; divideRoot.left.right.comps = 1; divideRoot.left.right.swaps = 0;
+  divideRoot.right.left.sorted = [4,24]; divideRoot.right.left.comps = 1; divideRoot.right.left.swaps = 1;
+  divideRoot.right.right.sorted = [9,11]; divideRoot.right.right.comps = 1; divideRoot.right.right.swaps = 1;
+
+  divideRoot.left.sorted = [2,3,7,16]; divideRoot.left.comps = 3;
+  divideRoot.right.sorted = [4,9,11,24]; divideRoot.right.comps = 3;
+  divideRoot.sorted = [2,3,4,7,9,11,16,24]; divideRoot.comps = 7;
+
+  mergeRoot = divideRoot;
+  maxLevel = 0;
+  updateMaxLevel(divideRoot);
+  divideLeaves = getLeaves(divideRoot);
+  mergeLeaves = divideLeaves;
+  assignPositions(divideRoot, divideLeaves);
+  steps = [];
+  generateSteps(divideRoot);
+  steps.push({
+    narration: `Merge Sort is complete! The array is fully sorted: [${divideRoot.sorted.join(' ')}]. Total comparisons: ${totalComps}.`,
+    subphase: 'done', phase: 'done', comps: totalComps, swaps: totalSwaps, codeLine: 6, depth: 0
+  });
   stopPlay();
   stepIdx = -1;
   drawTree(steps[0]);
-  document.getElementById('arrDisplay').textContent = `[${steps[0].arr.join(', ')}]`;
+  document.getElementById('arrDisplay').textContent = `[7, 3, 2, 16, 24, 4, 11, 9]`;
   document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
@@ -760,8 +698,7 @@ function init() {
 
 window.addEventListener('resize', () => {
   resizeCanvas();
-  positions = {};
-  calculatePositions(0, canvas.width / 2, 60, canvas.width / 4, 0, arr.length - 1);
+  assignPositions(divideRoot, divideLeaves);
   if (stepIdx >= 0 && steps[stepIdx]) drawTree(steps[stepIdx]);
   else if (steps.length > 0) drawTree(steps[0]);
 });
