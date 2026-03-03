@@ -5,75 +5,429 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Matrix Chain Multiplication — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
-}
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
-}
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0a0f1e;--surface:#0f1829;--surface2:#131f33;--border:#1e2d44;--text:#c8d8f0;--text-dim:#5a7399;--teal:#00d4aa;--orange:#ff8c42;--pink:#ff6b9d;--yellow:#ffd166;--purple:#b48ead;--mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;}
+[data-theme="light"]{--bg:#f0f4fb;--surface:#ffffff;--surface2:#f5f8ff;--border:#d0daea;--text:#1a2840;--text-dim:#6a85aa;--teal:#00a882;--orange:#e07030;--pink:#d04070;--yellow:#b8860b;--purple:#7b5ea7;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,212,170,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,.03) 1px,transparent 1px);background-size:40px 40px;}
+.bg-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:900px;height:600px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,212,170,.06) 0%,transparent 70%);pointer-events:none;z-index:0;}
+.navbar{position:sticky;top:0;z-index:100;background:rgba(10,15,30,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:52px;display:flex;align-items:center;gap:24px;}
+.nav-logo{font-family:var(--mono);font-size:14px;font-weight:800;color:var(--teal);text-decoration:none;}
+.logo-bracket{color:var(--text-dim);}.logo-dot{color:var(--orange);}
+.nav-links{display:flex;gap:20px;}
+.nav-links a{font-size:12px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;transition:color .2s;}
+.nav-links a:hover{color:var(--teal);}
+.theme-toggle{margin-left:auto;background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px 4px 6px;cursor:pointer;display:flex;align-items:center;gap:8px;}
+.toggle-track{width:32px;height:18px;background:var(--surface2);border-radius:9px;position:relative;border:1px solid var(--border);}
+.toggle-thumb{position:absolute;top:1px;left:1px;width:14px;height:14px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .3s;}
+[data-theme="light"] .toggle-thumb{transform:translateX(14px);}
+.toggle-icon{font-size:8px;}
+[data-theme="light"] .toggle-icon::before{content:'☀️';}
+.toggle-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+.algo-page{max-width:1200px;margin:0 auto;padding:28px 24px 60px;position:relative;z-index:1;}
+.back-link{font-family:var(--mono);font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;display:inline-block;margin-bottom:20px;}
+.back-link:hover{color:var(--teal);}
+.two-col{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-bottom:16px;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+.complexity{display:flex;flex-wrap:wrap;gap:8px;}
+.cplx-chip{font-family:var(--mono);font-size:10px;padding:4px 10px;border:1px solid var(--border);border-radius:20px;color:var(--text-dim);letter-spacing:.5px;}
+.cplx-chip span{color:var(--teal);font-weight:700;}
+.card-difficulty{font-family:var(--mono);font-size:9px;font-weight:700;padding:4px 10px;border-radius:12px;letter-spacing:1.5px;text-transform:uppercase;}
+.hard{background:rgba(255,107,157,.15);color:var(--pink);border:1px solid rgba(255,107,157,.3);}
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:18px 0;}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.cc-icon{font-size:22px;display:block;margin-bottom:7px;}
+.cc-title{font-size:12px;font-weight:700;margin-bottom:5px;letter-spacing:.5px;}
+.cc-desc{font-size:11px;color:var(--text-dim);line-height:1.6;}
+.narration{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:10px;padding:12px 16px;margin-bottom:14px;min-height:52px;}
+.teacher{font-size:22px;flex-shrink:0;}
+.narration-text{font-size:12px;color:var(--text);line-height:1.6;flex:1;}
+.speak-bars{display:flex;gap:2px;align-items:flex-end;height:14px;flex-shrink:0;}
+.speak-bars span{width:3px;background:var(--teal);border-radius:2px;height:4px;opacity:.3;}
+.speak-bars.on span{animation:bar-bounce .6s ease-in-out infinite;opacity:1;}
+.speak-bars.on span:nth-child(1){animation-delay:0s}.speak-bars.on span:nth-child(2){animation-delay:.1s}
+.speak-bars.on span:nth-child(3){animation-delay:.2s}.speak-bars.on span:nth-child(4){animation-delay:.15s}
+.speak-bars.on span:nth-child(5){animation-delay:.05s}
+@keyframes bar-bounce{0%,100%{height:3px}50%{height:14px}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+.panel-hd{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;}
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;}
+.ctrl-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+.input-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+.input-row label{font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:1px;white-space:nowrap;}
+.btn{font-family:var(--mono);font-size:11px;font-weight:700;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;letter-spacing:.5px;transition:all .2s;white-space:nowrap;}
+.btn:hover{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.08);}
+.btn-primary{background:rgba(0,212,170,.15);border-color:rgba(0,212,170,.4);color:var(--teal);}
+.btn-primary:hover{background:rgba(0,212,170,.25);}
+.btn-danger{background:rgba(255,107,157,.1);border-color:rgba(255,107,157,.3);color:var(--pink);}
+.btn-danger:hover{background:rgba(255,107,157,.2);}
+.arr-input{flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;transition:border-color .2s;}
+.arr-input:focus{border-color:var(--teal);}
+.speed-ctrl{display:flex;align-items:center;gap:6px;}
+.speed-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);}
+.speed-val{font-family:var(--mono);font-size:10px;color:var(--teal);min-width:22px;}
+input[type=range]{accent-color:var(--teal);width:80px;}
+.status-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 14px;margin-top:12px;}
+.si{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.sl{font-size:9px;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;}
+.sv{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--text);}
+.sv.orange{color:var(--orange);}
+.phase-badge{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;letter-spacing:.5px;}
+.ph-idle{background:rgba(90,115,153,.15);color:var(--text-dim);}
+.ph-active{background:rgba(0,212,170,.15);color:var(--teal);}
+.ph-compare{background:rgba(255,140,66,.15);color:var(--orange);}
+.ph-fill{background:rgba(255,107,157,.15);color:var(--pink);}
+.ph-done{background:rgba(0,212,170,.2);color:var(--teal);}
+.divider-auto{flex:1;}
+.prog-wrap{width:100px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;border:1px solid var(--border);}
+.prog-fill{height:100%;background:var(--teal);border-radius:3px;width:0%;transition:width .3s;}
+.step-ctr{font-family:var(--mono);font-size:10px;color:var(--text-dim);white-space:nowrap;}
+.legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);}
+.ld{width:11px;height:11px;border-radius:2px;flex-shrink:0;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;text-align:center;}
+.stat-box-n{font-family:var(--mono);font-size:20px;font-weight:800;color:var(--teal);}
+.stat-box-l{font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.code-block{font-family:var(--mono);font-size:11px;line-height:2;background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border);white-space:pre;overflow-x:auto;}
+.code-line{display:block;padding:0 6px;border-radius:4px;transition:background .2s;}
+.kw{color:#7ec8e3;}.fn{color:var(--teal);}.num{color:var(--orange);}
+.voice-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:1px;transition:background .2s,border-color .2s,color .2s;white-space:nowrap;}
+.voice-btn:hover{background:rgba(0,212,170,0.08);border-color:rgba(0,212,170,0.4);}
+.voice-btn.off{color:var(--text-dim);border-color:var(--border);}
+.dp-scroll{overflow-x:auto;padding-bottom:4px;}
+#dpTable{border-collapse:separate;border-spacing:3px;font-family:var(--mono);font-size:11px;}
+#dpTable th{background:var(--surface2);color:var(--text-dim);font-size:10px;padding:6px 4px;border-radius:5px;border:1px solid var(--border);min-width:58px;text-align:center;}
+#dpTable td{width:58px;min-width:58px;height:44px;text-align:center;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-size:11px;transition:background .2s,color .2s;vertical-align:middle;}
+#dpTable td.diagonal{background:rgba(90,115,153,.08);color:var(--text-dim);font-size:10px;}
+#dpTable td.skip{background:transparent;border-color:transparent;}
+#dpTable td.active{background:rgba(255,140,66,.22);border-color:var(--orange);color:var(--orange);font-weight:800;}
+#dpTable td.compare{background:rgba(180,142,173,.2);border-color:var(--purple);color:var(--purple);font-weight:700;}
+#dpTable td.filled{background:rgba(0,212,170,.13);border-color:rgba(0,212,170,.3);color:var(--teal);font-weight:700;}
+#dpTable td.optimal{background:rgba(0,212,170,.35);border-color:var(--teal);color:#fff;font-weight:800;}
+.chain-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.mat-box{font-family:var(--mono);font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);display:flex;flex-direction:column;align-items:center;gap:1px;transition:all .2s;min-width:46px;}
+.mat-box .mat-name{font-size:13px;font-weight:800;}
+.mat-box .mat-dim{font-size:9px;color:var(--text-dim);letter-spacing:.5px;}
+.mat-box.highlight{border-color:var(--orange);color:var(--orange);background:rgba(255,140,66,.12);box-shadow:0 0 10px rgba(255,140,66,.25);}
+.mat-box.highlight .mat-dim{color:var(--orange);}
+.mat-box.inrange{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.10);}
+.mat-box.inrange .mat-dim{color:var(--teal);}
+.mat-sep{font-family:var(--mono);font-size:16px;color:var(--text-dim);}
+.result-box{font-family:var(--mono);font-size:12px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);line-height:2;}
+.result-box.success{border-color:rgba(0,212,170,.4);background:rgba(0,212,170,.06);}
+.narration-text.intro-mode{color:var(--teal);font-weight:600;animation:glowPulse 2s infinite;}
+@keyframes glowPulse{0%{text-shadow:0 0 5px rgba(0,212,170,.2)}50%{text-shadow:0 0 15px rgba(0,212,170,.6)}100%{text-shadow:0 0 5px rgba(0,212,170,.2)}}
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track"><div class="toggle-thumb"><span class="toggle-icon">🌙</span></div></div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
-
 <div class="algo-page">
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
-
-  <div class="coming-soon">
-    <span class="cs-icon">🔢</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Matrix Chain Multiplication</h1>
-    <p class="cs-sub">Optimal parenthesization for minimum multiplications.</p>
-
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Interval DP</li>
-        <li>Triangular DP table</li>
-        <li>Reconstruction of optimal brackets</li>
-      </ul>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🔢</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Dynamic Programming</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Matrix Chain Multiplication</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty hard">Hard</span></div>
     </div>
-
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <p style="color:var(--text-dim);font-size:14px;max-width:660px;line-height:1.7;">
+      Given a chain of matrices, find the most efficient way to multiply them together. The order of multiplication affects the total number of scalar operations — choose the <strong style="color:var(--text)">optimal parenthesization</strong> to minimize cost.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Time: <span>O(n³)</span></div>
+      <div class="cplx-chip">Space: <span>O(n²)</span></div>
+      <div class="cplx-chip">Type: <span>Interval DP</span></div>
+      <div class="cplx-chip">Fill order: <span>Diagonal by diagonal</span></div>
+    </div>
+  </header>
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">📐</span><div class="cc-title">Matrix Cost</div><div class="cc-desc">Multiplying a (p×q) matrix by a (q×r) matrix costs p×q×r scalar multiplications.</div></div>
+    <div class="cc"><span class="cc-icon">🔗</span><div class="cc-title">Interval DP</div><div class="cc-desc">dp[i][j] = min cost to multiply matrices i…j. Fill by increasing chain length L = 2, 3, …, n.</div></div>
+    <div class="cc"><span class="cc-icon">✂️</span><div class="cc-title">Split Point k</div><div class="cc-desc">Try every k between i and j: cost = dp[i][k] + dp[k+1][j] + p[i-1]×p[k]×p[j]. Take the min.</div></div>
+    <div class="cc"><span class="cc-icon">🔍</span><div class="cc-title">Traceback</div><div class="cc-desc">Store the optimal k in a bracket table. Recursively reconstruct the fully parenthesized expression.</div></div>
+  </div>
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Matrix Chain Multiplication! Press Play to watch the DP table fill diagonal by diagonal.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📦 Matrix Chain</div>
+        <div class="chain-wrap" id="chainWrap"></div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">Dimensions array p: <span id="pDisplay" style="color:var(--teal);"></span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">📊 DP Cost Table <span style="font-size:10px;color:var(--text-dim);font-weight:400;">— dp[i][j] = min multiplications for Mi…Mj</span></div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--surface2);border:1px solid var(--border)"></div>Unfilled</div>
+          <div class="li"><div class="ld" style="background:rgba(0,212,170,.13)"></div>Filled</div>
+          <div class="li"><div class="ld" style="background:rgba(255,140,66,.22)"></div>Target</div>
+          <div class="li"><div class="ld" style="background:rgba(180,142,173,.2)"></div>Lookup</div>
+          <div class="li"><div class="ld" style="background:rgba(0,212,170,.35)"></div>Optimal</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span><span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <div class="dp-scroll">
+          <table id="dpTable"><thead id="dpHead"></thead><tbody id="dpBody"></tbody></table>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Dimensions p (n+1 values):</label>
+          <input type="text" class="arr-input" id="dimInput" value="40, 20, 30, 10, 30">
+          <button class="btn" onclick="applyInput()">Apply</button>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">For n matrices, enter n+1 values. Matrix Mi has dimensions p[i-1]×p[i]. Max 6 matrices.</div>
+      </div>
+      <div class="status-row">
+        <div class="si"><span class="sl">Length L</span><span class="sv orange" id="sLen">—</span></div>
+        <div class="si"><span class="sl">Chain i…j</span><span class="sv" id="sChain">—</span></div>
+        <div class="si"><span class="sl">Split k</span><span class="sv" id="sSplit">—</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="divider-auto"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statMin">—</div><div class="stat-box-l">Min Ops</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Matrices</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statCells">0</div><div class="stat-box-l">Cells Filled</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSteps">0</div><div class="stat-box-l">Total Steps</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1"  class="code-line"><span class="kw">function</span> <span class="fn">matrixChain</span>(p, n):</span>
+<span id="cl2"  class="code-line">  dp[i][i] = <span class="num">0</span> <span style="color:var(--text-dim)">for all i</span></span>
+<span id="cl3"  class="code-line">  <span class="kw">for</span> L = 2 <span class="kw">to</span> n:   <span style="color:var(--text-dim)">// chain length</span></span>
+<span id="cl4"  class="code-line">    <span class="kw">for</span> i = 1 <span class="kw">to</span> n-L+1:</span>
+<span id="cl5"  class="code-line">      j = i + L - 1</span>
+<span id="cl6"  class="code-line">      dp[i][j] = ∞</span>
+<span id="cl7"  class="code-line">      <span class="kw">for</span> k = i <span class="kw">to</span> j-1:</span>
+<span id="cl8"  class="code-line">        cost = dp[i][k] + dp[k+<span class="num">1</span>][j]</span>
+<span id="cl9"  class="code-line">               + p[i-<span class="num">1</span>]*p[k]*p[j]</span>
+<span id="cl10" class="code-line">        <span class="kw">if</span> cost &lt; dp[i][j]:</span>
+<span id="cl11" class="code-line">          dp[i][j] = cost</span>
+<span id="cl12" class="code-line">          bracket[i][j] = k</span>
+<span id="cl13" class="code-line">  <span class="kw">return</span> dp[<span class="num">1</span>][n], bracket</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">🔤 Optimal Parenthesization</div>
+        <div class="result-box" id="resultBox">Run the algorithm to see the optimal parenthesization.</div>
+      </div>
     </div>
   </div>
 </div>
+<script>
+function toggleTheme(){const h=document.documentElement,isL=h.getAttribute('data-theme')!=='light';h.setAttribute('data-theme',isL?'light':'dark');document.getElementById('toggleLabel').textContent=isL?'Dark mode':'Light mode';localStorage.setItem('theme',isL?'light':'dark');}
+(function(){const s=localStorage.getItem('theme');if(s==='light')document.documentElement.setAttribute('data-theme','light');})();
+const synth=window.speechSynthesis;let ttsVoice=null;
+function loadVoices(){const v=synth.getVoices();ttsVoice=v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;}
+loadVoices();if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=loadVoices;
+function speak(text){return new Promise(res=>{if(!voiceEnabled||!synth){res();return;}synth.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=ttsVoice;u.rate=0.88;u.pitch=1.05;u.volume=1;u.onstart=()=>document.getElementById('speakBars').classList.add('on');u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');res();};synth.speak(u);});}
+function stopSpeech(){synth&&synth.cancel();document.getElementById('speakBars').classList.remove('on');}
+let voiceEnabled=false;
+function toggleVoice(){voiceEnabled=!voiceEnabled;const icon=document.getElementById('voiceIcon'),lbl=document.getElementById('voiceLabel'),btn=document.getElementById('voiceToggle');if(voiceEnabled){icon.textContent='🔊';lbl.textContent='Voice On';btn.classList.remove('off');document.getElementById('speedWrap').style.display='none';}else{icon.textContent='🔇';lbl.textContent='Voice Off';btn.classList.add('off');stopSpeech();document.getElementById('speedWrap').style.display='';}if(isPlaying){stopPlay();startPlay();}}
+let p=[40,20,30,10,30];
+function buildSteps(p){
+  const n=p.length-1;const INF=Infinity;
+  const dp=Array.from({length:n+1},()=>new Array(n+1).fill(INF));
+  const br=Array.from({length:n+1},()=>new Array(n+1).fill(-1));
+  const steps=[];let cellsFilled=0;
+  for(let i=1;i<=n;i++)dp[i][i]=0;
+  cellsFilled=n;
+  steps.push({dp:dp.map(r=>[...r]),br:br.map(r=>[...r]),active:null,lookup:[],phase:'active',len:1,cI:-1,cJ:-1,splitK:-1,cells:cellsFilled,codeLine:2,
+    narration:`Starting Matrix Chain Multiplication with ${n} matrices: ${Array.from({length:n},(_,i)=>`M${i+1}(${p[i]}x${p[i+1]})`).join(', ')}. All single-matrix costs dp[i][i]=0.`});
+  for(let L=2;L<=n;L++){
+    steps.push({dp:dp.map(r=>[...r]),br:br.map(r=>[...r]),active:null,lookup:[],phase:'active',len:L,cI:-1,cJ:-1,splitK:-1,cells:cellsFilled,codeLine:3,
+      narration:`Chain length L=${L}: now computing min cost for all subchains of ${L} consecutive matrices.`});
+    for(let i=1;i<=n-L+1;i++){
+      const j=i+L-1;dp[i][j]=INF;
+      steps.push({dp:dp.map(r=>[...r]),br:br.map(r=>[...r]),active:[i,j],lookup:[],phase:'active',len:L,cI:i,cJ:j,splitK:-1,cells:cellsFilled,codeLine:6,
+        narration:`Subchain M${i} to M${j} (${p[i-1]}x${p[j]}): Trying every split point k from ${i} to ${j-1}.`});
+      for(let k=i;k<=j-1;k++){
+        const left=dp[i][k],right=dp[k+1][j];
+        const mult=p[i-1]*p[k]*p[j];
+        const cost=(left===INF||right===INF)?INF:left+right+mult;
+        const better=cost<dp[i][j];
+        steps.push({dp:dp.map(r=>[...r]),br:br.map(r=>[...r]),active:[i,j],lookup:[[i,k],[k+1,j]],phase:'compare',len:L,cI:i,cJ:j,splitK:k,cells:cellsFilled,codeLine:8,
+          narration:`Split k=${k}: dp[${i}][${k}]=${left===INF?'INF':left} + dp[${k+1}][${j}]=${right===INF?'INF':right} + ${p[i-1]}x${p[k]}x${p[j]}=${mult} = ${cost===INF?'INF':cost.toLocaleString()}. Best so far=${dp[i][j]===INF?'INF':dp[i][j]}. ${better?'New best!':'Not better.'}`});
+        if(better){dp[i][j]=cost;br[i][j]=k;
+          steps.push({dp:dp.map(r=>[...r]),br:br.map(r=>[...r]),active:[i,j],lookup:[],phase:'fill',len:L,cI:i,cJ:j,splitK:k,cells:cellsFilled,codeLine:11,
+            narration:`Updated dp[${i}][${j}]=${cost.toLocaleString()} with split k=${k}.`});}
+      }
+      cellsFilled++;
+      steps.push({dp:dp.map(r=>[...r]),br:br.map(r=>[...r]),active:[i,j],lookup:[],phase:'fill',len:L,cI:i,cJ:j,splitK:-1,cells:cellsFilled,codeLine:12,
+        narration:`dp[${i}][${j}]=${dp[i][j].toLocaleString()} finalized. Optimal split: k=${br[i][j]}, meaning (M${i}...M${br[i][j]}) x (M${br[i][j]+1}...M${j}).`});
+    }
+  }
+  function buildBracket(i,j){if(i===j)return `M${i}`;const k=br[i][j];return `(${buildBracket(i,k)} x ${buildBracket(k+1,j)})`;}
+  const bracketStr=buildBracket(1,n);
+  steps.push({dp:dp.map(r=>[...r]),br:br.map(r=>[...r]),active:[1,n],lookup:[],phase:'done',len:n,cI:1,cJ:n,splitK:-1,cells:cellsFilled,codeLine:13,
+    narration:`Done! Minimum scalar multiplications = ${dp[1][n].toLocaleString()}. Optimal: ${bracketStr}.`,
+    finalAns:dp[1][n],bracketStr});
+  return steps;
+}
+function buildTable(n){
+  const head=document.getElementById('dpHead'),body=document.getElementById('dpBody');
+  head.innerHTML='';body.innerHTML='';
+  let hrow='<tr><th></th>';for(let j=1;j<=n;j++)hrow+=`<th>M${j}</th>`;hrow+='</tr>';head.innerHTML=hrow;
+  for(let i=1;i<=n;i++){let row=`<tr><th style="background:var(--surface2);color:var(--text-dim);font-size:10px;padding:6px 4px;">M${i}</th>`;
+    for(let j=1;j<=n;j++){if(j<i)row+=`<td class="skip" id="c${i}_${j}"></td>`;else if(j===i)row+=`<td class="diagonal" id="c${i}_${j}">0</td>`;else row+=`<td id="c${i}_${j}">—</td>`;}
+    row+='</tr>';body.innerHTML+=row;}
+}
+function fmtVal(v){if(v===Infinity)return '—';if(v>=1000000)return (v/1000000).toFixed(1)+'M';if(v>=1000)return Math.round(v/1000)+'k';return v;}
+function applyStep(step,n){
+  const dp=step.dp;
+  const actSet=step.active?new Set([`${step.active[0]},${step.active[1]}`]):new Set();
+  const lookSet=new Set((step.lookup||[]).map(l=>`${l[0]},${l[1]}`));
+  for(let i=1;i<=n;i++)for(let j=1;j<=n;j++){
+    const el=document.getElementById(`c${i}_${j}`);if(!el)continue;
+    if(j<i){el.className='skip';continue;}
+    if(i===j){el.className='diagonal';el.textContent='0';continue;}
+    const key=`${i},${j}`,v=dp[i][j];
+    el.textContent=fmtVal(v);el.className='';
+    if(step.phase==='done'&&i===1&&j===n){el.classList.add('optimal');}
+    else if(actSet.has(key))el.classList.add('active');
+    else if(lookSet.has(key))el.classList.add('compare');
+    else if(v!==Infinity)el.classList.add('filled');
+  }
+}
+function renderChain(p,cI,cJ){
+  const n=p.length-1;const wrap=document.getElementById('chainWrap');wrap.innerHTML='';
+  for(let i=1;i<=n;i++){
+    const box=document.createElement('div');box.className='mat-box';
+    if(cI>=1&&cJ>=1&&i>=cI&&i<=cJ)box.classList.add(i===cI||i===cJ?'highlight':'inrange');
+    box.innerHTML=`<span class="mat-name">M${i}</span><span class="mat-dim">${p[i-1]}×${p[i]}</span>`;
+    wrap.appendChild(box);
+    if(i<n){const sep=document.createElement('span');sep.className='mat-sep';sep.textContent='×';wrap.appendChild(sep);}
+  }
+}
+function updateUI(step,idx,n){
+  applyStep(step,n);renderChain(p,step.cI,step.cJ);
+  document.getElementById('sLen').textContent=step.len>=2?step.len:'—';
+  document.getElementById('sChain').textContent=step.cI>=1?`${step.cI}…${step.cJ}`:'—';
+  document.getElementById('sSplit').textContent=step.splitK>=0?step.splitK:'—';
+  document.getElementById('statCells').textContent=step.cells||0;
+  document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
+  const pct=steps.length>1?((idx/(steps.length-1))*100).toFixed(1):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  const badge=document.getElementById('phaseBadge');
+  const phMap={active:['ph-active','Running'],compare:['ph-compare','Comparing'],fill:['ph-fill','Filling'],done:['ph-done','Done'],idle:['ph-idle','Idle']};
+  const[cls,lbl]=phMap[step.phase]||['ph-idle','Idle'];badge.className=`phase-badge ${cls}`;badge.textContent=lbl;
+  for(let i=1;i<=13;i++){const el=document.getElementById(`cl${i}`);if(el)el.style.background=step.codeLine===i?'rgba(0,212,170,0.12)':'';}
+  document.getElementById('narText').textContent=step.narration;
+  document.getElementById('narText').classList.remove('intro-mode');
+  if(step.finalAns!==undefined){
+    document.getElementById('statMin').textContent=step.finalAns.toLocaleString();
+    const rb=document.getElementById('resultBox');rb.className='result-box success';
+    rb.textContent=`✅ Minimum scalar multiplications:\n   ${step.finalAns.toLocaleString()}\n\n🔤 Optimal parenthesization:\n   ${step.bracketStr}`;
+  }
+}
+let steps=[],stepIdx=-1,isPlaying=false,playTimer=null,speedMult=2;
+const SPEED_DELAYS={1:1800,2:1000,3:550,4:270,5:80};
+function getDelay(){return SPEED_DELAYS[speedMult]||1000;}
+function onSpeedChange(v){speedMult=parseInt(v);document.getElementById('speedVal').textContent=v+'×';}
+function renderStep(idx,autoAdvance){
+  if(idx<0||idx>=steps.length)return;
+  stepIdx=idx;updateUI(steps[idx],idx,p.length-1);
+  if(autoAdvance)scheduleNext(steps[idx]);
+}
+function scheduleNext(step){
+  if(!isPlaying)return;if(stepIdx>=steps.length-1){stopPlay();return;}
+  if(voiceEnabled){speak(step.narration).then(()=>{if(!isPlaying)return;playTimer=setTimeout(()=>{if(isPlaying)renderStep(stepIdx+1,true);},400);});}
+  else{playTimer=setTimeout(()=>{if(isPlaying)renderStep(stepIdx+1,true);},getDelay());}
+}
+function startPlay(){if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').textContent='⏸ Pause';renderStep(stepIdx+1,true);}
+function stopPlay(){isPlaying=false;if(playTimer){clearTimeout(playTimer);playTimer=null;}document.getElementById('btnPlay').textContent='▶ Play';stopSpeech();}
+function nextStep(){stopPlay();if(stepIdx+1<steps.length){renderStep(stepIdx+1,false);if(voiceEnabled)speak(steps[stepIdx].narration);}}
+function resetAll(){
+  stopPlay();stepIdx=-1;const n=p.length-1;
+  buildTable(n);renderChain(p,-1,-1);
+  ['sLen','sChain','sSplit'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('statCells').textContent='0';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('narText').textContent='Ready! Press Play to start.';
+  document.getElementById('resultBox').className='result-box';document.getElementById('resultBox').textContent='Run the algorithm to see the optimal parenthesization.';
+  document.getElementById('statMin').textContent='—';
+  for(let i=1;i<=13;i++){const el=document.getElementById(`cl${i}`);if(el)el.style.background='';}
+  applyStep(steps[0],n);
+}
+document.getElementById('btnPlay').addEventListener('click',()=>{if(isPlaying)stopPlay();else startPlay();});
+document.getElementById('btnNext').addEventListener('click',nextStep);
+document.getElementById('btnReset').addEventListener('click',resetAll);
+function applyInput(){
+  const vals=document.getElementById('dimInput').value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>0);
+  if(vals.length<3){alert('Enter at least 3 values (2 matrices).');return;}
+  if(vals.length>7){alert('Max 7 values (6 matrices) for clear visualization.');return;}
+  p=vals;init();
+}
+function randomize(){
+  const n=Math.floor(Math.random()*3)+3;
+  p=Array.from({length:n+1},()=>Math.floor(Math.random()*49)+10);
+  document.getElementById('dimInput').value=p.join(', ');init();
+}
+function init(){
+  const saved=localStorage.getItem('theme');if(saved==='light')document.getElementById('toggleLabel').textContent='Dark mode';
+  const n=p.length-1;
+  document.getElementById('pDisplay').textContent=`[${p.join(', ')}]`;
+  document.getElementById('statN').textContent=n;
+  buildTable(n);renderChain(p,-1,-1);
+  steps=buildSteps(p);
+  document.getElementById('statSteps').textContent=steps.length;
+  stopPlay();stepIdx=-1;
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('narText').textContent='Ready! Press Play to start, or Next Step for manual control.';
+  document.getElementById('resultBox').className='result-box';document.getElementById('resultBox').textContent='Run the algorithm to see the optimal parenthesization.';
+  document.getElementById('statMin').textContent='—';document.getElementById('statCells').textContent='0';
+  document.getElementById('speedWrap').style.display=voiceEnabled?'none':'';
+  applyStep(steps[0],n);
+}
+init();
+</script>
 </body>
 </html>

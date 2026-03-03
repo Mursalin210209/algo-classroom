@@ -5,75 +5,790 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Longest Increasing Subsequence — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0f1e;
+  --surface: #0f1829;
+  --surface2: #131f33;
+  --border: #1e2d44;
+  --text: #c8d8f0;
+  --text-dim: #5a7399;
+  --teal: #00d4aa;
+  --orange: #ff8c42;
+  --pink: #ff6b9d;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+
+  --cell-default: #131f33;
+  --cell-active: rgba(255,140,66,0.22);
+  --cell-compare: rgba(255,107,157,0.22);
+  --cell-filled: rgba(0,212,170,0.18);
+  --cell-selected: rgba(0,212,170,0.35);
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+
+[data-theme="light"] {
+  --bg: #f0f4fb;
+  --surface: #ffffff;
+  --surface2: #f5f8ff;
+  --border: #d0daea;
+  --text: #1a2840;
+  --text-dim: #6a85aa;
+  --teal: #00a882;
+  --orange: #e07030;
+  --pink: #d04070;
+  --cell-default: #eef2fa;
+  --cell-active: rgba(224,112,48,0.18);
+  --cell-compare: rgba(208,64,112,0.18);
+  --cell-filled: rgba(0,168,130,0.18);
+  --cell-selected: rgba(0,168,130,0.35);
 }
-.preview-box {
-  background: var(--surface);
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(rgba(0,212,170,.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,212,170,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.bg-glow {
+  position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 900px; height: 600px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0,212,170,.06) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Navbar ── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,15,30,.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 24px; height: 52px;
+  display: flex; align-items: center; gap: 24px;
+}
+.nav-logo {
+  font-family: var(--mono); font-size: 14px; font-weight: 800;
+  color: var(--teal); text-decoration: none; letter-spacing: -0.5px;
+}
+.logo-bracket { color: var(--text-dim); }
+.logo-dot { color: var(--orange); }
+.nav-links { display: flex; gap: 20px; }
+.nav-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; letter-spacing: 1px; transition: color .2s; }
+.nav-links a:hover { color: var(--teal); }
+
+.theme-toggle {
+  margin-left: auto; background: none; border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px 4px 6px;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  transition: border-color .2s;
+}
+.toggle-track {
+  width: 32px; height: 18px; background: var(--surface2);
+  border-radius: 9px; position: relative; border: 1px solid var(--border);
+}
+.toggle-thumb {
+  position: absolute; top: 1px; left: 1px;
+  width: 14px; height: 14px; background: var(--teal);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: transform .3s;
+}
+[data-theme="light"] .toggle-thumb { transform: translateX(14px); }
+.toggle-icon { font-size: 8px; }
+[data-theme="light"] .toggle-icon::before { content: '☀️'; }
+.toggle-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+
+/* ── Page Layout ── */
+.algo-page { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; position: relative; z-index: 1; }
+.back-link { font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-decoration: none; letter-spacing: 1px; display: inline-block; margin-bottom: 20px; }
+.back-link:hover { color: var(--teal); }
+
+/* ── Complexity chips ── */
+.complexity { display: flex; flex-wrap: wrap; gap: 8px; }
+.cplx-chip {
+  font-family: var(--mono); font-size: 10px;
+  padding: 4px 10px; border: 1px solid var(--border);
+  border-radius: 20px; color: var(--text-dim); letter-spacing: .5px;
+}
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+
+/* ── Concept cards ── */
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 10px; margin: 18px 0; }
+.cc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.cc-icon { font-size: 22px; display: block; margin-bottom: 7px; }
+.cc-title { font-size: 12px; font-weight: 700; margin-bottom: 5px; letter-spacing: .5px; }
+.cc-desc { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+
+/* ── Narration ── */
+.narration {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--teal); border-radius: 10px;
+  padding: 12px 16px; margin-bottom: 14px; min-height: 52px;
+}
+.teacher { font-size: 22px; flex-shrink: 0; }
+.narration-text { font-size: 12px; color: var(--text); line-height: 1.6; flex: 1; }
+.speak-bars { display: flex; gap: 2px; align-items: flex-end; height: 14px; flex-shrink: 0; }
+.speak-bars span {
+  width: 3px; background: var(--teal); border-radius: 2px;
+  height: 4px; opacity: 0.3;
+}
+.speak-bars.on span { animation: bar-bounce .6s ease-in-out infinite; opacity: 1; }
+.speak-bars.on span:nth-child(1) { animation-delay: 0s; }
+.speak-bars.on span:nth-child(2) { animation-delay: .1s; }
+.speak-bars.on span:nth-child(3) { animation-delay: .2s; }
+.speak-bars.on span:nth-child(4) { animation-delay: .15s; }
+.speak-bars.on span:nth-child(5) { animation-delay: .05s; }
+@keyframes bar-bounce { 0%,100% { height:3px } 50% { height:14px } }
+
+/* ── Panel ── */
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;
+}
+.panel-hd { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
+
+/* ── Controls ── */
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+
+.btn {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text); cursor: pointer;
+  letter-spacing: .5px; transition: all .2s; white-space: nowrap;
+}
+.btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(0,212,170,.08); }
+.btn-primary { background: rgba(0,212,170,.15); border-color: rgba(0,212,170,.4); color: var(--teal); }
+.btn-primary:hover { background: rgba(0,212,170,.25); }
+.btn-danger { background: rgba(255,107,157,.1); border-color: rgba(255,107,157,.3); color: var(--pink); }
+.btn-danger:hover { background: rgba(255,107,157,.2); }
+
+.arr-input {
+  flex: 1; min-width: 160px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+
+.speed-ctrl { display: flex; align-items: center; gap: 6px; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+.speed-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 22px; }
+input[type=range] { accent-color: var(--teal); width: 80px; }
+
+/* ── Status bar ── */
+.status-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 9px 14px; margin-top: 12px;
+}
+.si { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sl { font-size: 9px; letter-spacing: 1px; color: var(--text-dim); text-transform: uppercase; }
+.sv { font-family: var(--mono); font-size: 15px; font-weight: 800; color: var(--text); }
+.sv.orange { color: var(--orange); }
+.phase-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 3px 9px; border-radius: 12px; letter-spacing: .5px;
+}
+.ph-idle    { background: rgba(90,115,153,.15); color: var(--text-dim); }
+.ph-active  { background: rgba(0,212,170,.15);  color: var(--teal); }
+.ph-compare { background: rgba(255,140,66,.15); color: var(--orange); }
+.ph-fill    { background: rgba(255,107,157,.15); color: var(--pink); }
+.ph-done    { background: rgba(0,212,170,.2);   color: var(--teal); }
+.divider-auto { flex: 1; }
+.prog-wrap { width: 100px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.prog-fill { height: 100%; background: var(--teal); border-radius: 3px; width: 0%; transition: width .3s; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+
+/* ── Legend ── */
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+
+/* ── Stats grid ── */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; text-align: center; }
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+/* ── Code block ── */
+.code-block {
+  font-family: var(--mono); font-size: 11px; line-height: 2;
+  background: var(--surface2); border-radius: 8px; padding: 12px 14px;
+  border: 1px solid var(--border); white-space: pre; overflow-x: auto;
+}
+.code-line { display: block; padding: 0 6px; border-radius: 4px; transition: background .2s; }
+.kw { color: #7ec8e3; } .fn { color: var(--teal); } .num { color: var(--orange); }
+
+/* ── Voice toggle ── */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+
+/* ── DP Table ── */
+.dp-scroll { overflow-x: auto; }
+#dpTable {
+  border-collapse: separate; border-spacing: 3px;
+  font-family: var(--mono); font-size: 11px; min-width: 100%;
+}
+#dpTable th, #dpTable td {
+  width: 40px; min-width: 36px; height: 36px;
+  text-align: center; border-radius: 5px;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+  transition: background .25s, color .25s;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+#dpTable th { background: var(--surface2); color: var(--text-dim); font-size: 10px; }
+#dpTable td { background: var(--cell-default); color: var(--text-dim); }
+#dpTable td.active  { background: var(--cell-active);  color: var(--orange); font-weight: 800; }
+#dpTable td.compare { background: var(--cell-compare); color: var(--pink);   font-weight: 800; }
+#dpTable td.filled  { background: var(--cell-filled);  color: var(--teal); }
+#dpTable td.selected{ background: var(--cell-selected); color: var(--teal); font-weight: 800; }
+#dpTable td.traceback{ background: rgba(0,212,170,.4); color: #fff; font-weight: 800; }
+
+/* ── Array display ── */
+.array-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.num-chip {
+  font-family: var(--mono); font-size: 10px;
+  padding: 4px 10px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text-dim); transition: all .2s;
+}
+.num-chip.highlight { border-color: var(--orange); color: var(--orange); background: rgba(255,140,66,.12); }
+.num-chip.selected  { border-color: var(--teal);   color: var(--teal);   background: rgba(0,212,170,.12); }
+
+/* ── LIS result ── */
+.lis-result {
+  font-family: var(--mono); font-size: 12px;
+  padding: 10px 14px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); line-height: 1.8;
+}
+
+/* ── Two col ── */
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+.card-difficulty {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  padding: 4px 10px; border-radius: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+}
+.beginner    { background: rgba(0,212,170,.15); color: var(--teal); border: 1px solid rgba(0,212,170,.3); }
+.intermediate{ background: rgba(255,140,66,.15); color: var(--orange); border: 1px solid rgba(255,140,66,.3); }
+
+.narration-text.intro-mode { color: var(--teal); font-weight: 600; animation: glowPulse 2s infinite; }
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb"><span class="toggle-icon">🌙</span></div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
+
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">📈</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Longest Increasing Subsequence</h1>
-    <p class="cs-sub">Find the longest strictly increasing subsequence.</p>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">📈</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Dynamic Programming</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Longest Increasing Subsequence</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7;">
+      Given an array of integers, find the length of the longest strictly increasing subsequence. Solved with O(n²) dynamic programming (note: faster O(n log n) methods exist).
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Time: <span>O(n²)</span></div>
+      <div class="cplx-chip">Space: <span>O(n)</span></div>
+      <div class="cplx-chip">Type: <span>Bottom-up DP</span></div>
+      <div class="cplx-chip">Optimal: <span>No (O(n log n) possible)</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>O(n²) DP approach</li>
-        <li>O(n log n) with patience sorting</li>
-        <li>LIS reconstruction</li>
-      </ul>
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">📏</span><div class="cc-title">Subproblems</div><div class="cc-desc">dp[i] = length of LIS ending at index i. Build from previous elements.</div></div>
+    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Update or Skip</div><div class="cc-desc">For each previous j, if arr[j] < arr[i], update dp[i] = max(dp[i], dp[j] + 1).</div></div>
+    <div class="cc"><span class="cc-icon">📜</span><div class="cc-title">Recurrence</div><div class="cc-desc">dp[i] = 1 + max(dp[j] for j < i where arr[j] < arr[i]), else 1.</div></div>
+    <div class="cc"><span class="cc-icon">🔙</span><div class="cc-title">Traceback</div><div class="cc-desc">From max dp value, backtrack to reconstruct one possible LIS.</div></div>
+  </div>
+
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Longest Increasing Subsequence! Press Play to watch the DP array fill step by step.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📋 Array</div>
+        <div class="array-row" id="arrayRow"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📊 DP Array  <span style="font-size:10px;color:var(--text-dim);font-weight:400;">— dp[i] = LIS length ending at i</span></div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--cell-default);border:1px solid var(--border)"></div>Unfilled</div>
+          <div class="li"><div class="ld" style="background:var(--cell-active)"></div>Current Cell</div>
+          <div class="li"><div class="ld" style="background:var(--cell-compare)"></div>Comparing</div>
+          <div class="li"><div class="ld" style="background:var(--cell-filled)"></div>Filled</div>
+          <div class="li"><div class="ld" style="background:rgba(0,212,170,.4)"></div>Traceback</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <div class="dp-scroll">
+          <table id="dpTable"><thead id="dpHead"></thead><tbody id="dpBody"></tbody></table>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Array:</label>
+          <input type="text" class="arr-input" id="arrInput" value="10,22,9,33,21,50,41,60,80" style="min-width:240px;">
+          <button class="btn" onclick="applyInput()">Apply</button>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="si"><span class="sl">i Index</span><span class="sv orange" id="sItem">0</span></div>
+        <div class="si"><span class="sl">j Index</span><span class="sv" id="sCap">0</span></div>
+        <div class="si"><span class="sl">Cells Filled</span><span class="sv" id="sCells">0</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="divider-auto"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statMax">0</div><div class="stat-box-l">LIS Length</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Length</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1"  class="code-line"><span class="kw">function</span> <span class="fn">lis</span>(arr, n):</span>
+<span id="cl2"  class="code-line">  dp = array of <span class="num">1</span>s size n</span>
+<span id="cl3"  class="code-line">  <span class="kw">for</span> i = 1 <span class="kw">to</span> n-1:</span>
+<span id="cl4"  class="code-line">    <span class="kw">for</span> j = 0 <span class="kw">to</span> i-1:</span>
+<span id="cl5"  class="code-line">      <span class="kw">if</span> arr[j] < arr[i] and dp[j]+<span class="num">1</span> > dp[i]:</span>
+<span id="cl6"  class="code-line">        dp[i] = dp[j] + <span class="num">1</span></span>
+<span id="cl7"  class="code-line">  <span class="kw">return</span> <span class="fn">max</span>(dp)  <span style="color:var(--text-dim)">// traceback for sequence</span></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📈 LIS Sequence</div>
+        <div class="lis-result" id="lisResult">Run the algorithm to see one LIS.</div>
+      </div>
+
     </div>
   </div>
+
 </div>
+
+<script>
+// ── Theme ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+(function() {
+  const s = localStorage.getItem('theme');
+  if (s === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+// ── TTS ──
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const v = synth.getVoices();
+  ttsVoice = v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(res => {
+    if (!voiceEnabled || !synth) { res(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = ttsVoice; u.rate = 0.88; u.pitch = 1.05; u.volume = 1;
+    u.onstart = () => document.getElementById('speakBars').classList.add('on');
+    u.onend = u.onerror = () => { document.getElementById('speakBars').classList.remove('on'); res(); };
+    synth.speak(u);
+  });
+}
+function stopSpeech() { synth && synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
+// ── Voice toggle ──
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const icon = document.getElementById('voiceIcon'), lbl = document.getElementById('voiceLabel');
+  const btn  = document.getElementById('voiceToggle');
+  if (voiceEnabled) { icon.textContent='🔊'; lbl.textContent='Voice On'; btn.classList.remove('off'); document.getElementById('speedWrap').style.display='none'; }
+  else              { icon.textContent='🔇'; lbl.textContent='Voice Off'; btn.classList.add('off'); stopSpeech(); document.getElementById('speedWrap').style.display=''; }
+  if (isPlaying) { stopPlay(); startPlay(); }
+}
+
+// ── Problem data ──
+let arr = [10,22,9,33,21,50,41,60,80];
+
+// ── Step builder ──
+function buildSteps(arr) {
+  const n = arr.length;
+  const dp = new Array(n).fill(null);
+  const steps = [];
+  let cellsFilled = 0;
+
+  // Init step
+  steps.push({
+    dp: [...dp], active:null, compare:[], traceback:[],
+    narration:`Starting LIS for array [${arr.join(', ')}] (len=${n}). dp[i] = length of LIS ending at index i.`,
+    phase:'active', i:0, j:0, cells:0, codeLine:1
+  });
+
+  // Init dp to 1
+  for(let i=0; i<n; i++) dp[i] = 1;
+  steps.push({
+    dp: [...dp], active:null, compare:[], traceback:[],
+    narration:`Initialize all dp[i] = 1, as each single element is an LIS of length 1.`,
+    phase:'active', i:0, j:0, cells:n, codeLine:2
+  });
+  cellsFilled = n;
+
+  for(let i=1; i<n; i++) {
+    steps.push({
+      dp:[...dp], active:null, compare:[], traceback:[],
+      narration:`Processing i=${i}, arr[${i}]=${arr[i]}. Check previous j=0 to ${i-1} for possible extensions.`,
+      phase:'active', i:i, j:0, cells:cellsFilled, codeLine:3
+    });
+
+    for(let j=0; j<i; j++) {
+      let update = false;
+      let narr = `Checking j=${j}: arr[${j}]=${arr[j]} ${arr[j] < arr[i] ? '<' : '>='} ${arr[i]}.`;
+      if(arr[j] < arr[i]) {
+        narr += ` Compare dp[${j}]+1=${dp[j]+1} vs current dp[${i}]=${dp[i]}.`;
+      } else {
+        narr += ` Skip since not increasing.`;
+      }
+      steps.push({
+        dp:[...dp], active:i, compare:[j], traceback:[],
+        narration:narr,
+        phase:'compare', i:i, j:j, cells:cellsFilled, codeLine:5
+      });
+
+      if(arr[j] < arr[i] && dp[j] + 1 > dp[i]) {
+        const old = dp[i];
+        dp[i] = dp[j] + 1;
+        update = true;
+        steps.push({
+          dp:[...dp], active:i, compare:[], traceback:[],
+          narration:`Update dp[${i}] from ${old} to ${dp[i]} using j=${j}.`,
+          phase:'fill', i:i, j:j, cells:cellsFilled, codeLine:6
+        });
+      } else {
+        steps.push({
+          dp:[...dp], active:i, compare:[], traceback:[],
+          narration:`No update for this j.`,
+          phase:'fill', i:i, j:j, cells:cellsFilled, codeLine:6
+        });
+      }
+    }
+  }
+
+  // Traceback
+  const lisLen = Math.max(...dp);
+  let seq = [];
+  let idx = n - 1;
+  while(idx >= 0 && dp[idx] !== lisLen) idx--;
+  let current = idx;
+  const tbSet = new Set();
+  while(current >= 0) {
+    tbSet.add(current);
+    seq.push(arr[current]);
+    if(dp[current] === 1) break;
+    for(let j=current-1; j>=0; j--) {
+      if(arr[j] < arr[current] && dp[j] + 1 === dp[current]) {
+        current = j;
+        break;
+      }
+    }
+  }
+  seq.reverse();
+
+  steps.push({
+    dp:[...dp], active:null, compare:[], traceback:[...tbSet],
+    narration:`Done! LIS length = ${lisLen}. One possible LIS: [${seq.join(', ')}].`,
+    phase:'done', i:n-1, j:0, cells:cellsFilled, codeLine:7,
+    lisSeq: seq, lisLen
+  });
+
+  return steps;
+}
+
+// ── Render table ──
+function buildTable(n, arr) {
+  const head = document.getElementById('dpHead');
+  const body = document.getElementById('dpBody');
+  head.innerHTML = ''; body.innerHTML = '';
+  // header row
+  let hrow = '<tr><th></th>';
+  for(let i=0; i<n; i++) hrow += `<th>${i}</th>`;
+  hrow += '</tr>';
+  head.innerHTML = hrow;
+  // arr row
+  let arow = '<tr><th>arr</th>';
+  for(let i=0; i<n; i++) arow += `<td>${arr[i]}</td>`;
+  arow += '</tr>';
+  // dp row
+  let drow = '<tr><th>dp</th>';
+  for(let i=0; i<n; i++) drow += `<td id="c${i}">—</td>`;
+  drow += '</tr>';
+  body.innerHTML = arow + drow;
+}
+
+function applyStep(step) {
+  const dp = step.dp;
+  const n = dp.length;
+  const actSet = new Set(step.active !== null ? [step.active] : []);
+  const cmpSet = new Set(step.compare || []);
+  const tbSet  = new Set(step.traceback || []);
+
+  for(let i=0; i<n; i++) {
+    const el = document.getElementById(`c${i}`);
+    if(!el) continue;
+    el.textContent = dp[i] === null ? '—' : dp[i];
+    el.className = '';
+    if (tbSet.has(i)) { el.classList.add('traceback'); }
+    else if (actSet.has(i)) { el.classList.add('active'); }
+    else if (cmpSet.has(i)) { el.classList.add('compare'); }
+    else if (dp[i] !== null) { el.classList.add('filled'); }
+  }
+}
+
+function renderArrayChips(arr, highlightIdx, selectedIdxs) {
+  const row = document.getElementById('arrayRow');
+  row.innerHTML = '';
+  const selSet = new Set(selectedIdxs || []);
+  arr.forEach((val, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'num-chip';
+    if(highlightIdx !== null && i === highlightIdx) chip.classList.add('highlight');
+    if(selSet.has(i)) chip.classList.add('selected');
+    chip.textContent = `${val}`;
+    row.appendChild(chip);
+  });
+}
+
+// ── Controller ──
+let steps = [];
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let speedMult = 2;
+const SPEED_DELAYS = {1:1600,2:900,3:500,4:250,5:80};
+function getDelay() { return SPEED_DELAYS[speedMult]||900; }
+function onSpeedChange(v) { speedMult=parseInt(v); document.getElementById('speedVal').textContent=v+'×'; }
+
+function updateUI(step, idx) {
+  applyStep(step);
+  renderArrayChips(arr, step.i > 0 ? step.i : null, step.lisSeq ? step.lisSeq.map((_,k) => step.lisSeq.length - 1 - k) : []); // reverse indices if needed, but since seq is values, but for selected, need indices
+  // Wait, selectedIdxs are indices, in step.traceback is indices
+  renderArrayChips(arr, step.i > 0 ? step.i : null, [...(step.traceback || [])]);
+  document.getElementById('sItem').textContent  = step.i||0;
+  document.getElementById('sCap').textContent   = step.j!==undefined?step.j:'—';
+  document.getElementById('sCells').textContent = step.cells||0;
+  document.getElementById('stepCtr').textContent = `Step ${idx+1} / ${steps.length}`;
+  const pct = steps.length>1 ? ((idx/(steps.length-1))*100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+
+  const badge = document.getElementById('phaseBadge');
+  const phMap = {active:['ph-active','Running'],compare:['ph-compare','Comparing'],fill:['ph-fill','Filling'],done:['ph-done','Done'],idle:['ph-idle','Idle']};
+  const [cls,lbl] = phMap[step.phase]||['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  for(let k=1;k<=7;k++) { const el=document.getElementById(`cl${k}`); if(el) el.style.background = step.codeLine===k?'rgba(0,212,170,0.12)':''; }
+
+  if(step.lisSeq) {
+    document.getElementById('lisResult').textContent = `LIS: [${step.lisSeq.join(', ')}]\nLength: ${step.lisLen}`;
+    document.getElementById('statMax').textContent   = step.lisLen;
+  }
+
+  document.getElementById('narText').textContent = step.narration;
+  document.getElementById('narText').classList.remove('intro-mode');
+}
+
+function renderStep(idx, autoAdvance=false) {
+  if(idx<0||idx>=steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  updateUI(step, idx);
+  if(autoAdvance) scheduleNext(step);
+}
+
+function scheduleNext(step) {
+  if(!isPlaying) return;
+  if(stepIdx>=steps.length-1) { stopPlay(); return; }
+  if(voiceEnabled) {
+    speak(step.narration).then(()=>{ if(!isPlaying) return; playTimer=setTimeout(()=>{ if(isPlaying) renderStep(stepIdx+1,true); },400); });
+  } else {
+    playTimer = setTimeout(()=>{ if(isPlaying) renderStep(stepIdx+1,true); }, getDelay());
+  }
+}
+
+function startPlay() {
+  if(stepIdx>=steps.length-1) stepIdx=-1;
+  isPlaying=true;
+  document.getElementById('btnPlay').textContent='⏸ Pause';
+  renderStep(stepIdx+1,true);
+}
+function stopPlay() {
+  isPlaying=false;
+  if(playTimer){clearTimeout(playTimer);playTimer=null;}
+  document.getElementById('btnPlay').textContent='▶ Play';
+  stopSpeech();
+}
+function nextStep() {
+  stopPlay();
+  if(stepIdx+1<steps.length) { renderStep(stepIdx+1,false); if(voiceEnabled) speak(steps[stepIdx].narration); }
+}
+function resetAll() {
+  stopPlay();
+  stepIdx=-1;
+  buildTable(arr.length, arr);
+  renderArrayChips(arr, null, []);
+  ['sItem','sCap','sCells'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('narText').textContent='Ready! Press Play to watch the array fill, or Next Step for manual control.';
+  document.getElementById('lisResult').textContent='Run the algorithm to see one LIS.';
+  document.getElementById('statMax').textContent='0';
+  for(let k=1;k<=7;k++){const el=document.getElementById(`cl${k}`);if(el)el.style.background='';}
+}
+
+document.getElementById('btnPlay').addEventListener('click',()=>{if(isPlaying)stopPlay();else startPlay();});
+document.getElementById('btnNext').addEventListener('click',nextStep);
+document.getElementById('btnReset').addEventListener('click',resetAll);
+
+function applyInput() {
+  const input = document.getElementById('arrInput').value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  if(input.length < 1) {alert('Array must have at least 1 element.'); return;}
+  if(input.length > 15) {alert('Keep array ≤ 15 elements for readable visualization.'); return;}
+  arr = input;
+  init();
+}
+
+function randomize() {
+  const n = Math.floor(Math.random()*6)+5; // 5-10
+  arr = Array.from({length:n},()=>Math.floor(Math.random()*90)+10);
+  document.getElementById('arrInput').value = arr.join(', ');
+  init();
+}
+
+function init() {
+  const saved = localStorage.getItem('theme');
+  if(saved==='light') document.getElementById('toggleLabel').textContent='Dark mode';
+
+  document.getElementById('statN').textContent   = arr.length;
+
+  buildTable(arr.length, arr);
+  renderArrayChips(arr, null, []);
+  steps = buildSteps(arr);
+  stopPlay();
+  stepIdx = -1;
+
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or Next Step for manual control.';
+  document.getElementById('lisResult').textContent='Run the algorithm to see one LIS.';
+  document.getElementById('speedWrap').style.display = voiceEnabled?'none':'';
+
+  // Show initial dp state
+  applyStep(steps[0]);
+}
+
+init();
+</script>
 </body>
 </html>

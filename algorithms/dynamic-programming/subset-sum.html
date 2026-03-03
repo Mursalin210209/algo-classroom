@@ -5,75 +5,802 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Subset Sum — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0f1e;
+  --surface: #0f1829;
+  --surface2: #131f33;
+  --border: #1e2d44;
+  --text: #c8d8f0;
+  --text-dim: #5a7399;
+  --teal: #00d4aa;
+  --orange: #ff8c42;
+  --pink: #ff6b9d;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+
+  --cell-default: #131f33;
+  --cell-active: rgba(255,140,66,0.22);
+  --cell-compare: rgba(255,107,157,0.22);
+  --cell-filled: rgba(0,212,170,0.18);
+  --cell-selected: rgba(0,212,170,0.35);
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+
+[data-theme="light"] {
+  --bg: #f0f4fb;
+  --surface: #ffffff;
+  --surface2: #f5f8ff;
+  --border: #d0daea;
+  --text: #1a2840;
+  --text-dim: #6a85aa;
+  --teal: #00a882;
+  --orange: #e07030;
+  --pink: #d04070;
+  --cell-default: #eef2fa;
+  --cell-active: rgba(224,112,48,0.18);
+  --cell-compare: rgba(208,64,112,0.18);
+  --cell-filled: rgba(0,168,130,0.18);
+  --cell-selected: rgba(0,168,130,0.35);
 }
-.preview-box {
-  background: var(--surface);
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(rgba(0,212,170,.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,212,170,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.bg-glow {
+  position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 900px; height: 600px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0,212,170,.06) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Navbar ── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,15,30,.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 24px; height: 52px;
+  display: flex; align-items: center; gap: 24px;
+}
+.nav-logo {
+  font-family: var(--mono); font-size: 14px; font-weight: 800;
+  color: var(--teal); text-decoration: none; letter-spacing: -0.5px;
+}
+.logo-bracket { color: var(--text-dim); }
+.logo-dot { color: var(--orange); }
+.nav-links { display: flex; gap: 20px; }
+.nav-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; letter-spacing: 1px; transition: color .2s; }
+.nav-links a:hover { color: var(--teal); }
+
+.theme-toggle {
+  margin-left: auto; background: none; border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px 4px 6px;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  transition: border-color .2s;
+}
+.toggle-track {
+  width: 32px; height: 18px; background: var(--surface2);
+  border-radius: 9px; position: relative; border: 1px solid var(--border);
+}
+.toggle-thumb {
+  position: absolute; top: 1px; left: 1px;
+  width: 14px; height: 14px; background: var(--teal);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: transform .3s;
+}
+[data-theme="light"] .toggle-thumb { transform: translateX(14px); }
+.toggle-icon { font-size: 8px; }
+[data-theme="light"] .toggle-icon::before { content: '☀️'; }
+.toggle-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+
+/* ── Page Layout ── */
+.algo-page { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; position: relative; z-index: 1; }
+.back-link { font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-decoration: none; letter-spacing: 1px; display: inline-block; margin-bottom: 20px; }
+.back-link:hover { color: var(--teal); }
+
+/* ── Complexity chips ── */
+.complexity { display: flex; flex-wrap: wrap; gap: 8px; }
+.cplx-chip {
+  font-family: var(--mono); font-size: 10px;
+  padding: 4px 10px; border: 1px solid var(--border);
+  border-radius: 20px; color: var(--text-dim); letter-spacing: .5px;
+}
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+
+/* ── Concept cards ── */
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 10px; margin: 18px 0; }
+.cc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.cc-icon { font-size: 22px; display: block; margin-bottom: 7px; }
+.cc-title { font-size: 12px; font-weight: 700; margin-bottom: 5px; letter-spacing: .5px; }
+.cc-desc { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+
+/* ── Narration ── */
+.narration {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--teal); border-radius: 10px;
+  padding: 12px 16px; margin-bottom: 14px; min-height: 52px;
+}
+.teacher { font-size: 22px; flex-shrink: 0; }
+.narration-text { font-size: 12px; color: var(--text); line-height: 1.6; flex: 1; }
+.speak-bars { display: flex; gap: 2px; align-items: flex-end; height: 14px; flex-shrink: 0; }
+.speak-bars span {
+  width: 3px; background: var(--teal); border-radius: 2px;
+  height: 4px; opacity: 0.3;
+}
+.speak-bars.on span { animation: bar-bounce .6s ease-in-out infinite; opacity: 1; }
+.speak-bars.on span:nth-child(1) { animation-delay: 0s; }
+.speak-bars.on span:nth-child(2) { animation-delay: .1s; }
+.speak-bars.on span:nth-child(3) { animation-delay: .2s; }
+.speak-bars.on span:nth-child(4) { animation-delay: .15s; }
+.speak-bars.on span:nth-child(5) { animation-delay: .05s; }
+@keyframes bar-bounce { 0%,100% { height:3px } 50% { height:14px } }
+
+/* ── Panel ── */
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;
+}
+.panel-hd { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
+
+/* ── Controls ── */
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+
+.btn {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text); cursor: pointer;
+  letter-spacing: .5px; transition: all .2s; white-space: nowrap;
+}
+.btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(0,212,170,.08); }
+.btn-primary { background: rgba(0,212,170,.15); border-color: rgba(0,212,170,.4); color: var(--teal); }
+.btn-primary:hover { background: rgba(0,212,170,.25); }
+.btn-danger { background: rgba(255,107,157,.1); border-color: rgba(255,107,157,.3); color: var(--pink); }
+.btn-danger:hover { background: rgba(255,107,157,.2); }
+
+.arr-input {
+  flex: 1; min-width: 160px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+
+.speed-ctrl { display: flex; align-items: center; gap: 6px; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+.speed-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 22px; }
+input[type=range] { accent-color: var(--teal); width: 80px; }
+
+/* ── Status bar ── */
+.status-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 9px 14px; margin-top: 12px;
+}
+.si { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sl { font-size: 9px; letter-spacing: 1px; color: var(--text-dim); text-transform: uppercase; }
+.sv { font-family: var(--mono); font-size: 15px; font-weight: 800; color: var(--text); }
+.sv.orange { color: var(--orange); }
+.phase-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 3px 9px; border-radius: 12px; letter-spacing: .5px;
+}
+.ph-idle    { background: rgba(90,115,153,.15); color: var(--text-dim); }
+.ph-active  { background: rgba(0,212,170,.15);  color: var(--teal); }
+.ph-compare { background: rgba(255,140,66,.15); color: var(--orange); }
+.ph-fill    { background: rgba(255,107,157,.15); color: var(--pink); }
+.ph-done    { background: rgba(0,212,170,.2);   color: var(--teal); }
+.divider-auto { flex: 1; }
+.prog-wrap { width: 100px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.prog-fill { height: 100%; background: var(--teal); border-radius: 3px; width: 0%; transition: width .3s; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+
+/* ── Legend ── */
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+
+/* ── Stats grid ── */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; text-align: center; }
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+/* ── Code block ── */
+.code-block {
+  font-family: var(--mono); font-size: 11px; line-height: 2;
+  background: var(--surface2); border-radius: 8px; padding: 12px 14px;
+  border: 1px solid var(--border); white-space: pre; overflow-x: auto;
+}
+.code-line { display: block; padding: 0 6px; border-radius: 4px; transition: background .2s; }
+.kw { color: #7ec8e3; } .fn { color: var(--teal); } .num { color: var(--orange); }
+
+/* ── Voice toggle ── */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+
+/* ── DP Table ── */
+.dp-scroll { overflow-x: auto; }
+#dpTable {
+  border-collapse: separate; border-spacing: 3px;
+  font-family: var(--mono); font-size: 11px; min-width: 100%;
+}
+#dpTable th, #dpTable td {
+  width: 40px; min-width: 36px; height: 36px;
+  text-align: center; border-radius: 5px;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+  transition: background .25s, color .25s;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+#dpTable th { background: var(--surface2); color: var(--text-dim); font-size: 10px; }
+#dpTable td { background: var(--cell-default); color: var(--text-dim); }
+#dpTable td.active  { background: var(--cell-active);  color: var(--orange); font-weight: 800; }
+#dpTable td.compare { background: var(--cell-compare); color: var(--pink);   font-weight: 800; }
+#dpTable td.filled  { background: var(--cell-filled);  color: var(--teal); }
+#dpTable td.selected{ background: var(--cell-selected); color: var(--teal); font-weight: 800; }
+#dpTable td.traceback{ background: rgba(0,212,170,.4); color: #fff; font-weight: 800; }
+
+/* ── Items display ── */
+.items-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.item-chip {
+  font-family: var(--mono); font-size: 10px;
+  padding: 4px 10px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text-dim); transition: all .2s;
+}
+.item-chip.highlight { border-color: var(--orange); color: var(--orange); background: rgba(255,140,66,.12); }
+.item-chip.selected  { border-color: var(--teal);   color: var(--teal);   background: rgba(0,212,170,.12); }
+
+/* ── Selected subset result ── */
+.selected-subset {
+  font-family: var(--mono); font-size: 12px;
+  padding: 10px 14px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); line-height: 1.8;
+}
+
+/* ── Two col ── */
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+.card-difficulty {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  padding: 4px 10px; border-radius: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+}
+.beginner    { background: rgba(0,212,170,.15); color: var(--teal); border: 1px solid rgba(0,212,170,.3); }
+.intermediate{ background: rgba(255,140,66,.15); color: var(--orange); border: 1px solid rgba(255,140,66,.3); }
+
+.narration-text.intro-mode { color: var(--teal); font-weight: 600; animation: glowPulse 2s infinite; }
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb"><span class="toggle-icon">🌙</span></div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
+
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">➕</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Subset Sum</h1>
-    <p class="cs-sub">Can a subset of numbers equal the target?</p>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🎯</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Dynamic Programming</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Subset Sum Problem</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7;">
+      Given a set of positive integers and a target sum, determine if there is a subset that sums exactly to the target. Solved with a 2D DP table.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Time: <span>O(m·target)</span></div>
+      <div class="cplx-chip">Space: <span>O(m·target)</span></div>
+      <div class="cplx-chip">Type: <span>Bottom-up DP</span></div>
+      <div class="cplx-chip">Optimal: <span>✓ Yes (for small target)</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Boolean DP table</li>
-        <li>Subset reconstruction</li>
-        <li>Variant: partition equal subset</li>
-      </ul>
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">📦</span><div class="cc-title">Subproblems</div><div class="cc-desc">dp[i][s] = true if subset of first i numbers sums to s.</div></div>
+    <div class="cc"><span class="cc-icon">⚖️</span><div class="cc-title">Include or Skip</div><div class="cc-desc">dp[i][s] = dp[i-1][s] (skip) or dp[i-1][s - num[i]] (include, if possible).</div></div>
+    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Recurrence</div><div class="cc-desc">dp[i][s] = dp[i-1][s] || (s >= num[i] ? dp[i-1][s - num[i]] : false).</div></div>
+    <div class="cc"><span class="cc-icon">🔍</span><div class="cc-title">Traceback</div><div class="cc-desc">Trace back from dp[m][target] to find the exact subset if possible.</div></div>
+  </div>
+
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Subset Sum Problem! Press Play to watch the DP table fill step by step.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">🔢 Numbers</div>
+        <div class="items-row" id="itemsRow"></div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Target Sum: <span id="targetDisplay" style="color:var(--teal);font-weight:700;">9</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📊 DP Table  <span style="font-size:10px;color:var(--text-dim);font-weight:400;">— rows = numbers (0=none), cols = sum</span></div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--cell-default);border:1px solid var(--border)"></div>Unfilled</div>
+          <div class="li"><div class="ld" style="background:var(--cell-active)"></div>Current Cell</div>
+          <div class="li"><div class="ld" style="background:var(--cell-compare)"></div>Comparing</div>
+          <div class="li"><div class="ld" style="background:var(--cell-filled)"></div>Filled</div>
+          <div class="li"><div class="ld" style="background:rgba(0,212,170,.4)"></div>Traceback</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <div class="dp-scroll">
+          <table id="dpTable"><thead id="dpHead"></thead><tbody id="dpBody"></tbody></table>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Numbers:</label>
+          <input type="text" class="arr-input" id="arrInput" value="3,34,4,12,5,2" style="min-width:140px;">
+          <label>Target:</label>
+          <input type="text" class="arr-input" id="targetInput" value="9" style="min-width:60px;flex:none;">
+          <button class="btn" onclick="applyInput()">Apply</button>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="si"><span class="sl">Item</span><span class="sv orange" id="sItem">0</span></div>
+        <div class="si"><span class="sl">Sum</span><span class="sv" id="sCap">0</span></div>
+        <div class="si"><span class="sl">Cells Filled</span><span class="sv" id="sCells">0</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="divider-auto"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statMax">No</div><div class="stat-box-l">Possible</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statItems">0</div><div class="stat-box-l">Subset Size</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statCap">0</div><div class="stat-box-l">Target</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Num Items</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1"  class="code-line"><span class="kw">function</span> <span class="fn">subsetSum</span>(arr, target, m):</span>
+<span id="cl2"  class="code-line">  dp = <span class="num">(m+1)</span> × <span class="num">(target+1)</span> false</span>
+<span id="cl3"  class="code-line">  dp[0][0] = true</span>
+<span id="cl4"  class="code-line">  <span class="kw">for</span> i = 1 <span class="kw">to</span> m:</span>
+<span id="cl5"  class="code-line">    <span class="kw">for</span> s = 0 <span class="kw">to</span> target:</span>
+<span id="cl6"  class="code-line">      dp[i][s] = dp[i-1][s]</span>
+<span id="cl7"  class="code-line">      <span class="kw">if</span> s >= arr[i-1]:</span>
+<span id="cl8"  class="code-line">        dp[i][s] = dp[i][s] || dp[i-1][s - arr[i-1]]</span>
+<span id="cl9"  class="code-line">  <span class="kw">return</span> dp[m][target]  <span style="color:var(--text-dim)">// traceback for subset</span></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">🎯 Subset Result</div>
+        <div class="selected-subset" id="selectedSubset">Run the algorithm to see if subset exists.</div>
+      </div>
+
     </div>
   </div>
+
 </div>
+
+<script>
+// ── Theme ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+(function() {
+  const s = localStorage.getItem('theme');
+  if (s === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+// ── TTS ──
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const v = synth.getVoices();
+  ttsVoice = v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(res => {
+    if (!voiceEnabled || !synth) { res(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = ttsVoice; u.rate = 0.88; u.pitch = 1.05; u.volume = 1;
+    u.onstart = () => document.getElementById('speakBars').classList.add('on');
+    u.onend = u.onerror = () => { document.getElementById('speakBars').classList.remove('on'); res(); };
+    synth.speak(u);
+  });
+}
+function stopSpeech() { synth && synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
+// ── Voice toggle ──
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const icon = document.getElementById('voiceIcon'), lbl = document.getElementById('voiceLabel');
+  const btn  = document.getElementById('voiceToggle');
+  if (voiceEnabled) { icon.textContent='🔊'; lbl.textContent='Voice On'; btn.classList.remove('off'); document.getElementById('speedWrap').style.display='none'; }
+  else              { icon.textContent='🔇'; lbl.textContent='Voice Off'; btn.classList.add('off'); stopSpeech(); document.getElementById('speedWrap').style.display=''; }
+  if (isPlaying) { stopPlay(); startPlay(); }
+}
+
+// ── Problem data ──
+let arr = [3,34,4,12,5,2];
+let target = 9;
+
+// ── Step builder ──
+function buildSteps(arr, target) {
+  const m = arr.length;
+  const dp = Array.from({length:m+1},()=>new Array(target+1).fill(null));
+  const steps = [];
+  let cellsFilled = 0;
+
+  // Init step
+  steps.push({
+    dp: dp.map(r=>[...r]), active:null, compare:[], traceback:[],
+    narration:`Starting Subset Sum with numbers [${arr.join(', ')}] and target ${target}. We build a (${m+1})×(${target+1}) DP table. dp[i][s] = true if subset of first i numbers sums to s.`,
+    phase:'active', i:0, s:target, cells:0, codeLine:1
+  });
+
+  // Base row
+  dp[0][0] = true;
+  for(let s=1;s<=target;s++) dp[0][s]=false;
+  steps.push({
+    dp: dp.map(r=>[...r]), active:null, compare:[], traceback:[],
+    narration:`Row 0 (no numbers): dp[0][0]=true, others false. Empty subset sums to 0.`,
+    phase:'active', i:0, s:target, cells:target+1, codeLine:3
+  });
+  cellsFilled = target+1;
+
+  for(let i=1;i<=m;i++) {
+    steps.push({
+      dp:dp.map(r=>[...r]), active:null, compare:[], traceback:[],
+      narration:`Processing number ${i}: ${arr[i-1]}. For each sum s, decide include or skip.`,
+      phase:'active', i:i, s:target, cells:cellsFilled, codeLine:4
+    });
+
+    for(let s=0;s<=target;s++) {
+      const skip = dp[i-1][s];
+      const include = (s >= arr[i-1]) ? dp[i-1][s - arr[i-1]] : false;
+
+      if(s < arr[i-1]) {
+        steps.push({
+          dp:dp.map(r=>[...r]), active:[i,s], compare:[[i-1,s]], traceback:[],
+          narration:`dp[${i}][${s}]: s=${s} < ${arr[i-1]}, can't include. Copy dp[${i-1}][${s}] = ${skip ? 'true' : 'false'}.`,
+          phase:'compare', i:i, s:s, cells:cellsFilled, codeLine:6
+        });
+        dp[i][s] = skip;
+        cellsFilled++;
+        steps.push({
+          dp:dp.map(r=>[...r]), active:[i,s], compare:[], traceback:[],
+          narration:`dp[${i}][${s}] = ${dp[i][s] ? 'true' : 'false'}.`,
+          phase:'fill', i:i, s:s, cells:cellsFilled, codeLine:6
+        });
+      } else {
+        steps.push({
+          dp:dp.map(r=>[...r]), active:[i,s], compare:[[i-1,s],[i-1,s - arr[i-1]]], traceback:[],
+          narration:`dp[${i}][${s}]: Can include ${arr[i-1]}. ${skip ? 'true' : 'false'} (skip) or ${include ? 'true' : 'false'} (include).`,
+          phase:'compare', i:i, s:s, cells:cellsFilled, codeLine:8
+        });
+        dp[i][s] = skip || include;
+        cellsFilled++;
+        steps.push({
+          dp:dp.map(r=>[...r]), active:[i,s], compare:[], traceback:[],
+          narration:`dp[${i}][${s}] = ${dp[i][s] ? 'true' : 'false'}. ${dp[i][s]===include?'Including':'Skipping'} is possible.`,
+          phase:'fill', i:i, s:s, cells:cellsFilled, codeLine:8
+        });
+      }
+    }
+  }
+
+  // Traceback
+  const tbSet = new Set();
+  let subset = [];
+  let ti = m, ts = target;
+  while(ts > 0 && ti > 0) {
+    tbSet.add(`${ti},${ts}`);
+    if(dp[ti-1][ts]) {
+      ti--;
+    } else {
+      subset.push(arr[ti-1]);
+      ts -= arr[ti-1];
+      ti--;
+    }
+  }
+  subset.reverse();
+
+  steps.push({
+    dp:dp.map(r=>[...r]), active:null, compare:[], traceback:[...tbSet],
+    narration:`Done! Subset sums to ${target}: ${dp[m][target] ? 'Yes' : 'No'}. ${dp[m][target] ? `One subset: [${subset.join(', ')}]` : ''}.`,
+    phase:'done', i:m, s:target, cells:cellsFilled, codeLine:9,
+    possible: dp[m][target], subset
+  });
+
+  return steps;
+}
+
+// ── Render table ──
+function buildTable(m, target) {
+  const head = document.getElementById('dpHead');
+  const body = document.getElementById('dpBody');
+  head.innerHTML = ''; body.innerHTML = '';
+  // header row
+  let hrow = '<tr><th>i\\s</th>';
+  for(let s=0;s<=target;s++) hrow += `<th>${s}</th>`;
+  hrow += '</tr>';
+  head.innerHTML = hrow;
+  // body rows
+  for(let i=0;i<=m;i++) {
+    let row = `<tr><th style="background:var(--surface2);color:var(--text-dim);">${i}</th>`;
+    for(let s=0;s<=target;s++) row += `<td id="c${i}_${s}">—</td>`;
+    row += '</tr>';
+    body.innerHTML += row;
+  }
+}
+
+function applyStep(step) {
+  const dp = step.dp;
+  const m = dp.length-1, target = dp[0].length-1;
+  const actSet = new Set(step.active ? [`${step.active[0]},${step.active[1]}`] : []);
+  const cmpSet = new Set((step.compare||[]).map(c=>`${c[0]},${c[1]}`));
+  const tbSet  = new Set(step.traceback||[]);
+
+  for(let i=0;i<=m;i++) for(let s=0;s<=target;s++) {
+    const el = document.getElementById(`c${i}_${s}`);
+    if(!el) continue;
+    const key = `${i},${s}`;
+    el.textContent = dp[i][s]===null ? '—' : (dp[i][s] ? 'T' : 'F');
+    el.className = '';
+    if (tbSet.has(key))  { el.classList.add('traceback'); }
+    else if (actSet.has(key)) { el.classList.add('active'); }
+    else if (cmpSet.has(key)) { el.classList.add('compare'); }
+    else if (dp[i][s]!==null) { el.classList.add('filled'); }
+  }
+}
+
+function renderItemChips(arr, highlightIdx, selectedNums) {
+  const row = document.getElementById('itemsRow');
+  row.innerHTML = '';
+  const selSet = new Set(selectedNums||[]);
+  arr.forEach((num,i) => {
+    const chip = document.createElement('div');
+    chip.className = 'item-chip';
+    if(highlightIdx !== null && i+1 === highlightIdx) chip.classList.add('highlight');
+    if(selSet.has(num)) chip.classList.add('selected');
+    chip.textContent = `Num ${i+1}: ${num}`;
+    row.appendChild(chip);
+  });
+}
+
+// ── Controller ──
+let steps = [];
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let speedMult = 2;
+const SPEED_DELAYS = {1:1600,2:900,3:500,4:250,5:80};
+function getDelay() { return SPEED_DELAYS[speedMult]||900; }
+function onSpeedChange(v) { speedMult=parseInt(v); document.getElementById('speedVal').textContent=v+'×'; }
+
+function updateUI(step, idx) {
+  applyStep(step);
+  renderItemChips(arr, step.i>0?step.i:null, step.subset||[]);
+  document.getElementById('sItem').textContent  = step.i||0;
+  document.getElementById('sCap').textContent   = step.s!==undefined?step.s:'—';
+  document.getElementById('sCells').textContent = step.cells||0;
+  document.getElementById('stepCtr').textContent = `Step ${idx+1} / ${steps.length}`;
+  const pct = steps.length>1 ? ((idx/(steps.length-1))*100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+
+  const badge = document.getElementById('phaseBadge');
+  const phMap = {active:['ph-active','Running'],compare:['ph-compare','Comparing'],fill:['ph-fill','Filling'],done:['ph-done','Done'],idle:['ph-idle','Idle']};
+  const [cls,lbl] = phMap[step.phase]||['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  for(let i=1;i<=9;i++) { const el=document.getElementById(`cl${i}`); if(el) el.style.background = step.codeLine===i?'rgba(0,212,170,0.12)':''; }
+
+  if(step.possible !== undefined) {
+    const poss = step.possible ? 'Yes' : 'No';
+    document.getElementById('selectedSubset').textContent = `Possible: ${poss}${step.possible ? `\nSubset: [${step.subset.join(', ')}]` : ''}`;
+    document.getElementById('statMax').textContent   = poss;
+    document.getElementById('statItems').textContent = step.possible ? step.subset.length : 0;
+  }
+
+  document.getElementById('narText').textContent = step.narration;
+  document.getElementById('narText').classList.remove('intro-mode');
+}
+
+function renderStep(idx, autoAdvance=false) {
+  if(idx<0||idx>=steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  updateUI(step, idx);
+  if(autoAdvance) scheduleNext(step);
+}
+
+function scheduleNext(step) {
+  if(!isPlaying) return;
+  if(stepIdx>=steps.length-1) { stopPlay(); return; }
+  if(voiceEnabled) {
+    speak(step.narration).then(()=>{ if(!isPlaying) return; playTimer=setTimeout(()=>{ if(isPlaying) renderStep(stepIdx+1,true); },400); });
+  } else {
+    playTimer = setTimeout(()=>{ if(isPlaying) renderStep(stepIdx+1,true); }, getDelay());
+  }
+}
+
+function startPlay() {
+  if(stepIdx>=steps.length-1) stepIdx=-1;
+  isPlaying=true;
+  document.getElementById('btnPlay').textContent='⏸ Pause';
+  renderStep(stepIdx+1,true);
+}
+function stopPlay() {
+  isPlaying=false;
+  if(playTimer){clearTimeout(playTimer);playTimer=null;}
+  document.getElementById('btnPlay').textContent='▶ Play';
+  stopSpeech();
+}
+function nextStep() {
+  stopPlay();
+  if(stepIdx+1<steps.length) { renderStep(stepIdx+1,false); if(voiceEnabled) speak(steps[stepIdx].narration); }
+}
+function resetAll() {
+  stopPlay();
+  stepIdx=-1;
+  buildTable(arr.length, target);
+  renderItemChips(arr,null,[]);
+  ['sItem','sCap','sCells'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('narText').textContent='Ready! Press Play to watch the table fill, or Next Step for manual control.';
+  document.getElementById('selectedSubset').textContent='Run the algorithm to see if subset exists.';
+  document.getElementById('statMax').textContent='No';
+  document.getElementById('statItems').textContent='0';
+  for(let i=1;i<=9;i++){const el=document.getElementById(`cl${i}`);if(el)el.style.background='';}
+}
+
+document.getElementById('btnPlay').addEventListener('click',()=>{if(isPlaying)stopPlay();else startPlay();});
+document.getElementById('btnNext').addEventListener('click',nextStep);
+document.getElementById('btnReset').addEventListener('click',resetAll);
+
+function applyInput() {
+  const a = document.getElementById('arrInput').value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>0);
+  const t = parseInt(document.getElementById('targetInput').value.trim());
+  if(a.length<1){alert('Numbers must have at least 1 positive integer.');return;}
+  if(isNaN(t)||t<1){alert('Target must be positive integer.');return;}
+  if(a.length>8||t>20){alert('Keep numbers ≤8 and target ≤20 for readable visualization.');return;}
+  arr=a; target=t;
+  init();
+}
+
+function randomize() {
+  const m = Math.floor(Math.random()*4)+3; // 3-6 numbers
+  arr = Array.from({length:m},()=>Math.floor(Math.random()*8)+1);
+  target = Math.floor(Math.random()*12)+5;
+  document.getElementById('arrInput').value = arr.join(', ');
+  document.getElementById('targetInput').value = target;
+  init();
+}
+
+function init() {
+  const saved = localStorage.getItem('theme');
+  if(saved==='light') document.getElementById('toggleLabel').textContent='Dark mode';
+
+  document.getElementById('targetDisplay').textContent = target;
+  document.getElementById('statCap').textContent = target;
+  document.getElementById('statN').textContent   = arr.length;
+
+  buildTable(arr.length, target);
+  renderItemChips(arr, null, []);
+  steps = buildSteps(arr, target);
+  stopPlay();
+  stepIdx = -1;
+
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or Next Step for manual control.';
+  document.getElementById('selectedSubset').textContent='Run the algorithm to see if subset exists.';
+  document.getElementById('speedWrap').style.display = voiceEnabled?'none':'';
+
+  // Show initial dp state
+  applyStep(steps[0]);
+}
+
+init();
+</script>
 </body>
 </html>
