@@ -3,33 +3,1071 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fractional Knapsack</title>
+<title>Fractional Knapsack — Detailed Steps</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
-body { font-family: Arial; background:#0f172a; color:white; padding:40px; }
-h1 { color:#00d4aa; }
-code { background:#1e293b; padding:10px; display:block; margin-top:15px; }
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0f1e;
+  --surface: #0f1829;
+  --surface2: #131f33;
+  --border: #1e2d44;
+  --text: #c8d8f0;
+  --text-dim: #5a7399;
+  --teal: #00d4aa;
+  --orange: #ff8c42;
+  --pink: #ff6b9d;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+  --cell-default: #131f33;
+  --cell-active: rgba(255,140,66,0.22);
+  --cell-compare: rgba(255,107,157,0.22);
+  --cell-selected: rgba(0,212,170,0.35);
+}
+
+[data-theme="light"] {
+  --bg: #f0f4fb;
+  --surface: #ffffff;
+  --surface2: #f5f8ff;
+  --border: #d0daea;
+  --text: #1a2840;
+  --text-dim: #6a85aa;
+  --teal: #00a882;
+  --orange: #e07030;
+  --pink: #d04070;
+  --cell-default: #eef2fa;
+  --cell-active: rgba(224,112,48,0.18);
+  --cell-compare: rgba(208,64,112,0.18);
+  --cell-selected: rgba(0,168,130,0.35);
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(rgba(0,212,170,.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,212,170,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.bg-glow {
+  position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 900px; height: 600px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0,212,170,.06) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Navbar ── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,15,30,.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 24px; height: 52px;
+  display: flex; align-items: center; gap: 24px;
+}
+.nav-logo {
+  font-family: var(--mono); font-size: 14px; font-weight: 800;
+  color: var(--teal); text-decoration: none; letter-spacing: -0.5px;
+}
+.logo-bracket { color: var(--text-dim); }
+.logo-dot { color: var(--orange); }
+.nav-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; letter-spacing: 1px; transition: color .2s; }
+.nav-links a:hover { color: var(--teal); }
+
+.theme-toggle {
+  margin-left: auto; background: none; border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px 4px 6px;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+}
+.toggle-track {
+  width: 32px; height: 18px; background: var(--surface2);
+  border-radius: 9px; position: relative; border: 1px solid var(--border);
+}
+.toggle-thumb {
+  position: absolute; top: 1px; left: 1px;
+  width: 14px; height: 14px; background: var(--teal);
+  border-radius: 50%; transition: transform .3s;
+}
+[data-theme="light"] .toggle-thumb { transform: translateX(14px); }
+.toggle-icon { font-size: 8px; }
+.toggle-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+
+.algo-page { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; position: relative; z-index: 1; }
+.back-link { font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-decoration: none; display: inline-block; margin-bottom: 20px; }
+.back-link:hover { color: var(--teal); }
+
+.complexity { display: flex; flex-wrap: wrap; gap: 8px; }
+.cplx-chip {
+  font-family: var(--mono); font-size: 10px;
+  padding: 4px 10px; border: 1px solid var(--border);
+  border-radius: 20px; color: var(--text-dim);
+}
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 10px; margin: 18px 0; }
+.cc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.cc-icon { font-size: 22px; display: block; margin-bottom: 7px; }
+.cc-title { font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+.cc-desc { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+
+.narration {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--teal); border-radius: 10px;
+  padding: 12px 16px; margin-bottom: 14px; min-height: 80px;
+}
+.teacher { font-size: 22px; flex-shrink: 0; }
+.narration-text { font-size: 12px; color: var(--text); line-height: 1.6; flex: 1; }
+.speak-bars { display: flex; gap: 2px; align-items: flex-end; height: 14px; }
+.speak-bars span {
+  width: 3px; background: var(--teal); border-radius: 2px;
+  height: 4px; opacity: 0.3;
+}
+.speak-bars.on span { animation: bar-bounce .6s ease-in-out infinite; opacity: 1; }
+@keyframes bar-bounce { 0%,100% { height:3px } 50% { height:14px } }
+
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;
+}
+.panel-hd { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
+
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); }
+
+.btn {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text); cursor: pointer;
+  transition: all .2s;
+}
+.btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(0,212,170,.08); }
+.btn-primary { background: rgba(0,212,170,.15); border-color: rgba(0,212,170,.4); color: var(--teal); }
+.btn-danger { background: rgba(255,107,157,.1); border-color: rgba(255,107,157,.3); color: var(--pink); }
+
+.arr-input {
+  flex: 1; min-width: 160px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none;
+}
+.arr-input:focus { border-color: var(--teal); }
+
+.speed-ctrl { display: flex; align-items: center; gap: 6px; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+.speed-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 22px; }
+input[type=range] { accent-color: var(--teal); width: 80px; }
+
+.status-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 9px 14px; margin-top: 12px;
+}
+.si { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sl { font-size: 9px; letter-spacing: 1px; color: var(--text-dim); text-transform: uppercase; }
+.sv { font-family: var(--mono); font-size: 15px; font-weight: 800; color: var(--text); }
+.sv.orange { color: var(--orange); }
+.phase-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 3px 9px; border-radius: 12px;
+}
+.ph-idle    { background: rgba(90,115,153,.15); color: var(--text-dim); }
+.ph-active  { background: rgba(0,212,170,.15);  color: var(--teal); }
+.ph-compare { background: rgba(255,140,66,.15); color: var(--orange); }
+.ph-fill    { background: rgba(255,107,157,.15); color: var(--pink); }
+.ph-done    { background: rgba(0,212,170,.2);   color: var(--teal); }
+.divider-auto { flex: 1; }
+.prog-wrap { width: 100px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.prog-fill { height: 100%; background: var(--teal); width: 0%; transition: width .3s; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+
+.legend {
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+  padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; margin-bottom: 12px;
+}
+.li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+.ld { width: 11px; height: 11px; border-radius: 2px; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; text-align: center; }
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+.code-block {
+  font-family: var(--mono); font-size: 11px; line-height: 2;
+  background: var(--surface2); border-radius: 8px; padding: 12px 14px;
+  border: 1px solid var(--border); white-space: pre; overflow-x: auto;
+}
+.code-line { display: block; padding: 0 6px; border-radius: 4px; transition: background .2s; }
+.kw { color: #7ec8e3; } .fn { color: var(--teal); } .num { color: var(--orange); }
+
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  transition: all .2s;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+
+.items-row {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+  max-height: 100px; overflow-y: auto; padding: 4px;
+}
+.item-chip {
+  font-family: var(--mono); font-size: 10px;
+  padding: 6px 12px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text-dim); transition: all .2s;
+  white-space: nowrap;
+}
+.item-chip.highlight {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: rgba(255,140,66,.15);
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(255,140,66,0.3);
+}
+.item-chip.selected {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(0,212,170,.15);
+}
+.item-chip.partial {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(0,212,170,.08);
+  border-style: dashed;
+}
+
+.selected-items {
+  font-family: var(--mono); font-size: 12px;
+  padding: 10px 14px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); line-height: 1.8;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+.card-difficulty {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  padding: 4px 10px; border-radius: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+}
+.beginner    { background: rgba(0,212,170,.15); color: var(--teal); border: 1px solid rgba(0,212,170,.3); }
+
+.narration-text.intro-mode { color: var(--teal); font-weight: 600; animation: glowPulse 2s infinite; }
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
+
+.frac-bar {
+  display: inline-block; width: 50px; height: 8px; background: var(--surface);
+  border-radius: 4px; margin: 0 4px; border: 1px solid var(--border);
+}
+.frac-fill { height: 8px; background: var(--teal); border-radius: 4px; }
+
+.steps-container {
+  font-family: var(--mono); font-size: 11px;
+  background: var(--surface2); border-radius: 8px;
+  padding: 12px; max-height: 300px; overflow-y: auto;
+  border: 1px solid var(--border);
+}
+.step-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px; border-radius: 6px;
+  margin-bottom: 4px; transition: all .2s;
+}
+.step-current {
+  background: rgba(255,140,66,.2);
+  border-left: 3px solid var(--orange);
+}
+.step-prev {
+  opacity: 0.7;
+}
+.step-completed {
+  background: rgba(0,212,170,.1);
+  border-left: 3px solid var(--teal);
+}
+.calculation-detail {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  padding-left: 16px;
+}
 </style>
 </head>
 <body>
-<h1>Fractional Knapsack</h1>
-<p>This is a demo implementation page for Fractional Knapsack using Greedy strategy.</p>
 
-<h2>Demo Pseudocode</h2>
-<code>
-Step 1: Sort input based on greedy condition.<br>
-Step 2: Pick best available choice.<br>
-Step 3: Repeat until solution is complete.
-</code>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
 
-<h2>JavaScript Demo (Simple Example)</h2>
-<code>
-function greedyDemo(arr) {
-  arr.sort((a,b) => a-b);
-  return arr;
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+      <div class="toggle-track">
+        <div class="toggle-thumb"><span class="toggle-icon">🌙</span></div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
+  </div>
+</nav>
+
+<div class="algo-page">
+  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🥧</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Greedy Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Fractional Knapsack</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty beginner">Beginner</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7;">
+      Detailed step-by-step visualization showing every calculation, comparison, and decision. Each step reveals the mathematical reasoning behind the greedy choice.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Time: <span>O(n log n)</span></div>
+      <div class="cplx-chip">Space: <span>O(n)</span></div>
+      <div class="cplx-chip">Paradigm: <span>Greedy</span></div>
+      <div class="cplx-chip">Optimal: <span>✓ Yes</span></div>
+    </div>
+  </header>
+
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">⚖️</span><div class="cc-title">Value per weight</div><div class="cc-desc">Ratio = value/weight determines priority. Higher ratio = more valuable per unit weight.</div></div>
+    <div class="cc"><span class="cc-icon">📊</span><div class="cc-title">Sorting step</div><div class="cc-desc">Items are sorted by ratio descending. This is crucial for optimal solution.</div></div>
+    <div class="cc"><span class="cc-icon">🧮</span><div class="cc-title">Fraction calculation</div><div class="cc-desc">When an item doesn't fully fit, fraction = remaining capacity / item weight.</div></div>
+    <div class="cc"><span class="cc-icon">📈</span><div class="cc-title">Accumulation</div><div class="cc-desc">Total value accumulates: whole items add full value, fractions add proportional value.</div></div>
+  </div>
+
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Fractional Knapsack! Watch as we break down each step with detailed calculations.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="two-col">
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">🎒 Items (sorted by ratio)</div>
+        <div class="items-row" id="itemsRow"></div>
+        <div style="font-family:var(--mono);font-size:11px;display:flex;gap:20px;">
+          <span>Capacity: <span id="capDisplay" style="color:var(--teal);font-weight:700;">50</span></span>
+          <span>Remaining: <span id="remDisplay" style="color:var(--orange);font-weight:700;">50</span></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📝 Detailed Steps</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--cell-default);border:1px solid var(--border)"></div>Not processed</div>
+          <div class="li"><div class="ld" style="background:var(--cell-active)"></div>Current step</div>
+          <div class="li"><div class="ld" style="background:var(--cell-selected)"></div>Completed</div>
+          <div class="li"><div class="ld" style="background:var(--teal); opacity:0.4;"></div>Partial</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <div id="detailedStepsContainer" class="steps-container">
+          <!-- Steps will be dynamically populated -->
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Weights:</label>
+          <input type="text" class="arr-input" id="wInput" value="10, 20, 30, 40, 25" style="min-width:140px;">
+          <label>Values:</label>
+          <input type="text" class="arr-input" id="vInput" value="60, 100, 120, 160, 75" style="min-width:140px;">
+          <label>Cap:</label>
+          <input type="text" class="arr-input" id="capInput" value="80" style="min-width:60px;">
+          <button class="btn" onclick="applyInput()">Apply</button>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="si"><span class="sl">Current Item</span><span class="sv orange" id="sItem">—</span></div>
+        <div class="si"><span class="sl">Remaining</span><span class="sv" id="sRem">80</span></div>
+        <div class="si"><span class="sl">Total Value</span><span class="sv" id="sVal">0.00</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="divider-auto"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="panel-hd">📊 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statMax">0.00</div><div class="stat-box-l">Max Value</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statItems">0</div><div class="stat-box-l">Items Used</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statCap">0</div><div class="stat-box-l">Capacity</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Total Items</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">fractionalKnapsack</span>(weights, values, W):</span>
+<span id="cl2" class="code-line">  <span class="comment">// 1. Calculate value/weight ratios</span></span>
+<span id="cl3" class="code-line">  items = []</span>
+<span id="cl4" class="code-line">  <span class="kw">for</span> i <span class="kw">in</span> range(n):</span>
+<span id="cl5" class="code-line">    ratio = values[i] / weights[i]</span>
+<span id="cl6" class="code-line">    items.append((ratio, weights[i], values[i]))</span>
+<span id="cl7" class="code-line">  </span>
+<span id="cl8" class="code-line">  <span class="comment">// 2. Sort by ratio descending</span></span>
+<span id="cl9" class="code-line">  sort(items, reverse=True)</span>
+<span id="cl10" class="code-line">  </span>
+<span id="cl11" class="code-line">  totalValue = 0</span>
+<span id="cl12" class="code-line">  remaining = W</span>
+<span id="cl13" class="code-line">  </span>
+<span id="cl14" class="code-line">  <span class="kw">for</span> (ratio, weight, value) <span class="kw">in</span> items:</span>
+<span id="cl15" class="code-line">    <span class="kw">if</span> remaining >= weight:</span>
+<span id="cl16" class="code-line">      <span class="comment">// Take whole item</span></span>
+<span id="cl17" class="code-line">      totalValue += value</span>
+<span id="cl18" class="code-line">      remaining -= weight</span>
+<span id="cl19" class="code-line">    <span class="kw">else</span>:</span>
+<span id="cl20" class="code-line">      <span class="comment">// Take fraction</span></span>
+<span id="cl21" class="code-line">      fraction = remaining / weight</span>
+<span id="cl22" class="code-line">      totalValue += value * fraction</span>
+<span id="cl23" class="code-line">      remaining = 0</span>
+<span id="cl24" class="code-line">      <span class="kw">break</span></span>
+<span id="cl25" class="code-line">  </span>
+<span id="cl26" class="code-line">  <span class="kw">return</span> totalValue</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">🥧 Selected Items (Detailed)</div>
+        <div class="selected-items" id="selectedItems">Run the algorithm to see detailed breakdown.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Theme ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+(function() {
+  const s = localStorage.getItem('theme');
+  if (s === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+// ── TTS ──
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const v = synth.getVoices();
+  ttsVoice = v.find(x=>x.name.includes('Google UK English Female'))||
+             v.find(x=>x.name.includes('Google US English'))||
+             v.find(x=>x.lang.startsWith('en'))||v[0]||null;
+}
+loadVoices();
+if (synth.onvoiceschanged) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(res => {
+    if (!voiceEnabled || !synth) { res(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = ttsVoice; u.rate = 0.88; u.pitch = 1.05;
+    u.onstart = () => document.getElementById('speakBars').classList.add('on');
+    u.onend = u.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      res();
+    };
+    synth.speak(u);
+  });
+}
+function stopSpeech() { synth && synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
+// ── Voice toggle ──
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const icon = document.getElementById('voiceIcon'), lbl = document.getElementById('voiceLabel');
+  const btn = document.getElementById('voiceToggle');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+  }
+  if (isPlaying) { stopPlay(); startPlay(); }
 }
 
-console.log(greedyDemo([5,3,8,1]));
-</code>
+// ── Data ──
+let weights = [10, 20, 30, 40, 25];
+let values = [60, 100, 120, 160, 75];
+let capacity = 80;
 
+// Helper: create items with ratios
+function createItems(w, v) {
+  return w.map((weight, idx) => ({
+    id: idx + 1,
+    originalIndex: idx,
+    weight,
+    value: v[idx],
+    ratio: v[idx] / weight
+  })).sort((a, b) => b.ratio - a.ratio);
+}
+
+// ── ULTRA-DETAILED STEP BUILDER ──
+function buildDetailedSteps(w, v, cap) {
+  const items = createItems(w, v);
+  const steps = [];
+  let remaining = cap;
+  let totalValue = 0;
+  const taken = []; // { id, weight, value, fraction, ratio }
+
+  // STEP 1: Initial state
+  steps.push({
+    narration: `Initial state: Knapsack capacity = ${cap}. Items need to be sorted by value/weight ratio.`,
+    detailed: `We have ${items.length} items. Let's calculate each ratio.`,
+    items: items.map(it => ({ ...it, takenFraction: 0 })),
+    currentIdx: null,
+    remaining,
+    totalValue,
+    taken: [],
+    phase: 'init',
+    codeLine: 1,
+    calculation: null
+  });
+
+  // STEP 2: Show ratio calculations
+  let ratioCalc = items.map(it => 
+    `Item ${it.id}: value ${it.value} / weight ${it.weight} = ${it.ratio.toFixed(3)}`
+  ).join('\n');
+  steps.push({
+    narration: `Calculating value/weight ratios: Items with higher ratios are more valuable per unit weight.`,
+    detailed: ratioCalc,
+    items: items.map(it => ({ ...it, takenFraction: 0 })),
+    currentIdx: null,
+    remaining,
+    totalValue,
+    taken: [],
+    phase: 'ratio',
+    codeLine: 5,
+    calculation: ratioCalc
+  });
+
+  // STEP 3: Show sorted order
+  let sortedDisplay = items.map(it => 
+    `Item ${it.id}: ratio ${it.ratio.toFixed(3)} (value ${it.value}, weight ${it.weight})`
+  ).join('\n');
+  steps.push({
+    narration: `Sorting items by ratio descending. This ensures we take the most valuable items first.`,
+    detailed: sortedDisplay,
+    items: items.map(it => ({ ...it, takenFraction: 0 })),
+    currentIdx: null,
+    remaining,
+    totalValue,
+    taken: [],
+    phase: 'sort',
+    codeLine: 9,
+    calculation: sortedDisplay
+  });
+
+  // Process each item with multiple sub-steps
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    
+    if (remaining <= 0) {
+      steps.push({
+        narration: `Knapsack is already full. Remaining items are not considered.`,
+        detailed: `Remaining capacity = 0. Stop processing.`,
+        items: items.map((x, idx) => ({ ...x, takenFraction: taken.find(t => t.id === x.id) ? 
+          (taken.find(t => t.id === x.id).fraction || 1.0) : 0 })),
+        currentIdx: i,
+        remaining,
+        totalValue,
+        taken: [...taken],
+        phase: 'skip',
+        codeLine: 14,
+        calculation: `Remaining capacity = 0`
+      });
+      break;
+    }
+
+    // Step: Considering the item
+    steps.push({
+      narration: `Now considering Item ${it.id}: weight = ${it.weight}, value = ${it.value}, ratio = ${it.ratio.toFixed(3)}`,
+      detailed: `We have ${remaining.toFixed(2)} capacity remaining. Compare item weight with remaining capacity.`,
+      items: items.map((x, idx) => ({ ...x, takenFraction: taken.find(t => t.id === x.id) ? 
+        (taken.find(t => t.id === x.id).fraction || 1.0) : 0 })),
+      currentIdx: i,
+      remaining,
+      totalValue,
+      taken: [...taken],
+      phase: 'consider',
+      codeLine: 14,
+      calculation: `Item ${it.id}: weight ${it.weight} vs remaining ${remaining.toFixed(2)}`
+    });
+
+    if (it.weight <= remaining) {
+      // Can take whole item
+      const beforeTotal = totalValue;
+      const beforeRemaining = remaining;
+      
+      // Step: Decision to take whole
+      steps.push({
+        narration: `Item ${it.id} weight (${it.weight}) ≤ remaining capacity (${remaining.toFixed(2)}). We can take the whole item.`,
+        detailed: `Decision: Take entire item. Value added = ${it.value}`,
+        items: items.map((x, idx) => ({ ...x, takenFraction: taken.find(t => t.id === x.id) ? 
+          (taken.find(t => t.id === x.id).fraction || 1.0) : 0 })),
+        currentIdx: i,
+        remaining,
+        totalValue,
+        taken: [...taken],
+        phase: 'decision',
+        codeLine: 15,
+        calculation: `${it.weight} ≤ ${beforeRemaining.toFixed(2)} → take whole`
+      });
+
+      // Take it
+      remaining -= it.weight;
+      totalValue += it.value;
+      taken.push({ ...it, fraction: 1.0 });
+
+      // Step: After taking whole
+      steps.push({
+        narration: `Added whole Item ${it.id}. Value increased by ${it.value}. Remaining capacity now ${remaining.toFixed(2)}.`,
+        detailed: `Calculation: ${beforeTotal} + ${it.value} = ${totalValue}\nRemaining: ${beforeRemaining} - ${it.weight} = ${remaining}`,
+        items: items.map((x, idx) => ({ ...x, takenFraction: idx <= i ? 1.0 : 0 })),
+        currentIdx: i,
+        remaining,
+        totalValue,
+        taken: [...taken],
+        phase: 'taken',
+        codeLine: 17,
+        calculation: `${beforeTotal} + ${it.value} = ${totalValue}`
+      });
+    } else {
+      // Need to take fraction
+      const fraction = remaining / it.weight;
+      const valueGain = it.value * fraction;
+      const beforeTotal = totalValue;
+      const beforeRemaining = remaining;
+
+      // Step: Decision to take fraction
+      steps.push({
+        narration: `Item ${it.id} weight (${it.weight}) > remaining capacity (${remaining.toFixed(2)}). We can only take a fraction.`,
+        detailed: `Calculating fraction = remaining / weight = ${remaining.toFixed(2)} / ${it.weight} = ${fraction.toFixed(3)}`,
+        items: items.map((x, idx) => ({ ...x, takenFraction: taken.find(t => t.id === x.id) ? 
+          (taken.find(t => t.id === x.id).fraction || 1.0) : 0 })),
+        currentIdx: i,
+        remaining,
+        totalValue,
+        taken: [...taken],
+        phase: 'fraction-calc',
+        codeLine: 20,
+        calculation: `fraction = ${remaining.toFixed(2)} / ${it.weight} = ${fraction.toFixed(3)}`
+      });
+
+      // Step: Show value calculation
+      steps.push({
+        narration: `Value gained from fraction = item value × fraction = ${it.value} × ${fraction.toFixed(3)} = ${valueGain.toFixed(2)}`,
+        detailed: `This represents ${(fraction * 100).toFixed(1)}% of the item's value.`,
+        items: items.map((x, idx) => ({ ...x, takenFraction: taken.find(t => t.id === x.id) ? 
+          (taken.find(t => t.id === x.id).fraction || 1.0) : 0 })),
+        currentIdx: i,
+        remaining,
+        totalValue,
+        taken: [...taken],
+        phase: 'fraction-value',
+        codeLine: 22,
+        calculation: `${it.value} × ${fraction.toFixed(3)} = ${valueGain.toFixed(2)}`
+      });
+
+      // Take fraction
+      totalValue += valueGain;
+      taken.push({ ...it, fraction });
+
+      // Step: After taking fraction
+      steps.push({
+        narration: `Added ${(fraction * 100).toFixed(1)}% of Item ${it.id}. Value increased by ${valueGain.toFixed(2)}. Knapsack is now full.`,
+        detailed: `Calculation: ${beforeTotal.toFixed(2)} + ${valueGain.toFixed(2)} = ${totalValue.toFixed(2)}\nRemaining capacity now 0.`,
+        items: items.map((x, idx) => ({ 
+          ...x, 
+          takenFraction: idx < i ? 1.0 : (idx === i ? fraction : 0) 
+        })),
+        currentIdx: i,
+        remaining: 0,
+        totalValue,
+        taken: [...taken],
+        phase: 'fraction-taken',
+        codeLine: 23,
+        calculation: `${beforeTotal.toFixed(2)} + ${valueGain.toFixed(2)} = ${totalValue.toFixed(2)}`
+      });
+      remaining = 0;
+    }
+  }
+
+  // Final step
+  steps.push({
+    narration: `Algorithm complete! Maximum value = ${totalValue.toFixed(2)}.`,
+    detailed: `Selected items: ${taken.map(t => `Item ${t.id}${t.fraction < 1.0 ? ` (${(t.fraction*100).toFixed(1)}%)` : ''}`).join(', ')}`,
+    items: items.map((x, idx) => ({ 
+      ...x, 
+      takenFraction: taken.find(t => t.id === x.id) ? 
+        (taken.find(t => t.id === x.id).fraction || 1.0) : 0 
+    })),
+    currentIdx: null,
+    remaining: 0,
+    totalValue,
+    taken: [...taken],
+    phase: 'done',
+    codeLine: 26,
+    calculation: `Final total = ${totalValue.toFixed(2)}`
+  });
+
+  return steps;
+}
+
+// ── Render UI ──
+function renderItemChips(items, currentIdx, taken) {
+  const row = document.getElementById('itemsRow');
+  row.innerHTML = '';
+  items.forEach((it, idx) => {
+    const chip = document.createElement('div');
+    chip.className = 'item-chip';
+    if (idx === currentIdx) chip.classList.add('highlight');
+    
+    const takenItem = taken ? taken.find(t => t.id === it.id) : null;
+    if (takenItem) {
+      if (takenItem.fraction && takenItem.fraction < 1.0) {
+        chip.classList.add('partial');
+        chip.textContent = `Item ${it.id}: ${it.value}/${it.weight} (${(takenItem.fraction*100).toFixed(0)}%)`;
+      } else {
+        chip.classList.add('selected');
+        chip.textContent = `Item ${it.id}: ${it.value}/${it.weight}`;
+      }
+    } else {
+      chip.textContent = `Item ${it.id}: ${it.value}/${it.weight} (${it.ratio.toFixed(2)})`;
+    }
+    row.appendChild(chip);
+  });
+}
+
+function renderDetailedSteps(step, stepIndex, totalSteps) {
+  const container = document.getElementById('detailedStepsContainer');
+  let html = '';
+  
+  // Show current step prominently
+  html += `<div class="step-item step-current" style="margin-bottom:12px;">
+    <span style="color:var(--orange);font-weight:700;">▶ CURRENT STEP</span>
+  </div>`;
+  
+  html += `<div class="step-item step-current" style="flex-direction:column;align-items:flex-start;">
+    <div style="display:flex;gap:8px;width:100%;">
+      <span style="color:var(--orange);">Step ${stepIndex+1}/${totalSteps}</span>
+      <span style="color:var(--teal);">${step.phase.toUpperCase()}</span>
+    </div>
+    <div style="margin-top:4px;color:var(--text);">${step.narration}</div>`;
+  
+  if (step.calculation) {
+    html += `<div class="calculation-detail">📊 ${step.calculation}</div>`;
+  }
+  
+  if (step.detailed) {
+    html += `<div class="calculation-detail" style="white-space:pre-wrap;background:var(--surface);padding:6px;border-radius:4px;margin-top:4px;">${step.detailed}</div>`;
+  }
+  html += `</div>`;
+
+  // Show previous steps summary
+  if (stepIndex > 0) {
+    html += `<div style="margin-top:16px;font-size:10px;color:var(--text-dim);">PREVIOUS STEPS:</div>`;
+    for (let i = 0; i < stepIndex; i++) {
+      html += `<div class="step-item step-prev" style="opacity:0.6;font-size:10px;">
+        <span>${i+1}. ${steps[i].narration.substring(0, 50)}...</span>
+      </div>`;
+    }
+  }
+
+  container.innerHTML = html;
+}
+
+function formatDetailedSelected(taken, cap) {
+  if (!taken || taken.length === 0) return 'No items taken yet.';
+  
+  let totalWeight = 0;
+  let lines = taken.map(t => {
+    const weightTaken = t.weight * (t.fraction || 1.0);
+    totalWeight += weightTaken;
+    if (t.fraction && t.fraction < 1.0) {
+      return `• Item ${t.id}: ${(t.fraction*100).toFixed(1)}% of weight ${t.weight} = ${weightTaken.toFixed(2)} units → value ${(t.value * t.fraction).toFixed(2)} (ratio ${t.ratio.toFixed(3)})`;
+    } else {
+      return `• Item ${t.id}: whole (weight ${t.weight}, value ${t.value}, ratio ${t.ratio.toFixed(3)})`;
+    }
+  });
+  
+  const totalValue = taken.reduce((s, t) => s + (t.value * (t.fraction || 1.0)), 0);
+  lines.push(`\n📊 SUMMARY:`);
+  lines.push(`   Total weight: ${totalWeight.toFixed(2)} / ${cap}`);
+  lines.push(`   Total value:  ${totalValue.toFixed(2)}`);
+  lines.push(`   Utilization:  ${((totalWeight/cap)*100).toFixed(1)}%`);
+  
+  return lines.join('\n');
+}
+
+// ── Controller ──
+let steps = [];
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let speedMult = 2;
+const SPEED_DELAYS = {1:2500,2:1500,3:800,4:400,5:150};
+function getDelay() { return SPEED_DELAYS[speedMult] || 1500; }
+function onSpeedChange(v) { speedMult = parseInt(v); document.getElementById('speedVal').textContent = v+'×'; }
+
+function updateUI(step, idx) {
+  renderItemChips(step.items, step.currentIdx, step.taken);
+  renderDetailedSteps(step, idx, steps.length);
+
+  document.getElementById('sItem').textContent = step.currentIdx !== null ? 
+    `Item ${step.items[step.currentIdx].id}` : '—';
+  document.getElementById('sRem').textContent = step.remaining.toFixed(2);
+  document.getElementById('sVal').textContent = step.totalValue.toFixed(2);
+  document.getElementById('stepCtr').textContent = `Step ${idx+1} / ${steps.length}`;
+  document.getElementById('remDisplay').textContent = step.remaining.toFixed(2);
+  
+  const pct = ((idx) / (steps.length - 1)) * 100;
+  document.getElementById('progFill').style.width = pct + '%';
+
+  const badge = document.getElementById('phaseBadge');
+  const phMap = {
+    init: ['ph-active', 'Init'],
+    ratio: ['ph-active', 'Ratios'],
+    sort: ['ph-active', 'Sorting'],
+    consider: ['ph-compare', 'Considering'],
+    decision: ['ph-compare', 'Deciding'],
+    taken: ['ph-fill', 'Taking'],
+    'fraction-calc': ['ph-compare', 'Calculating'],
+    'fraction-value': ['ph-compare', 'Valuing'],
+    'fraction-taken': ['ph-fill', 'Taking'],
+    skip: ['ph-idle', 'Skip'],
+    done: ['ph-done', 'Complete']
+  };
+  const [cls, lbl] = phMap[step.phase] || ['ph-idle', 'Idle'];
+  badge.className = `phase-badge ${cls}`;
+  badge.textContent = lbl;
+
+  // Highlight code line
+  for (let i = 1; i <= 26; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
+  }
+
+  document.getElementById('selectedItems').textContent = formatDetailedSelected(step.taken, capacity);
+  document.getElementById('statMax').textContent = step.totalValue.toFixed(2);
+  document.getElementById('statItems').textContent = step.taken ? step.taken.length : 0;
+  document.getElementById('statCap').textContent = capacity;
+  document.getElementById('statN').textContent = weights.length;
+
+  document.getElementById('narText').textContent = step.narration;
+  document.getElementById('narText').classList.remove('intro-mode');
+}
+
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  updateUI(step, idx);
+  if (autoAdvance) scheduleNext(step);
+}
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => {
+        if (isPlaying) renderStep(stepIdx + 1, true);
+      }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => {
+      if (isPlaying) renderStep(stepIdx + 1, true);
+    }, getDelay());
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function nextStep() {
+  stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function resetAll() {
+  stopPlay();
+  stepIdx = -1;
+  const items = createItems(weights, values);
+  renderItemChips(items, null, []);
+  
+  document.getElementById('sItem').textContent = '—';
+  document.getElementById('sRem').textContent = capacity;
+  document.getElementById('sVal').textContent = '0.00';
+  document.getElementById('remDisplay').textContent = capacity;
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  document.getElementById('narText').textContent = 'Ready! Press Play for detailed step-by-step learning.';
+  document.getElementById('selectedItems').textContent = 'Run the algorithm to see detailed breakdown.';
+  document.getElementById('statMax').textContent = '0.00';
+  document.getElementById('statItems').textContent = '0';
+  
+  for (let i = 1; i <= 26; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = '';
+  }
+  
+  // Show initial step in detailed view
+  if (steps.length > 0) {
+    renderDetailedSteps(steps[0], 0, steps.length);
+  }
+}
+
+document.getElementById('btnPlay').addEventListener('click', () => {
+  if (isPlaying) stopPlay(); else startPlay();
+});
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+function applyInput() {
+  const wt = document.getElementById('wInput').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+  const vl = document.getElementById('vInput').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+  const cp = parseInt(document.getElementById('capInput').value.trim());
+  
+  if (wt.length < 1 || vl.length < 1 || wt.length !== vl.length) {
+    alert('Weights and values must have equal length.');
+    return;
+  }
+  if (isNaN(cp) || cp < 1) { alert('Valid capacity required.'); return; }
+  if (wt.length > 8) { alert('Keep items ≤ 8 for clarity.'); return; }
+  
+  weights = wt;
+  values = vl;
+  capacity = cp;
+  init();
+}
+
+function randomize() {
+  const n = Math.floor(Math.random() * 4) + 4; // 4-7 items
+  weights = Array.from({ length: n }, () => Math.floor(Math.random() * 20) + 5);
+  values = Array.from({ length: n }, () => Math.floor(Math.random() * 40) + 10);
+  capacity = Math.floor(Math.random() * 40) + 30;
+  
+  document.getElementById('wInput').value = weights.join(', ');
+  document.getElementById('vInput').value = values.join(', ');
+  document.getElementById('capInput').value = capacity;
+  init();
+}
+
+function init() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+  
+  document.getElementById('capDisplay').textContent = capacity;
+  document.getElementById('statCap').textContent = capacity;
+  document.getElementById('statN').textContent = weights.length;
+  
+  // Build ULTRA-DETAILED steps
+  steps = buildDetailedSteps(weights, values, capacity);
+  
+  stopPlay();
+  stepIdx = -1;
+  
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('narText').textContent = 'Ready! Press Play for detailed step-by-step learning.';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+  
+  // Show initial state
+  resetAll();
+}
+
+// Start
+init();
+</script>
 </body>
 </html>

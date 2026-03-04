@@ -3,77 +3,932 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fast Power — AlgoClassroom</title>
+<title>Fast Power (Binary Exponentiation) — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+:root {
+  --bit-0: #1a2840;
+  --bit-1: #06d6a0;
+  --active-bit: #ff8c42;
+  --multiply: #ff6b9d;
+  --result-update: #4a90e2;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
+
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+#vizCanvas {
+  width: 100%; border-radius: 8px;
+  background: transparent; display: block;
+}
+
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+
+.base-exp-input {
+  flex: 1; min-width: 120px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.base-exp-input:focus { border-color: var(--teal); }
+
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px; text-align: center;
+}
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+/* Voice toggle */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
+
+/* Binary representation display */
+.binary-container {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.binary-label {
   font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
 }
-.preview-box {
+
+.binary-bits {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.bit {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.bit-0 { color: var(--text-dim); }
+.bit-1 { color: var(--teal); border-color: var(--teal); background: rgba(6,214,160,0.1); }
+.bit-active { border-color: var(--active-bit); transform: scale(1.1); box-shadow: 0 0 15px rgba(255,140,66,0.3); }
+
+/* Result display */
+.result-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.result-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.result-value {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--teal);
+  word-break: break-word;
+}
+
+.result-expression {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-top: 8px;
+}
+
+.calculation-step {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+  border-radius: 6px;
+  padding: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  margin-top: 8px;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+
+.highlight-mult {
+  color: var(--multiply);
+  font-weight: 700;
+}
+
+.highlight-square {
+  color: var(--result-update);
+  font-weight: 700;
+}
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
+<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
+
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">⚡</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Fast Power</h1>
-    <p class="cs-sub">Compute a^n in O(log n) by repeated squaring.</p>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">⚡</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Mathematical Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Fast Power (Binary Exponentiation)</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      Compute aⁿ efficiently by using the binary representation of the exponent. Instead of multiplying n times (O(n)), 
+      we process bits from right to left, squaring the base at each step and multiplying when we see a 1 bit.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Time: <span>O(log n)</span></div>
+      <div class="cplx-chip">Space: <span>O(1)</span></div>
+      <div class="cplx-chip">Method: <span>Exponentiation by Squaring</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Binary representation of exponent</li>
-        <li>Modular exponentiation</li>
-        <li>Matrix fast power</li>
-      </ul>
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">🔢</span><div class="cc-title">Binary Representation</div><div class="cc-desc">The exponent n is written in binary. Each 1 bit tells us to multiply the current power into our result.</div></div>
+    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Repeated Squaring</div><div class="cc-desc">At each step, we square the base: x → x² → x⁴ → x⁸ ... building powers of 2.</div></div>
+    <div class="cc"><span class="cc-icon">⚡</span><div class="cc-title">Logarithmic Time</div><div class="cc-desc">Instead of n multiplications, we only need O(log n) multiplications — much faster for large exponents.</div></div>
+    <div class="cc"><span class="cc-icon">🧮</span><div class="cc-title">Modular Exponentiation</div><div class="cc-desc">Often used in cryptography with modulo arithmetic to keep numbers manageable.</div></div>
+  </div>
+
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Fast Power (Binary Exponentiation)! Let me explain how this algorithm works before we begin...</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="two-col">
+
+    <!-- LEFT: Canvas & Controls -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--bit-0);"></div>Bit 0 (Skip)</div>
+          <div class="li"><div class="ld" style="background:var(--bit-1);"></div>Bit 1 (Multiply)</div>
+          <div class="li"><div class="ld" style="background:var(--active-bit);"></div>Current Bit</div>
+          <div class="li"><div class="ld" style="background:var(--multiply);"></div>Multiplying</div>
+          <div class="li"><div class="ld" style="background:var(--result-update);"></div>Squaring</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="240"></canvas>
+        
+        <!-- Binary representation display -->
+        <div class="binary-container" id="binaryDisplay">
+          <div class="binary-label">Exponent in Binary</div>
+          <div class="binary-bits" id="binaryBits"></div>
+        </div>
+        
+        <!-- Result display -->
+        <div class="result-box">
+          <div class="result-label">Current Result</div>
+          <div class="result-value" id="resultValue">1</div>
+          <div class="result-expression" id="resultExpression">1</div>
+          <div class="calculation-step" id="calculationStep">Ready to start...</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random Example</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Base:</label>
+          <input type="number" class="base-exp-input" id="baseInput" value="3" min="1" max="20">
+          <label>Exponent:</label>
+          <input type="number" class="base-exp-input" id="expInput" value="13" min="1" max="50">
+          <button class="btn" onclick="applyBaseExp()">Apply</button>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="si"><span class="sl">Bit Position</span><span class="sv orange" id="sBitPos">-</span></div>
+        <div class="si"><span class="sl">Current Bit</span><span class="sv" id="sCurrentBit">-</span></div>
+        <div class="si"><span class="sl">Multiplications</span><span class="sv" id="sMultCount">0</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="divider-auto"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statMultiplications">0</div><div class="stat-box-l">Multiplications</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statBits">0</div><div class="stat-box-l">Bits Processed</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statResult">-</div><div class="stat-box-l">Final Result</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statComplexity">O(log n)</div><div class="stat-box-l">Complexity</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">fastPower</span>(base, exp):</span>
+<span id="cl2" class="code-line">  result = 1</span>
+<span id="cl3" class="code-line">  current = base</span>
+<span id="cl4" class="code-line">  n = exp</span>
+<span id="cl5" class="code-line">  <span class="kw">while</span> n > 0:</span>
+<span id="cl6" class="code-line">    <span class="kw">if</span> n & 1 == 1:  <span class="comment">// Check least significant bit</span></span>
+<span id="cl7" class="code-line">      result = result * current</span>
+<span id="cl8" class="code-line">    current = current * current  <span class="comment">// Square the base</span></span>
+<span id="cl9" class="code-line">    n = n >> 1  <span class="comment">// Shift right (process next bit)</span></span>
+<span id="cl10" class="code-line">  <span class="kw">return</span> result</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Current Values</div>
+        <div style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;">
+          <div>Base: <span id="displayBase">3</span></div>
+          <div>Exponent: <span id="displayExp">13</span> (binary: <span id="displayBinary">1101</span>)</div>
+          <div>Result: <span id="displayResult">1</span></div>
+          <div>Current multiplier: <span id="displayCurrent">3</span></div>
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
+
+</div><!-- .algo-page -->
+
+<script>
+// ════════════════════════════════════════════════
+// THEME TOGGLE
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+
+// ════════════════════════════════════════════════
+// WEB SPEECH API
+// ════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English'))       ||
+    voices.find(v => v.lang === 'en-US' && v.localService)       ||
+    voices.find(v => v.lang.startsWith('en'))                    ||
+    voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice  = ttsVoice;
+    utt.rate   = 0.88;
+    utt.pitch  = 1.05;
+    utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+
+function stopSpeech() {
+  synth && synth.cancel();
+  document.getElementById('speakBars').classList.remove('on');
+}
+
+// ════════════════════════════════════════════════
+// VOICE TOGGLE — default OFF
+// ════════════════════════════════════════════════
+let voiceEnabled = false;
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn   = document.getElementById('voiceToggle');
+  const icon  = document.getElementById('voiceIcon');
+  const lbl   = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+
+// ════════════════════════════════════════════════
+// FAST POWER — STEP GENERATOR
+// ════════════════════════════════════════════════
+function buildFastPowerSteps(base, exponent) {
+  const steps = [];
+  let result = 1;
+  let current = base;
+  let n = exponent;
+  let bitPos = 0;
+  let multCount = 0;
+  
+  // Get binary representation
+  const binaryStr = n.toString(2);
+  const bits = binaryStr.split('').map(Number);
+  
+  steps.push({
+    result: result,
+    current: current,
+    n: n,
+    bitPos: -1,
+    currentBit: null,
+    binary: bits,
+    multCount: multCount,
+    narration: `Starting Fast Power: computing ${base}^${exponent}. The exponent in binary is ${binaryStr}. We'll process bits from right to left.`,
+    phase: 'idle',
+    codeLine: 1,
+    operation: 'start'
+  });
+  
+  // Process bits from LSB to MSB
+  let tempN = n;
+  let tempResult = 1;
+  let tempCurrent = base;
+  let processedBits = [];
+  
+  while (tempN > 0) {
+    const currentBit = tempN & 1;
+    const isMultStep = currentBit === 1;
+    
+    // Step showing the bit check
+    steps.push({
+      result: tempResult,
+      current: tempCurrent,
+      n: tempN,
+      bitPos: bitPos,
+      currentBit: currentBit,
+      binary: bits,
+      multCount: multCount,
+      narration: isMultStep 
+        ? `Bit ${bitPos} is 1. Multiply result (${tempResult}) by current multiplier (${tempCurrent}) → ${tempResult * tempCurrent}`
+        : `Bit ${bitPos} is 0. Skip multiplication, just square the multiplier.`,
+      phase: isMultStep ? 'multiply' : 'skip',
+      codeLine: 6,
+      operation: 'check',
+      willMultiply: isMultStep
+    });
+    
+    if (isMultStep) {
+      tempResult = tempResult * tempCurrent;
+      multCount++;
+      
+      steps.push({
+        result: tempResult,
+        current: tempCurrent,
+        n: tempN,
+        bitPos: bitPos,
+        currentBit: currentBit,
+        binary: bits,
+        multCount: multCount,
+        narration: `Multiplied! New result: ${tempResult}`,
+        phase: 'multiplying',
+        codeLine: 7,
+        operation: 'multiply'
+      });
+    }
+    
+    // Square the current multiplier
+    const nextCurrent = tempCurrent * tempCurrent;
+    
+    steps.push({
+      result: tempResult,
+      current: tempCurrent,
+      nextCurrent: nextCurrent,
+      n: tempN,
+      bitPos: bitPos,
+      currentBit: currentBit,
+      binary: bits,
+      multCount: multCount,
+      narration: `Square the multiplier: ${tempCurrent}² = ${nextCurrent}`,
+      phase: 'squaring',
+      codeLine: 8,
+      operation: 'square'
+    });
+    
+    tempCurrent = nextCurrent;
+    tempN = tempN >> 1;
+    bitPos++;
+    
+    // Show after shift
+    steps.push({
+      result: tempResult,
+      current: tempCurrent,
+      n: tempN,
+      bitPos: bitPos,
+      currentBit: tempN & 1,
+      binary: bits,
+      multCount: multCount,
+      narration: tempN > 0 
+        ? `Shift right. Next bit to process is position ${bitPos}.` 
+        : `All bits processed! Final result: ${tempResult}`,
+      phase: tempN > 0 ? 'shift' : 'done',
+      codeLine: 9,
+      operation: 'shift'
+    });
+  }
+  
+  // Final step
+  steps.push({
+    result: tempResult,
+    current: tempCurrent,
+    n: 0,
+    bitPos: bits.length,
+    currentBit: null,
+    binary: bits,
+    multCount: multCount,
+    narration: `Fast Power complete! ${base}^${exponent} = ${tempResult}. We used ${multCount} multiplications, compared to ${exponent} with naive method.`,
+    phase: 'done',
+    codeLine: 10,
+    operation: 'done'
+  });
+  
+  return steps;
+}
+
+// ════════════════════════════════════════════════
+// INTRO SPEECH
+// ════════════════════════════════════════════════
+let introAborted = false;
+
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const introLines = [
+    "Hello! I am your algorithm teacher. Today we are learning Fast Power, also known as Binary Exponentiation.",
+    "This algorithm computes powers like a raised to the n in logarithmic time by using the binary representation of the exponent.",
+    "For example, to compute 3 to the 13th power, we first write 13 in binary: 1 1 0 1.",
+    "We process bits from right to left. For each bit, we square our current multiplier.",
+    "If the current bit is 1, we also multiply that value into our result.",
+    "This way, we only need O(log n) multiplications instead of n multiplications.",
+    "Now, turn on Voice Mode and press Play. I will guide you through every single step."
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < introLines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = introLines[i];
+    await speak(introLines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+
+// ════════════════════════════════════════════════
+// CANVAS & VISUALIZATION
+// ════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+
+function updateBinaryDisplay(bits, activeBitPos) {
+  const container = document.getElementById('binaryBits');
+  container.innerHTML = '';
+  
+  bits.forEach((bit, index) => {
+    const bitEl = document.createElement('div');
+    bitEl.className = `bit bit-${bit}`;
+    if (index === bits.length - 1 - activeBitPos) { // Reverse because we process LSB first
+      bitEl.classList.add('bit-active');
+    }
+    bitEl.textContent = bit;
+    container.appendChild(bitEl);
+  });
+}
+
+function updateResultDisplay(result, current, base, exp, operation) {
+  document.getElementById('resultValue').textContent = result;
+  document.getElementById('resultExpression').textContent = `${base}^${exp} = ?`;
+  document.getElementById('displayResult').textContent = result;
+  document.getElementById('displayCurrent').textContent = current;
+  
+  let calcText = '';
+  switch(operation) {
+    case 'multiply':
+      calcText = `<span class="highlight-mult">Multiplying: result × current</span>`;
+      break;
+    case 'square':
+      calcText = `<span class="highlight-square">Squaring: current²</span>`;
+      break;
+    case 'shift':
+      calcText = `Moving to next bit...`;
+      break;
+    case 'done':
+      calcText = `<span style="color:var(--teal)">✓ Complete! ${base}^${exp} = ${result}</span>`;
+      break;
+    default:
+      calcText = `Ready to process bits`;
+  }
+  document.getElementById('calculationStep').innerHTML = calcText;
+}
+
+function drawVisualization(step) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!step) return;
+  
+  const W = canvas.width;
+  const H = canvas.height;
+  
+  // Draw algorithm visualization
+  ctx.font = '14px JetBrains Mono';
+  ctx.fillStyle = 'var(--text)';
+  ctx.textAlign = 'center';
+  
+  // Draw current operation
+  let operationText = '';
+  let operationColor = 'var(--text-dim)';
+  
+  switch(step.phase) {
+    case 'multiply':
+      operationText = '✕ MULTIPLYING';
+      operationColor = 'var(--multiply)';
+      break;
+    case 'squaring':
+      operationText = '² SQUARING';
+      operationColor = 'var(--result-update)';
+      break;
+    case 'skip':
+      operationText = '⏭ SKIP (bit 0)';
+      operationColor = 'var(--text-dim)';
+      break;
+    case 'shift':
+      operationText = '→ SHIFT RIGHT';
+      operationColor = 'var(--active-bit)';
+      break;
+    case 'done':
+      operationText = '✓ COMPLETE';
+      operationColor = 'var(--teal)';
+      break;
+    default:
+      operationText = '⚡ READY';
+  }
+  
+  ctx.fillStyle = operationColor;
+  ctx.font = 'bold 20px JetBrains Mono';
+  ctx.fillText(operationText, W/2, 40);
+  
+  // Draw result and current multiplier
+  ctx.font = '16px JetBrains Mono';
+  ctx.fillStyle = 'var(--text)';
+  ctx.fillText(`Result: ${step.result}`, W/2, 90);
+  ctx.fillText(`Current: ${step.current}`, W/2, 120);
+  
+  if (step.nextCurrent) {
+    ctx.fillStyle = 'var(--result-update)';
+    ctx.fillText(`→ Next: ${step.nextCurrent}`, W/2, 150);
+  }
+  
+  // Draw bit being processed
+  if (step.currentBit !== null) {
+    ctx.fillStyle = step.currentBit === 1 ? 'var(--bit-1)' : 'var(--bit-0)';
+    ctx.font = 'bold 28px JetBrains Mono';
+    ctx.fillText(`Bit: ${step.currentBit}`, W/2, 190);
+  }
+}
+
+// ════════════════════════════════════════════════
+// CONTROLLER
+// ════════════════════════════════════════════════
+let steps = [];
+let base = 3;
+let exponent = 13;
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+
+const SPEED_DELAYS = { 1: 2000, 2: 1200, 3: 700, 4: 350, 5: 150 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 1200; }
+function onSpeedChange(val) {
+  speedMult = parseInt(val);
+  document.getElementById('speedVal').textContent = val + '×';
+}
+
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
+
+function updateStatusBar(step, idx) {
+  document.getElementById('sBitPos').textContent = step.bitPos !== -1 ? step.bitPos : '-';
+  document.getElementById('sCurrentBit').textContent = step.currentBit !== null ? step.currentBit : '-';
+  document.getElementById('sMultCount').textContent = step.multCount || 0;
+  document.getElementById('statMultiplications').textContent = step.multCount || 0;
+  document.getElementById('statBits').textContent = step.binary ? step.binary.length : 0;
+  document.getElementById('statResult').textContent = step.result || 1;
+  document.getElementById('displayBase').textContent = base;
+  document.getElementById('displayExp').textContent = exponent;
+  document.getElementById('displayBinary').textContent = exponent.toString(2);
+  
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { 
+    idle: ['ph-idle','Idle'],
+    multiply: ['ph-compare','Checking Bit'],
+    multiplying: ['ph-swap','Multiplying'],
+    squaring: ['ph-active','Squaring'],
+    skip: ['ph-idle','Skipping'],
+    shift: ['ph-active','Shifting'],
+    done: ['ph-done','Complete']
+  };
+  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  for (let i = 1; i <= 10; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
+  }
+  
+  // Update binary display
+  if (step.binary) {
+    updateBinaryDisplay(step.binary, step.bitPos);
+  }
+  
+  // Update result display
+  updateResultDisplay(step.result, step.current, base, exponent, step.operation);
+}
+
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  
+  drawVisualization(step);
+  updateNarration(step);
+  updateStatusBar(step, idx);
+  
+  if (autoAdvance) scheduleNext(step);
+}
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+
+function nextStep() {
+  clearIntroTimeouts();
+  stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function resetAll() {
+  stopPlay();
+  introAborted = true;
+  stepIdx = -1;
+  
+  // Rebuild steps
+  steps = buildFastPowerSteps(base, exponent);
+  
+  drawVisualization(steps[0]);
+  updateStatusBar(steps[0], 0);
+  updateNarration(steps[0]);
+  
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  
+  for (let i = 1; i <= 10; i++) { 
+    const el = document.getElementById(`cl${i}`); 
+    if (el) el.style.background = ''; 
+  }
+  
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  
+  if (voiceEnabled) playIntroSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+function applyBaseExp() {
+  const newBase = parseInt(document.getElementById('baseInput').value);
+  const newExp = parseInt(document.getElementById('expInput').value);
+  
+  if (isNaN(newBase) || newBase < 1 || newBase > 20) {
+    alert('Base must be between 1 and 20');
+    return;
+  }
+  if (isNaN(newExp) || newExp < 1 || newExp > 50) {
+    alert('Exponent must be between 1 and 50');
+    return;
+  }
+  
+  base = newBase;
+  exponent = newExp;
+  init();
+}
+
+function randomize() {
+  base = Math.floor(Math.random() * 9) + 2; // 2-10
+  exponent = Math.floor(Math.random() * 20) + 3; // 3-22
+  document.getElementById('baseInput').value = base;
+  document.getElementById('expInput').value = exponent;
+  init();
+}
+
+function init() {
+  resizeCanvas();
+
+  // Sync theme toggle label on load
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+
+  steps = buildFastPowerSteps(base, exponent);
+  stopPlay();
+  stepIdx = -1;
+  
+  drawVisualization(steps[0]);
+  updateStatusBar(steps[0], 0);
+  updateNarration(steps[0]);
+  
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) {
+    drawVisualization(steps[stepIdx]);
+  } else if (steps.length > 0) {
+    drawVisualization(steps[0]);
+  }
+});
+
+init();
+</script>
 </body>
 </html>
