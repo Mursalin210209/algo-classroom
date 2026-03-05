@@ -3,33 +3,919 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Job Sequencing with Deadlines</title>
+<title>Job Sequencing — AlgoClassroom</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
-body { font-family: Arial; background:#0f172a; color:white; padding:40px; }
-h1 { color:#00d4aa; }
-code { background:#1e293b; padding:10px; display:block; margin-top:15px; }
+/* ─── CSS VARIABLES ─────────────────────────────────── */
+:root {
+  --bg: #0a0f1a;
+  --surface: #111827;
+  --surface2: #0d1520;
+  --border: #1e2d45;
+  --text: #e2e8f0;
+  --text-dim: #4a6a9a;
+  --teal: #00d4aa;
+  --orange: #ff8c42;
+  --pink: #ff6b9d;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+[data-theme="light"] {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface2: #e8eef5;
+  --border: #c8d8e8;
+  --text: #1a2840;
+  --text-dim: #6a8aaa;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+/* ─── BACKGROUND ─────────────────────────────────────── */
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.bg-glow {
+  position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 500px; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse at center, rgba(0,212,170,0.06) 0%, transparent 70%);
+}
+
+/* ─── NAVBAR ─────────────────────────────────────────── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,15,26,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+[data-theme="light"] .navbar { background: rgba(240,244,248,0.92); }
+.nav-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 24px;
+  height: 56px; display: flex; align-items: center; gap: 28px;
+}
+.nav-logo {
+  font-family: var(--mono); font-size: 16px; font-weight: 800; color: var(--teal);
+  text-decoration: none; letter-spacing: -0.5px; white-space: nowrap;
+}
+.logo-bracket { opacity: 0.6; }
+.logo-dot { color: var(--orange); }
+.nav-links { display: flex; gap: 20px; }
+.nav-links a {
+  color: var(--text-dim); text-decoration: none; font-size: 13px; font-weight: 600;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--teal); }
+.theme-toggle {
+  margin-left: auto; background: none; border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 12px 5px 6px; cursor: pointer; color: var(--text-dim);
+  display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px;
+  transition: border-color .2s, color .2s;
+}
+.theme-toggle:hover { border-color: var(--teal); color: var(--teal); }
+.toggle-track {
+  width: 28px; height: 16px; background: var(--border); border-radius: 8px;
+  position: relative; transition: background .3s;
+}
+.toggle-thumb {
+  width: 12px; height: 12px; border-radius: 50%; background: var(--teal);
+  position: absolute; top: 2px; left: 2px; display: flex; align-items: center;
+  justify-content: center; transition: left .3s;
+}
+[data-theme="light"] .toggle-thumb { left: 14px; }
+.toggle-icon { font-size: 8px; }
+
+/* ─── LAYOUT ─────────────────────────────────────────── */
+.algo-page {
+  max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px;
+  position: relative; z-index: 1;
+}
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text-dim); text-decoration: none; font-size: 12px;
+  font-family: var(--mono); margin-bottom: 20px; transition: color .2s;
+}
+.back-link:hover { color: var(--teal); }
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ─── CARDS ──────────────────────────────────────────── */
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; margin-bottom: 14px;
+}
+.panel-hd {
+  padding: 11px 16px; font-family: var(--mono); font-size: 11px;
+  letter-spacing: 2px; color: var(--text-dim); border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+}
+.panel > *:not(.panel-hd) { padding: 16px; }
+
+/* ─── COMPLEXITY ─────────────────────────────────────── */
+.complexity { display: flex; gap: 8px; flex-wrap: wrap; }
+.cplx-chip {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px; font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+}
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+
+/* ─── CONCEPTS ───────────────────────────────────────── */
+.concepts { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+@media (max-width: 900px) { .concepts { grid-template-columns: 1fr 1fr; } }
+.cc {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px; font-size: 12px; line-height: 1.6;
+}
+.cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
+.cc-title { font-weight: 700; font-family: var(--mono); font-size: 11px; color: var(--teal); margin-bottom: 5px; letter-spacing: 1px; }
+.cc-desc { color: var(--text-dim); font-size: 11px; }
+
+/* ─── NARRATION ──────────────────────────────────────── */
+.narration {
+  background: var(--surface); border: 1px solid rgba(0,212,170,0.2);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.teacher { font-size: 26px; flex-shrink: 0; }
+.narration-text { font-size: 13px; color: var(--text); line-height: 1.7; flex: 1; }
+.speak-bars { display:flex; align-items:center; gap:2px; flex-shrink:0; height:20px; margin-top:2px; }
+.speak-bars span {
+  width:3px; background:var(--teal); border-radius:2px; opacity:0.4;
+  animation: none; height:6px; transition: height .1s;
+}
+.speak-bars.on span { opacity:1; animation: speakBar 0.6s ease-in-out infinite alternate; }
+.speak-bars span:nth-child(1) { animation-delay:0s; }
+.speak-bars span:nth-child(2) { animation-delay:0.1s; }
+.speak-bars span:nth-child(3) { animation-delay:0.2s; }
+.speak-bars span:nth-child(4) { animation-delay:0.1s; }
+.speak-bars span:nth-child(5) { animation-delay:0s; }
+@keyframes speakBar { from { height:4px; } to { height:18px; } }
+
+/* ─── STATUS BAR ─────────────────────────────────────── */
+.status-row {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  margin-top: 12px; font-family: var(--mono); font-size: 11px;
+}
+.si { display:flex; align-items:center; gap:6px; }
+.sl { color:var(--text-dim); letter-spacing:1px; }
+.sv { color:var(--text); font-weight:700; }
+.sv.orange { color:var(--orange); }
+.phase-badge {
+  border-radius:5px; padding:2px 8px; font-weight:700;
+  font-family:var(--mono); font-size:10px; letter-spacing:1px;
+}
+.ph-idle    { background:rgba(74,106,154,0.15); color:#4a6a9a; }
+.ph-active  { background:rgba(0,212,170,0.1);   color:var(--teal); }
+.ph-compare { background:rgba(255,140,66,0.15); color:var(--orange); }
+.ph-place   { background:rgba(255,107,157,0.15);color:var(--pink); }
+.ph-done    { background:rgba(0,212,170,0.2);   color:var(--teal); }
+.prog-wrap { flex:1; min-width:80px; height:4px; background:var(--border); border-radius:2px; }
+.prog-fill { height:100%; background:linear-gradient(90deg,var(--teal),var(--orange)); border-radius:2px; transition:width .4s; }
+.step-ctr { color:var(--text-dim); white-space:nowrap; }
+
+/* ─── BUTTONS ────────────────────────────────────────── */
+.btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 14px; color: var(--text);
+  font-family: var(--mono); font-size: 11px; cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.btn:hover { border-color: var(--teal); background: rgba(0,212,170,0.06); }
+.btn-primary { background: rgba(0,212,170,0.12); border-color: rgba(0,212,170,0.4); color: var(--teal); font-weight: 700; }
+.btn-primary:hover { background: rgba(0,212,170,0.22); }
+.btn-danger { border-color: rgba(255,107,157,0.4); color: var(--pink); }
+.btn-danger:hover { background: rgba(255,107,157,0.08); }
+
+/* ─── CONTROLS ───────────────────────────────────────── */
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+}
+.ctrl-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.input-row { display:flex; gap:9px; align-items:center; flex-wrap:wrap; }
+.input-row label { font-size:10px; color:var(--text-dim); font-family:var(--mono); letter-spacing:1px; }
+.arr-input {
+  flex:1; min-width:200px; background:var(--surface2); border:1px solid var(--border);
+  border-radius:7px; padding:7px 11px; color:var(--text); font-family:var(--mono); font-size:11px;
+  outline:none; transition:border-color .2s;
+}
+.arr-input:focus { border-color:var(--teal); }
+.speed-ctrl { display:flex; align-items:center; gap:7px; }
+.speed-lbl,.speed-val { font-family:var(--mono); font-size:10px; color:var(--text-dim); }
+#speedSlider { width:80px; accent-color:var(--teal); cursor:pointer; }
+
+/* ─── LEGEND ─────────────────────────────────────────── */
+.legend {
+  display:flex; gap:14px; flex-wrap:wrap; align-items:center;
+  padding:9px 14px; background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; margin-bottom:12px;
+}
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+
+/* ─── VOICE ──────────────────────────────────────────── */
+.voice-btn {
+  margin-left:auto; background:none; border:1px solid var(--border); border-radius:7px;
+  padding:4px 10px; cursor:pointer; display:flex; align-items:center; gap:6px;
+  font-family:var(--mono); font-size:10px; color:var(--teal); letter-spacing:1px;
+  transition:background .2s, border-color .2s, color .2s; white-space:nowrap;
+}
+.voice-btn.off { color:var(--text-dim); border-color:var(--border); }
+
+/* ─── STATS ──────────────────────────────────────────── */
+.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.stat-box {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:9px; padding:12px 14px; text-align:center;
+}
+.stat-box-n { font-family:var(--mono); font-size:22px; font-weight:800; color:var(--teal); }
+.stat-box-l { font-size:10px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+
+/* ─── CODE BLOCK ─────────────────────────────────────── */
+.code-block {
+  background:var(--surface2); border-radius:8px; padding:12px 14px;
+  font-family:var(--mono); font-size:11px; line-height:2;
+  overflow-x:auto; display:flex; flex-direction:column;
+}
+.code-line { padding:0 6px; border-radius:4px; transition:background .2s; }
+.kw { color:var(--pink); }
+.fn { color:var(--teal); }
+.num { color:var(--orange); }
+.cm { color:var(--text-dim); }
+
+/* ─── CANVAS ─────────────────────────────────────────── */
+#vizCanvas {
+  width:100%; border-radius:8px; background:transparent; display:block;
+}
+
+/* ─── DIFFICULTY BADGE ───────────────────────────────── */
+.card-difficulty {
+  border-radius:6px; padding:4px 10px; font-family:var(--mono); font-size:10px;
+  font-weight:700; letter-spacing:1px; text-transform:uppercase;
+}
+.beginner { background:rgba(0,212,170,0.15); color:var(--teal); border:1px solid rgba(0,212,170,0.3); }
+.intermediate { background:rgba(255,140,66,0.15); color:var(--orange); border:1px solid rgba(255,140,66,0.3); }
+
+.narration-text.intro-mode {
+  color:var(--teal); font-weight:600; animation:glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0%,100% { text-shadow:0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow:0 0 15px rgba(0,212,170,0.6); }
+}
 </style>
 </head>
 <body>
-<h1>Job Sequencing with Deadlines</h1>
-<p>This is a demo implementation page for Job Sequencing with Deadlines using Greedy strategy.</p>
 
-<h2>Demo Pseudocode</h2>
-<code>
-Step 1: Sort input based on greedy condition.<br>
-Step 2: Pick best available choice.<br>
-Step 3: Repeat until solution is complete.
-</code>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
 
-<h2>JavaScript Demo (Simple Example)</h2>
-<code>
-function greedyDemo(arr) {
-  arr.sort((a,b) => a-b);
-  return arr;
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="#">Sorting</a>
+      <a href="#">Searching</a>
+      <a href="#">Graph</a>
+      <a href="#">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track"><div class="toggle-thumb"><span class="toggle-icon">🌙</span></div></div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
+  </div>
+</nav>
+
+<div class="algo-page">
+
+  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">📋</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Greedy Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Job Sequencing</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      Schedule jobs with deadlines and profits to maximize total earnings. Sort jobs by profit (descending), then greedily assign each job to the latest available time slot before its deadline.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Time: <span>O(n²)</span></div>
+      <div class="cplx-chip">Optimized: <span>O(n log n)</span></div>
+      <div class="cplx-chip">Space: <span>O(n)</span></div>
+      <div class="cplx-chip">Strategy: <span>Greedy</span></div>
+      <div class="cplx-chip">Optimal: <span>✓ Yes</span></div>
+    </div>
+  </header>
+
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">💰</span><div class="cc-title">Profit First</div><div class="cc-desc">Sort jobs by profit in descending order so high-value jobs get first pick of available slots.</div></div>
+    <div class="cc"><span class="cc-icon">⏰</span><div class="cc-title">Deadline Slots</div><div class="cc-desc">Each job must complete by its deadline. Time slots t1…tmax represent unit time periods.</div></div>
+    <div class="cc"><span class="cc-icon">🔍</span><div class="cc-title">Latest Slot First</div><div class="cc-desc">For each job, try to assign it to the latest free slot ≤ deadline to leave earlier slots open.</div></div>
+    <div class="cc"><span class="cc-icon">✂️</span><div class="cc-title">Skip if Full</div><div class="cc-desc">If no valid slot is free for a job, skip it. The greedy choice still guarantees maximum profit.</div></div>
+  </div>
+
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Job Sequencing! I'll walk you through how we pick jobs greedily to maximize profit...</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- LEFT: Canvas + controls -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Pending</div>
+          <div class="li"><div class="ld" style="background:rgba(255,140,66,0.3);border:1px solid var(--orange);"></div>Considering</div>
+          <div class="li"><div class="ld" style="background:rgba(0,212,170,0.25);border:1px solid var(--teal);"></div>Scheduled</div>
+          <div class="li"><div class="ld" style="background:rgba(255,107,157,0.2);border:1px solid var(--pink);"></div>Skipped</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="380"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random Jobs</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Jobs (name:profit:deadline, ...):</label>
+          <input type="text" class="arr-input" id="jobInput"
+            value="J1:20:2, J2:15:2, J3:10:1, J4:5:3, J5:1:3, J6:12:2, J7:18:1, J8:8:3">
+          <button class="btn" onclick="applyJobs()">Apply</button>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="si"><span class="sl">Step</span><span class="sv orange" id="sStep">0</span></div>
+        <div class="si"><span class="sl">Scheduled</span><span class="sv" id="sSched">0</span></div>
+        <div class="si"><span class="sl">Total Profit</span><span class="sv" id="sProfit" style="color:var(--teal);">$0</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statSched">0</div><div class="stat-box-l">Scheduled</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statProfit" style="color:var(--orange)">$0</div><div class="stat-box-l">Total Profit</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSkipped">0</div><div class="stat-box-l">Skipped</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Total Jobs</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1"  class="code-line"><span class="kw">function</span> <span class="fn">jobSequencing</span>(jobs):</span>
+<span id="cl2"  class="code-line">  <span class="fn">sort</span>(jobs, <span class="kw">by</span> profit <span class="kw">desc</span>)  <span class="cm">// greedy key</span></span>
+<span id="cl3"  class="code-line">  maxD = <span class="fn">max</span>(job.deadline)</span>
+<span id="cl4"  class="code-line">  slots = [<span class="kw">false</span>] * (maxD + <span class="num">1</span>)</span>
+<span id="cl5"  class="code-line">  result = []</span>
+<span id="cl6"  class="code-line">  <span class="kw">for</span> job <span class="kw">in</span> sortedJobs:</span>
+<span id="cl7"  class="code-line">    <span class="kw">for</span> t = job.deadline <span class="kw">down to</span> <span class="num">1</span>:</span>
+<span id="cl8"  class="code-line">      <span class="kw">if</span> slots[t] == <span class="kw">false</span>:</span>
+<span id="cl9"  class="code-line">        slots[t] = job</span>
+<span id="cl10" class="code-line">        result.<span class="fn">push</span>(job); <span class="kw">break</span></span>
+<span id="cl11" class="code-line">  <span class="kw">return</span> result</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Schedule State</div>
+        <div id="schedDisplay" style="font-family:var(--mono);font-size:12px;line-height:2;word-break:break-all;color:var(--text-dim);">—</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── THEME ───────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+// ─── TTS ─────────────────────────────────────────────────
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const v = synth.getVoices();
+  ttsVoice = v.find(x=>x.name.includes('Google UK English Female'))
+           ||v.find(x=>x.name.includes('Google US English'))
+           ||v.find(x=>x.lang==='en-US'&&x.localService)
+           ||v.find(x=>x.lang.startsWith('en'))||v[0]||null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+function speak(text) {
+  return new Promise(res => {
+    if (!voiceEnabled||!synth){res();return;}
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice=ttsVoice; u.rate=0.88; u.pitch=1.05; u.volume=1;
+    u.onstart=()=>document.getElementById('speakBars').classList.add('on');
+    u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');res();};
+    synth.speak(u);
+  });
+}
+function stopSpeech(){synth&&synth.cancel();document.getElementById('speakBars').classList.remove('on');}
+
+let voiceEnabled = false;
+function toggleVoice(){
+  voiceEnabled = !voiceEnabled;
+  const btn=document.getElementById('voiceToggle');
+  document.getElementById('voiceIcon').textContent = voiceEnabled?'🔊':'🔇';
+  document.getElementById('voiceLabel').textContent = voiceEnabled?'Voice On':'Voice Off';
+  btn.className = voiceEnabled?'voice-btn':'voice-btn off';
+  document.getElementById('speedWrap').style.display = voiceEnabled?'none':'';
+  if(voiceEnabled&&!isPlaying) playIntroSpeech();
 }
 
-console.log(greedyDemo([5,3,8,1]));
-</code>
+// ─── INTRO ────────────────────────────────────────────────
+let introAborted = false;
+function clearIntroTimeouts(){introAborted=true;stopSpeech();}
+async function playIntroSpeech(){
+  introAborted=false; stopSpeech();
+  const lines=[
+    "Welcome! Today we are solving the Job Sequencing problem using a greedy algorithm.",
+    "We have a set of jobs, each with a profit and a deadline — the last time slot by which the job must be completed.",
+    "Our goal is to select and schedule jobs to maximize total profit, fitting each selected job within its deadline.",
+    "The greedy strategy is elegant: sort all jobs by profit in descending order. Always try the most profitable job first.",
+    "For each job, we try to assign it to the latest available time slot that is still before or on its deadline.",
+    "Using the latest slot preserves earlier slots for future jobs with tighter deadlines.",
+    "If no valid slot is available for a job, we simply skip it — it cannot be profitably scheduled.",
+    "In the visualization, orange highlights the job being considered, green marks scheduled jobs, and pink shows skipped ones.",
+    "Press Play to watch the algorithm run step by step. I will explain every decision along the way!"
+  ];
+  const narText=document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  for(let i=0;i<lines.length;i++){
+    if(introAborted)break;
+    narText.textContent=lines[i];
+    await speak(lines[i]);
+    if(introAborted)break;
+    await new Promise(r=>setTimeout(r,250));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent='🧑‍💻';
+  if(!introAborted&&steps.length>0) narText.textContent=steps[0].narration;
+}
 
+// ─── JOB DATA ─────────────────────────────────────────────
+let jobs = [
+  {name:'J1',profit:20,deadline:2},
+  {name:'J2',profit:15,deadline:2},
+  {name:'J3',profit:10,deadline:1},
+  {name:'J4',profit:5, deadline:3},
+  {name:'J5',profit:1, deadline:3},
+  {name:'J6',profit:12,deadline:2},
+  {name:'J7',profit:18,deadline:1},
+  {name:'J8',profit:8, deadline:3},
+];
+
+// ─── STEP BUILDER ─────────────────────────────────────────
+function buildSteps(jobList) {
+  const steps = [];
+  const sorted = [...jobList].sort((a,b)=>b.profit-a.profit);
+  const maxD = Math.max(...jobList.map(j=>j.deadline));
+
+  // State per step: slots array, status map
+  const slots = new Array(maxD+1).fill(null); // slots[1..maxD]
+  const status = {}; // 'pending','considering','scheduled','skipped'
+  jobList.forEach(j=>status[j.name]='pending');
+
+  steps.push({
+    type:'intro', sorted:[...sorted], slots:[...slots], status:{...status},
+    narration:`We have ${jobList.length} jobs. First, sort by profit (descending): ${sorted.map(j=>`${j.name}($${j.profit},d${j.deadline})`).join(', ')}.`,
+    phase:'active', codeLine:2, scheduledCount:0, totalProfit:0,
+  });
+
+  let totalProfit = 0;
+  let scheduledCount = 0;
+
+  for(let si=0; si<sorted.length; si++){
+    const job = sorted[si];
+    const newStatus = {...status};
+    newStatus[job.name] = 'considering';
+
+    steps.push({
+      type:'consider', sorted:[...sorted], slots:[...slots], status:{...newStatus},
+      currentJob:job, si,
+      narration:`Considering ${job.name} (profit $${job.profit}, deadline ${job.deadline}). Looking for the latest free slot ≤ ${job.deadline}.`,
+      phase:'compare', codeLine:7, scheduledCount, totalProfit,
+    });
+
+    let placed = false;
+    for(let t=job.deadline; t>=1; t--){
+      if(!slots[t]){
+        slots[t] = job;
+        newStatus[job.name] = 'scheduled';
+        status[job.name] = 'scheduled';
+        totalProfit += job.profit;
+        scheduledCount++;
+        placed = true;
+        steps.push({
+          type:'place', sorted:[...sorted], slots:[...slots], status:{...newStatus},
+          currentJob:job, si, placedAt:t,
+          narration:`Placed ${job.name} in slot t${t}. It earns $${job.profit}. Running total profit: $${totalProfit}.`,
+          phase:'place', codeLine:9, scheduledCount, totalProfit,
+        });
+        break;
+      }
+    }
+    if(!placed){
+      newStatus[job.name] = 'skipped';
+      status[job.name] = 'skipped';
+      steps.push({
+        type:'skip', sorted:[...sorted], slots:[...slots], status:{...newStatus},
+        currentJob:job, si,
+        narration:`No free slot found for ${job.name} (deadline ${job.deadline}). Skipping — all slots t1…t${job.deadline} are occupied.`,
+        phase:'compare', codeLine:8, scheduledCount, totalProfit,
+      });
+    }
+  }
+
+  steps.push({
+    type:'done', sorted:[...sorted], slots:[...slots], status:{...status},
+    narration:`Done! Scheduled ${scheduledCount} jobs with total profit $${totalProfit}. Skipped ${jobList.length-scheduledCount} jobs.`,
+    phase:'done', codeLine:11, scheduledCount, totalProfit,
+  });
+
+  return steps;
+}
+
+// ─── CANVAS ───────────────────────────────────────────────
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas(){ canvas.width = canvas.parentElement.clientWidth; }
+
+const COLORS = {
+  pending:   {fill:'rgba(26,40,64,0.9)',  stroke:'#2a4060', text:'#4a6a9a'},
+  considering:{fill:'rgba(255,140,66,0.22)',stroke:'#ff8c42',text:'#ff8c42'},
+  scheduled: {fill:'rgba(0,212,170,0.18)', stroke:'#00d4aa',text:'#00d4aa'},
+  skipped:   {fill:'rgba(255,107,157,0.15)',stroke:'#ff6b9d',text:'#ff6b9d'},
+};
+
+function drawStep(step) {
+  if (!step) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const W = canvas.width, H = canvas.height;
+  const jobs = step.sorted;
+  const n = jobs.length;
+
+  // ── Section labels
+  const SEC_TOP_H   = 140; // original jobs table section
+  const SEC_SORT_H  = 140; // sorted row section
+  const SEC_SLOT_H  = H - SEC_TOP_H - SEC_SORT_H - 30;
+  const MARGIN = 18;
+
+  ctx.fillStyle = 'rgba(0,212,170,0.06)';
+  ctx.strokeStyle = 'rgba(0,212,170,0.12)';
+  ctx.lineWidth = 1;
+  roundRect(ctx, MARGIN, 10, W-MARGIN*2, SEC_TOP_H-10, 8);
+  roundRect(ctx, MARGIN, SEC_TOP_H+10, W-MARGIN*2, SEC_SORT_H-10, 8);
+  roundRect(ctx, MARGIN, SEC_TOP_H+SEC_SORT_H+18, W-MARGIN*2, SEC_SLOT_H+2, 8);
+
+  // Section titles
+  ctx.fillStyle = 'rgba(74,106,154,0.6)';
+  ctx.font = `700 9px JetBrains Mono`;
+  ctx.letterSpacing = '2px';
+  ctx.textAlign = 'left';
+  ctx.fillText('ORIGINAL JOBS', MARGIN+12, 26);
+  ctx.fillText('SORTED BY PROFIT ↓', MARGIN+12, SEC_TOP_H+26);
+  ctx.fillText('FINAL SCHEDULE (TIME SLOTS)', MARGIN+12, SEC_TOP_H+SEC_SORT_H+34);
+
+  // ── Original Jobs table
+  drawOriginalTable(step, MARGIN+8, 34, W-MARGIN*2-16, SEC_TOP_H-46);
+
+  // ── Sorted row
+  drawSortedRow(step, MARGIN+8, SEC_TOP_H+34, W-MARGIN*2-16, SEC_SORT_H-46);
+
+  // ── Slot schedule
+  drawSlots(step, MARGIN+8, SEC_TOP_H+SEC_SORT_H+44, W-MARGIN*2-16, SEC_SLOT_H-20);
+}
+
+function drawOriginalTable(step, x, y, w, h) {
+  const jobs = step.sorted; // original order is irrelevant here, show by profit order
+  // Actually show sorted order in original table too — just highlight statuses
+  const n = jobs.length;
+  if(n===0) return;
+  const cellW = Math.min(70, (w-4)/n);
+  const totalW = cellW * n;
+  const startX = x + (w - totalW)/2;
+  const rowH = Math.min(28, (h-4)/3);
+
+  // Header row
+  ['JOB','PROFIT','DEADLINE'].forEach((lbl,ri) => {
+    ctx.fillStyle = 'rgba(74,106,154,0.35)';
+    ctx.fillRect(startX, y + ri*rowH, totalW, rowH);
+    ctx.fillStyle = '#4a6a9a';
+    ctx.font = '700 9px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(lbl, startX+4, y+ri*rowH+rowH*0.67);
+  });
+
+  jobs.forEach((job, ci) => {
+    const cx = startX + ci*cellW;
+    const c = COLORS[step.status[job.name]||'pending'];
+    [job.name, `$${job.profit}`, `d${job.deadline}`].forEach((val, ri) => {
+      ctx.fillStyle = c.fill;
+      ctx.strokeStyle = c.stroke;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.rect(cx+cellW*0, y+ri*rowH, cellW, rowH); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = c.text;
+      ctx.font = ri===0?'700 10px JetBrains Mono':'400 10px JetBrains Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText(val, cx+cellW/2, y+ri*rowH+rowH*0.67);
+    });
+  });
+}
+
+function drawSortedRow(step, x, y, w, h) {
+  const jobs = step.sorted;
+  const n = jobs.length;
+  if(n===0) return;
+  const cellW = Math.min(70, (w-4)/n);
+  const totalW = cellW * n;
+  const startX = x + (w-totalW)/2;
+  const rowH = Math.min(28,(h-4)/3);
+
+  ['JOB','PROFIT','DEADLINE'].forEach((lbl,ri)=>{
+    ctx.fillStyle='rgba(74,106,154,0.35)';
+    ctx.fillRect(startX, y+ri*rowH, totalW, rowH);
+    ctx.fillStyle='#4a6a9a';
+    ctx.font='700 9px JetBrains Mono';
+    ctx.textAlign='left';
+    ctx.fillText(lbl, startX+4, y+ri*rowH+rowH*0.67);
+  });
+
+  jobs.forEach((job, ci) => {
+    const cx = startX + ci*cellW;
+    // Highlight current job in sorted row
+    const isCurrent = step.currentJob && step.currentJob.name===job.name;
+    const c = isCurrent ? COLORS.considering : COLORS[step.status[job.name]||'pending'];
+    [job.name, `$${job.profit}`, `d${job.deadline}`].forEach((val, ri) => {
+      ctx.fillStyle = c.fill;
+      ctx.strokeStyle = c.stroke;
+      ctx.lineWidth = isCurrent?1.5:1;
+      ctx.beginPath(); ctx.rect(cx, y+ri*rowH, cellW, rowH); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = c.text;
+      ctx.font = ri===0?'700 10px JetBrains Mono':'400 10px JetBrains Mono';
+      ctx.textAlign='center';
+      ctx.fillText(val, cx+cellW/2, y+ri*rowH+rowH*0.67);
+    });
+    // Arrow under current
+    if(isCurrent) {
+      ctx.fillStyle = '#ff8c42';
+      ctx.font='bold 14px sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText('▼', cx+cellW/2, y+3*rowH+14);
+    }
+  });
+}
+
+function drawSlots(step, x, y, w, h) {
+  const maxD = step.slots.length - 1;
+  if(maxD <= 0) return;
+  const slotCount = maxD;
+  const slotW = Math.min(80, (w-4) / (slotCount+1));
+  const totalW = slotW * (slotCount+1);
+  const startX = x + (w-totalW)/2;
+  const slotH = Math.min(52, h-24);
+  const slotY = y + 10;
+
+  // t0 label (empty)
+  ctx.fillStyle = 'rgba(26,40,64,0.5)';
+  ctx.strokeStyle = '#2a4060';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); roundRect(ctx, startX, slotY, slotW-4, slotH, 6);
+  ctx.fillStyle='rgba(74,106,154,0.1)'; ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#2a3d58'; ctx.font='700 9px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('t0', startX+slotW/2-2, slotY+slotH*0.4);
+  ctx.fillStyle='#1e2d45'; ctx.fillText('(unused)', startX+slotW/2-2, slotY+slotH*0.72);
+
+  for(let t=1; t<=maxD; t++) {
+    const sx = startX + t*slotW;
+    const job = step.slots[t];
+    let fill='rgba(26,40,64,0.6)', stroke='#2a4060', textColor='#2a3d58', label='—';
+    if(job) {
+      const c = COLORS[step.status[job.name]||'scheduled'];
+      fill=c.fill; stroke=c.stroke; textColor=c.text;
+      label=job.name;
+    }
+    ctx.fillStyle=fill; ctx.strokeStyle=stroke; ctx.lineWidth=job?1.5:1;
+    ctx.beginPath(); roundRect(ctx, sx, slotY, slotW-4, slotH, 6);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle='#4a6a9a'; ctx.font='700 9px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText(`t${t}`, sx+slotW/2-2, slotY+12);
+    ctx.fillStyle=textColor; ctx.font='bold 13px JetBrains Mono';
+    ctx.fillText(label, sx+slotW/2-2, slotY+slotH*0.6);
+    if(job) {
+      ctx.fillStyle=textColor; ctx.font='9px JetBrains Mono';
+      ctx.fillText(`$${job.profit}`, sx+slotW/2-2, slotY+slotH*0.85);
+    }
+  }
+
+  // Total profit label
+  ctx.fillStyle=step.totalProfit>0?'#00d4aa':'#4a6a9a';
+  ctx.font='bold 12px JetBrains Mono';
+  ctx.textAlign='right';
+  ctx.fillText(`Total Profit: $${step.totalProfit}`, x+w, slotY+slotH+20);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.roundRect(x,y,w,h,r); return ctx;
+}
+
+// ─── CONTROLLER ──────────────────────────────────────────
+let steps = [];
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+
+const SPEED_DELAYS = {1:1600,2:900,3:500,4:250,5:100};
+function getDelay(){ return SPEED_DELAYS[speedMult]||900; }
+function onSpeedChange(v){ speedMult=parseInt(v); document.getElementById('speedVal').textContent=v+'×'; }
+
+function updateUI(step, idx) {
+  document.getElementById('narText').textContent = step.narration;
+  document.getElementById('narText').classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  document.getElementById('sStep').textContent   = idx+1;
+  document.getElementById('sSched').textContent  = step.scheduledCount||0;
+  document.getElementById('sProfit').textContent = `$${step.totalProfit||0}`;
+  document.getElementById('statSched').textContent  = step.scheduledCount||0;
+  document.getElementById('statProfit').textContent = `$${step.totalProfit||0}`;
+  const skipped = Object.values(step.status).filter(s=>s==='skipped').length;
+  document.getElementById('statSkipped').textContent = skipped;
+  document.getElementById('stepCtr').textContent = `Step ${idx+1} / ${steps.length}`;
+  const pct = steps.length>1 ? ((idx/(steps.length-1))*100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+
+  // Schedule display
+  const sched = step.slots.map((j,i)=>i===0?null:(j?`t${i}:${j.name}($${j.profit})`:null)).filter(Boolean);
+  document.getElementById('schedDisplay').textContent = sched.length ? sched.join('  ') : 'No slots filled yet';
+
+  // Phase badge
+  const badge = document.getElementById('phaseBadge');
+  const pm = {active:['ph-active','Sorting'],compare:['ph-compare','Checking'],place:['ph-place','Placing'],done:['ph-done','Done'],idle:['ph-idle','Idle']};
+  const [cls,lbl] = pm[step.phase]||['ph-idle','Idle'];
+  badge.className=`phase-badge ${cls}`; badge.textContent=lbl;
+
+  // Code highlight
+  for(let i=1;i<=11;i++){
+    const el=document.getElementById(`cl${i}`);
+    if(el) el.style.background = step.codeLine===i?'rgba(0,212,170,0.12)':'';
+  }
+}
+
+function renderStep(idx, auto=false) {
+  if(idx<0||idx>=steps.length) return;
+  stepIdx=idx;
+  const step=steps[idx];
+  drawStep(step);
+  updateUI(step,idx);
+  if(auto) scheduleNext(step);
+}
+
+function scheduleNext(step) {
+  if(!isPlaying) return;
+  if(stepIdx>=steps.length-1){stopPlay();return;}
+  if(voiceEnabled){
+    speak(step.narration).then(()=>{
+      if(!isPlaying)return;
+      playTimer=setTimeout(()=>{if(isPlaying)renderStep(stepIdx+1,true);},350);
+    });
+  } else {
+    playTimer=setTimeout(()=>{if(isPlaying)renderStep(stepIdx+1,true);},getDelay());
+  }
+}
+
+function nextStep(){
+  clearIntroTimeouts(); stopPlay();
+  if(stepIdx+1<steps.length){
+    renderStep(stepIdx+1,false);
+    if(voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+function startPlay(){
+  if(stepIdx>=steps.length-1) stepIdx=-1;
+  clearIntroTimeouts();
+  isPlaying=true;
+  document.getElementById('btnPlay').textContent='⏸ Pause';
+  renderStep(stepIdx+1,true);
+}
+function stopPlay(){
+  isPlaying=false;
+  if(playTimer){clearTimeout(playTimer);playTimer=null;}
+  document.getElementById('btnPlay').textContent='▶ Play';
+  stopSpeech();
+}
+function resetAll(){
+  stopPlay(); introAborted=true; stepIdx=-1;
+  if(steps.length>0) drawStep(steps[0]);
+  document.getElementById('sStep').textContent='0';
+  document.getElementById('sSched').textContent='0';
+  document.getElementById('sProfit').textContent='$0';
+  ['statSched','statProfit','statSkipped'].forEach(id=>{document.getElementById(id).textContent=id==='statProfit'?'$0':'0';});
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('schedDisplay').textContent='—';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('narText').textContent='Ready! Press Play to start, or enable Voice Mode for a full walkthrough.';
+  for(let i=1;i<=11;i++){const el=document.getElementById(`cl${i}`);if(el)el.style.background='';}
+}
+
+document.getElementById('btnPlay').addEventListener('click',()=>{if(isPlaying)stopPlay();else startPlay();});
+document.getElementById('btnNext').addEventListener('click',nextStep);
+document.getElementById('btnReset').addEventListener('click',resetAll);
+
+function applyJobs(){
+  const raw = document.getElementById('jobInput').value;
+  const parsed = raw.split(',').map(s=>{
+    const p=s.trim().split(':');
+    if(p.length<3) return null;
+    const profit=parseInt(p[1]), deadline=parseInt(p[2]);
+    if(!p[0]||isNaN(profit)||isNaN(deadline)||profit<1||deadline<1) return null;
+    return {name:p[0].trim(), profit, deadline};
+  }).filter(Boolean);
+  if(parsed.length<2){alert('Enter at least 2 valid jobs in format name:profit:deadline');return;}
+  jobs = parsed.slice(0,12);
+  init();
+}
+
+function randomize(){
+  const names=['A','B','C','D','E','F','G','H'];
+  jobs = names.slice(0,6+Math.floor(Math.random()*3)).map((n,i)=>({
+    name:`J${i+1}`, profit:Math.floor(Math.random()*90)+5, deadline:Math.floor(Math.random()*4)+1
+  }));
+  document.getElementById('jobInput').value = jobs.map(j=>`${j.name}:${j.profit}:${j.deadline}`).join(', ');
+  init();
+}
+
+function init(){
+  resizeCanvas();
+  const saved=localStorage.getItem('theme');
+  if(saved==='light') document.getElementById('toggleLabel').textContent='Dark mode';
+  document.getElementById('statN').textContent = jobs.length;
+  steps = buildSteps(jobs);
+  stopPlay(); stepIdx=-1;
+  if(steps.length>0){ drawStep(steps[0]); }
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('speedWrap').style.display=voiceEnabled?'none':'';
+  if(!introPlayed){
+    introPlayed=true;
+    document.getElementById('narText').textContent='Ready! Press Play to start, or enable Voice Mode for a guided walkthrough.';
+  }
+}
+
+window.addEventListener('resize',()=>{
+  resizeCanvas();
+  if(stepIdx>=0&&steps[stepIdx]) drawStep(steps[stepIdx]);
+  else if(steps.length>0) drawStep(steps[0]);
+});
+
+init();
+</script>
 </body>
 </html>

@@ -3,77 +3,606 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Maze Solver — AlgoClassroom</title>
+<title>Maze Solver (Backtracking) — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+:root {
+  --cell-wall: #1a2840;
+  --cell-open: #ffffff;
+  --cell-attempt: #ff8c42;
+  --cell-deadend: #ff6b9d;
+  --cell-path: #06d6a0;
+  --cell-start: #ffd700;
+  --cell-end: #00bfff;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+#vizCanvas {
+  width: 100%; border-radius: 8px;
+  background: transparent; display: block;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+.arr-input {
+  flex: 1; min-width: 200px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px; text-align: center;
+}
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+/* Voice toggle */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
+<!-- NAVBAR — identical to Insertion Sort, includes theme toggle -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
-
 <div class="algo-page">
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
-
-  <div class="coming-soon">
-    <span class="cs-icon">🌀</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Maze Solver</h1>
-    <p class="cs-sub">Find a path through a maze using recursive backtracking.</p>
-
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Four-directional movement</li>
-        <li>Visited cell tracking</li>
-        <li>Path reconstruction</li>
-      </ul>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🧩</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Backtracking Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Maze Solver (Backtracking)</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
     </div>
-
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      Solve a maze using backtracking: explore paths depth-first, mark visited cells, and backtrack from dead ends until finding the exit or determining no path exists.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Worst: <span>O(4^{m*n})</span></div>
+      <div class="cplx-chip">Space: <span>O(m*n)</span></div>
+    </div>
+  </header>
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">🛤️</span><div class="cc-title">Path Exploration</div><div class="cc-desc">Tries directions (down, right, up, left) for each cell, checking validity.</div></div>
+    <div class="cc"><span class="cc-icon">🔙</span><div class="cc-title">Backtracking</div><div class="cc-desc">If a path leads to a dead end, unmark the cell and try another direction.</div></div>
+    <div class="cc"><span class="cc-icon">✅</span><div class="cc-title">Safety Check</div><div class="cc-desc">A move is safe if in bounds, open (0), and not visited.</div></div>
+    <div class="cc"><span class="cc-icon">🏁</span><div class="cc-title">Base Case</div><div class="cc-desc">If the current cell is the exit, a solution is found.</div></div>
+  </div>
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Maze Solver with Backtracking! Let me explain how this algorithm works before we begin...</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+  <!-- Status bar -->
+  <!-- Main layout -->
+  <div class="two-col">
+    <!-- LEFT: Canvas -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--cell-wall);"></div>Wall</div>
+          <div class="li"><div class="ld" style="background:var(--cell-open);"></div>Open/Unvisited</div>
+          <div class="li"><div class="ld" style="background:var(--cell-attempt);"></div>Attempting Move</div>
+          <div class="li"><div class="ld" style="background:var(--cell-deadend);"></div>Dead End</div>
+          <div class="li"><div class="ld" style="background:var(--cell-path);"></div>Path</div>
+          <div class="li"><div class="ld" style="background:var(--cell-start);"></div>Start</div>
+          <div class="li"><div class="ld" style="background:var(--cell-end);"></div>End</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="340"></canvas>
+      </div>
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random Maze</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Maze (rows sep by ;, cells by , e.g., 1,1,0;0,1,0;0,0,0):</label>
+          <input type="text" class="arr-input" id="mazeInput" value="0,1,0,0;0,1,0,1;0,0,0,1;1,1,0,0">
+          <button class="btn" onclick="applyMaze()">Apply</button>
+        </div>
+      </div>
+      <div class="status-row">
+        <div class="si"><span class="sl">Cell</span><span class="sv orange" id="sPass">(0,0)</span></div>
+        <div class="si"><span class="sl">Attempts</span><span class="sv" id="sComps">0</span></div>
+        <div class="si"><span class="sl">Backtracks</span><span class="sv" id="sSwaps">0</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="divider-auto"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
+    </div>
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Move Attempts</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSwaps">0</div><div class="stat-box-l">Backtracks</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPasses">0</div><div class="stat-box-l">Cells</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Rows x Cols</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">isSafe</span>(x, y, maze, visited):</span>
+<span id="cl2" class="code-line"> <span class="kw">if</span> x,y in bounds <span class="kw">and</span> maze[x][y] == 0 <span class="kw">and</span> not visited[x][y]:</span>
+<span id="cl3" class="code-line"> <span class="kw">return true</span></span>
+<span id="cl4" class="code-line"> <span class="kw">return false</span></span>
+<span id="cl5" class="code-line"><span class="kw">function</span> <span class="fn">solveMazeUtil</span>(maze, x, y, visited):</span>
+<span id="cl6" class="code-line"> <span class="kw">if</span> x,y == end: <span class="kw">return true</span></span>
+<span id="cl7" class="code-line"> visited[x][y] = true</span>
+<span id="cl8" class="code-line"> <span class="kw">for</span> each dir <span class="kw">in</span> [down, right, up, left]:</span>
+<span id="cl9" class="code-line"> nx = x + dx[dir]; ny = y + dy[dir]</span>
+<span id="cl10" class="code-line"> <span class="kw">if</span> <span class="fn">isSafe</span>(nx, ny, maze, visited):</span>
+<span id="cl11" class="code-line"> <span class="kw">if</span> <span class="fn">solveMazeUtil</span>(maze, nx, ny, visited): <span class="kw">return true</span></span>
+<span id="cl12" class="code-line"> visited[x][y] = false // backtrack</span>
+<span id="cl13" class="code-line"> <span class="kw">return false</span></span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">📋 Current Path</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
     </div>
   </div>
-</div>
+</div><!-- .algo-page -->
+<script>
+// ════════════════════════════════════════════════
+// THEME TOGGLE
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+// Restore saved theme on load
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+// ════════════════════════════════════════════════
+// WEB SPEECH API
+// ════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English')) ||
+    voices.find(v => v.lang === 'en-US' && v.localService) ||
+    voices.find(v => v.lang.startsWith('en')) ||
+    voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice = ttsVoice;
+    utt.rate = 0.88;
+    utt.pitch = 1.05;
+    utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+function stopSpeech() {
+  synth && synth.cancel();
+  document.getElementById('speakBars').classList.remove('on');
+}
+// ════════════════════════════════════════════════
+// VOICE TOGGLE — default OFF
+// ════════════════════════════════════════════════
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('voiceToggle');
+  const icon = document.getElementById('voiceIcon');
+  const lbl = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+// ════════════════════════════════════════════════
+// MAZE SOLVER — STEP GENERATOR
+// ════════════════════════════════════════════════
+function buildMazeSolverSteps(maze) {
+  const steps = [];
+  const rows = maze.length;
+  const cols = maze[0].length;
+  const visited = Array.from({length: rows}, () => Array(cols).fill(false));
+  const directions = [{dx:1,dy:0,name:'down'}, {dx:0,dy:1,name:'right'}, {dx:-1,dy:0,name:'up'}, {dx:0,dy:-1,name:'left'}];
+  const endX = rows - 1, endY = cols - 1;
+  let totalAttempts = 0, totalBacktracks = 0;
+  function pushStep(x, y, dirIdx, phase, narration, codeLine, conflict = false) {
+    steps.push({
+      visited: visited.map(row => [...row]), currentX: x, currentY: y, attemptDir: dirIdx, conflict,
+      narration,
+      phase, attempts: totalAttempts, backtracks: totalBacktracks, codeLine,
+    });
+  }
+  function isSafe(nx, ny) {
+    return nx >= 0 && nx < rows && ny >= 0 && ny < cols && maze[nx][ny] === 0 && !visited[nx][ny];
+  }
+  function solveUtil(x, y) {
+    if (x === endX && y === endY) {
+      pushStep(x, y, -1, 'done', 'Reached the end! Path found.', 6);
+      return true;
+    }
+    pushStep(x, y, -1, 'active', `Exploring cell (${x},${y}).`, 5);
+    visited[x][y] = true;
+    for (let d = 0; d < directions.length; d++) {
+      totalAttempts++;
+      const {dx, dy, name} = directions[d];
+      const nx = x + dx, ny = y + dy;
+      pushStep(x, y, d, 'attempt', `Attempting move ${name} to (${nx},${ny}). Checking if safe...`, 10);
+      const safe = isSafe(nx, ny);
+      if (safe) {
+        pushStep(x, y, d, 'assign', `Move ${name} is safe. Proceeding to (${nx},${ny}).`, 11);
+        if (solveUtil(nx, ny)) return true;
+        totalBacktracks++;
+        pushStep(x, y, d, 'backtrack', `Backtracking from (${nx},${ny}) after dead end. Unmark (${x},${y}).`, 12);
+      } else {
+        pushStep(x, y, d, 'conflict', `Move ${name} to (${nx},${ny}) is invalid (wall/visited/out of bounds). Trying next direction.`, 10, true);
+      }
+    }
+    visited[x][y] = false;
+    pushStep(x, y, -1, 'fail', `No valid moves from (${x},${y}). Backtracking.`, 13);
+    return false;
+  }
+  pushStep(0, 0, -1, 'active', `Starting Maze Solver from (0,0) to (${endX},${endY}).`, 5);
+  const success = solveUtil(0, 0);
+  if (!success) {
+    steps.push({
+      visited: visited.map(row => [...row]), currentX: -1, currentY: -1, attemptDir: -1, conflict: false,
+      narration: 'No path found to the end.',
+      phase: 'fail', attempts: totalAttempts, backtracks: totalBacktracks, codeLine: 13,
+    });
+  }
+  return steps;
+}
+// ════════════════════════════════════════════════
+// INTRO SPEECH
+// ════════════════════════════════════════════════
+let introAborted = false;
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const introLines = [
+    "Hello! I am your algorithm teacher. Today we are learning Maze Solving using Backtracking.",
+    "Maze Solving finds a path from start to end in a grid, avoiding walls, using up to 4 directions.",
+    "The backtracking approach tries directions sequentially for each cell, checking if it's safe (open and unvisited).",
+    "If a move works, it proceeds recursively. If not, it tries the next direction.",
+    "If no direction works, it backtracks to the previous cell and tries another direction there.",
+    "In the visualization, orange cells are being attempted, pink shows dead ends, and green are part of the path.",
+    "Now, turn on Voice Mode and press Play. I will guide you through every single step."
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < introLines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = introLines[i];
+    await speak(introLines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+// ════════════════════════════════════════════════
+// CANVAS
+// ════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+
+
+function drawMaze(step, maze) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!step) return;
+  
+  // Get computed styles to access CSS variables
+  const computedStyle = getComputedStyle(document.documentElement);
+  const cellWall = computedStyle.getPropertyValue('--cell-wall').trim() || '#1a2840';
+  const cellOpen = computedStyle.getPropertyValue('--cell-open').trim() || '#ffffff';
+  const cellAttempt = computedStyle.getPropertyValue('--cell-attempt').trim() || '#ff8c42';
+  const cellDeadend = computedStyle.getPropertyValue('--cell-deadend').trim() || '#ff6b9d';
+  const cellPath = computedStyle.getPropertyValue('--cell-path').trim() || '#06d6a0';
+  const cellStart = computedStyle.getPropertyValue('--cell-start').trim() || '#ffd700';
+  const cellEnd = computedStyle.getPropertyValue('--cell-end').trim() || '#00bfff';
+  
+  const { visited, currentX, currentY, attemptDir, conflict, phase } = step;
+  const rows = maze.length;
+  const cols = maze[0].length;
+  const cellSize = Math.min(Math.floor(canvas.width / cols), Math.floor(canvas.height / rows));
+  const offsetX = (canvas.width - cols * cellSize) / 2;
+  const offsetY = (canvas.height - rows * cellSize) / 2;
+  
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      let fill = maze[i][j] === 1 ? cellWall : cellOpen;
+      
+      // Override for path cells (visited)
+      if (visited[i][j] && !(i === currentX && j === currentY)) {
+        fill = cellPath;
+      }
+      
+      // Current cell highlighting
+      if (i === currentX && j === currentY) {
+        if (phase === 'conflict' || conflict) {
+          fill = cellDeadend;
+        } else if (phase === 'attempt' || phase === 'assign') {
+          fill = cellAttempt;
+        }
+      }
+      
+      // Start and end cells (these should take precedence)
+      if (i === 0 && j === 0) fill = cellStart;
+      if (i === rows - 1 && j === cols - 1) fill = cellEnd;
+      
+      ctx.fillStyle = fill;
+      ctx.fillRect(offsetX + j * cellSize, offsetY + i * cellSize, cellSize, cellSize);
+      
+      // Draw border
+      ctx.strokeStyle = '#2a4060';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(offsetX + j * cellSize, offsetY + i * cellSize, cellSize, cellSize);
+    }
+  }
+}
+
+
+
+
+
+
+
+
+// ════════════════════════════════════════════════
+// CONTROLLER
+// ════════════════════════════════════════════════
+let steps = [];
+let maze = parseMaze("0,1,0,0;0,1,0,1;0,0,0,1;1,1,0,0"); // Default maze
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
+function onSpeedChange(val) {
+  speedMult = parseInt(val);
+  document.getElementById('speedVal').textContent = val + '×';
+}
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
+function updateStatusBar(step, idx) {
+  document.getElementById('sPass').textContent = step.currentX >= 0 ? `(${step.currentX},${step.currentY})` : '(0,0)';
+  document.getElementById('sComps').textContent = step.attempts || 0;
+  document.getElementById('sSwaps').textContent = step.backtracks || 0;
+  document.getElementById('statComps').textContent = step.attempts || 0;
+  document.getElementById('statSwaps').textContent = step.backtracks || 0;
+  document.getElementById('statPasses').textContent = maze.length * maze[0].length;
+  document.getElementById('arrDisplay').textContent = step.visited.map(row => row.map(v => v ? 'V' : '.').join(' ')).join('\n');
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { active:['ph-active','Exploring'], attempt:['ph-compare','Attempting'], conflict:['ph-swap','Invalid'], backtrack:['ph-swap','Backtracking'], assign:['ph-active','Moving'], done:['ph-done','Done'], fail:['ph-swap','Failed'], idle:['ph-idle','Idle'] };
+  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+  for (let i = 1; i <= 13; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
+  }
+}
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  drawMaze(step, maze);
+  updateNarration(step);
+  updateStatusBar(step, idx);
+  if (autoAdvance) scheduleNext(step);
+}
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+function nextStep() {
+  clearIntroTimeouts();
+  stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+function resetAll() {
+  stopPlay();
+  introAborted = true;
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  drawMaze(steps[0], maze);
+  document.getElementById('arrDisplay').textContent = maze.map(row => row.map(v => v ? '#' : '.').join(' ')).join('\n');
+  ['sPass','sComps','sSwaps','statComps','statSwaps'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('statPasses').textContent = maze.length * maze[0].length;
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  for (let i = 1; i <= 13; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; }
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  if (voiceEnabled) playIntroSpeech();
+}
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+function parseMaze(raw) {
+  return raw.split(';').map(row => row.split(',').map(cell => parseInt(cell.trim())));
+}
+function applyMaze() {
+  const raw = document.getElementById('mazeInput').value;
+  maze = parseMaze(raw);
+  if (maze.length < 2 || maze[0].length < 2) { alert('Enter a valid maze with at least 2x2 cells.'); return; }
+  init();
+}
+function randomize() {
+  const rows = Math.floor(Math.random() * 3) + 4; // 4-6 rows
+  const cols = Math.floor(Math.random() * 3) + 4; // 4-6 cols
+  maze = Array.from({length: rows}, () => Array(cols).fill(0));
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      if (Math.random() > 0.7 && !(i===0 && j===0) && !(i===rows-1 && j===cols-1)) maze[i][j] = 1;
+    }
+  }
+  maze[0][0] = 0; // Ensure start open
+  maze[rows-1][cols-1] = 0; // Ensure end open
+  document.getElementById('mazeInput').value = maze.map(row => row.join(',')).join(';');
+  init();
+}
+function init() {
+  resizeCanvas();
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+  document.getElementById('statN').textContent = `${maze.length} x ${maze[0].length}`;
+  document.getElementById('statPasses').textContent = maze.length * maze[0].length;
+  steps = buildMazeSolverSteps(maze);
+  stopPlay();
+  stepIdx = -1;
+  drawMaze(steps[0], maze);
+  document.getElementById('arrDisplay').textContent = steps[0].visited.map(row => row.map(v => v ? 'V' : '.').join(' ')).join('\n');
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) drawMaze(steps[stepIdx], maze);
+  else if (steps.length > 0) drawMaze(steps[0], maze);
+});
+init();
+</script>
 </body>
 </html>

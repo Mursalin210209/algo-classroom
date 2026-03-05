@@ -3,77 +3,617 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sudoku Solver — AlgoClassroom</title>
+<title>Sudoku Solver (Backtracking) — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+:root {
+  --cell-empty: #ffffff;
+  --cell-attempt: #ff8c42;
+  --cell-conflict: #ff6b9d;
+  --cell-filled: #06d6a0;
+  --cell-given: #1a2840;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+#vizCanvas {
+  width: 100%; border-radius: 8px;
+  background: transparent; display: block;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+.arr-input {
+  flex: 1; min-width: 200px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px; text-align: center;
+}
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+/* Voice toggle */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
+<!-- NAVBAR — identical to Insertion Sort, includes theme toggle -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
-
 <div class="algo-page">
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
-
-  <div class="coming-soon">
-    <span class="cs-icon">🔢</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Sudoku Solver</h1>
-    <p class="cs-sub">Solve 9×9 Sudoku using constraint-based backtracking.</p>
-
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Constraint propagation</li>
-        <li>Backtracking with forward checking</li>
-        <li>Empty cell selection strategy</li>
-      </ul>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🧩</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Backtracking Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Sudoku Solver (Backtracking)</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
     </div>
-
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      Solve a Sudoku puzzle using backtracking: fill a 9×9 grid with digits 1-9 so each row, column, and 3×3 subgrid contains all digits without repetition.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Worst: <span>O(9!^{9})</span></div>
+      <div class="cplx-chip">Space: <span>O(81)</span></div>
+    </div>
+  </header>
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">🔢</span><div class="cc-title">Cell Filling</div><div class="cc-desc">Finds empty cells and tries numbers 1-9.</div></div>
+    <div class="cc"><span class="cc-icon">🔙</span><div class="cc-title">Backtracking</div><div class="cc-desc">If a number leads to conflict, try next number or backtrack.</div></div>
+    <div class="cc"><span class="cc-icon">✅</span><div class="cc-title">Safety Check</div><div class="cc-desc">A number is safe if not in same row, column, or 3x3 box.</div></div>
+    <div class="cc"><span class="cc-icon">🏁</span><div class="cc-title">Base Case</div><div class="cc-desc">If all cells are filled, a solution is found.</div></div>
+  </div>
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Sudoku Solver with Backtracking! Let me explain how this algorithm works before we begin...</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+  <!-- Status bar -->
+  <!-- Main layout -->
+  <div class="two-col">
+    <!-- LEFT: Canvas -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--cell-given);"></div>Given</div>
+          <div class="li"><div class="ld" style="background:var(--cell-empty);"></div>Empty</div>
+          <div class="li"><div class="ld" style="background:var(--cell-attempt);"></div>Attempting</div>
+          <div class="li"><div class="ld" style="background:var(--cell-conflict);"></div>Conflict</div>
+          <div class="li"><div class="ld" style="background:var(--cell-filled);"></div>Filled</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="340"></canvas>
+      </div>
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random Puzzle</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Sudoku (rows sep by ;, cells by , e.g., 5,3,0,...;...):</label>
+          <input type="text" class="arr-input" id="sudokuInput" value="5,3,0,0,7,0,0,0,0;6,0,0,1,9,5,0,0,0;0,9,8,0,0,0,0,6,0;8,0,0,0,6,0,0,0,3;4,0,0,8,0,3,0,0,1;7,0,0,0,2,0,0,0,6;0,6,0,0,0,0,2,8,0;0,0,0,4,1,9,0,0,5;0,0,0,0,8,0,0,7,9">
+          <button class="btn" onclick="applySudoku()">Apply</button>
+        </div>
+      </div>
+      <div class="status-row">
+        <div class="si"><span class="sl">Cell</span><span class="sv orange" id="sPass">(0,0)</span></div>
+        <div class="si"><span class="sl">Attempts</span><span class="sv" id="sComps">0</span></div>
+        <div class="si"><span class="sl">Backtracks</span><span class="sv" id="sSwaps">0</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="divider-auto"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
+    </div>
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Number Attempts</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSwaps">0</div><div class="stat-box-l">Backtracks</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPasses">0</div><div class="stat-box-l">Cells Filled</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">9x9</div><div class="stat-box-l">Grid</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">isSafe</span>(row, col, num, grid):</span>
+<span id="cl2" class="code-line"> // Check row, col, 3x3 box for num</span>
+<span id="cl3" class="code-line"> <span class="kw">return</span> not in row/col/box</span>
+<span id="cl4" class="code-line"><span class="kw">function</span> <span class="fn">findEmpty</span>(grid):</span>
+<span id="cl5" class="code-line"> <span class="kw">return</span> next empty (row, col) or null</span>
+<span id="cl6" class="code-line"><span class="kw">function</span> <span class="fn">solveSudokuUtil</span>(grid):</span>
+<span id="cl7" class="code-line"> empty = <span class="fn">findEmpty</span>(grid)</span>
+<span id="cl8" class="code-line"> <span class="kw">if</span> not empty: <span class="kw">return true</span></span>
+<span id="cl9" class="code-line"> row, col = empty</span>
+<span id="cl10" class="code-line"> <span class="kw">for</span> num <span class="kw">in</span> 1 to 9:</span>
+<span id="cl11" class="code-line"> <span class="kw">if</span> <span class="fn">isSafe</span>(row, col, num, grid):</span>
+<span id="cl12" class="code-line"> grid[row][col] = num</span>
+<span id="cl13" class="code-line"> <span class="kw">if</span> <span class="fn">solveSudokuUtil</span>(grid): <span class="kw">return true</span></span>
+<span id="cl14" class="code-line"> grid[row][col] = 0 // backtrack</span>
+<span id="cl15" class="code-line"> <span class="kw">return false</span></span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">📋 Current Grid</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
     </div>
   </div>
-</div>
+</div><!-- .algo-page -->
+<script>
+// ════════════════════════════════════════════════
+// THEME TOGGLE
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+// Restore saved theme on load
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+// ════════════════════════════════════════════════
+// WEB SPEECH API
+// ════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English')) ||
+    voices.find(v => v.lang === 'en-US' && v.localService) ||
+    voices.find(v => v.lang.startsWith('en')) ||
+    voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice = ttsVoice;
+    utt.rate = 0.88;
+    utt.pitch = 1.05;
+    utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+function stopSpeech() {
+  synth && synth.cancel();
+  document.getElementById('speakBars').classList.remove('on');
+}
+// ════════════════════════════════════════════════
+// VOICE TOGGLE — default OFF
+// ════════════════════════════════════════════════
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('voiceToggle');
+  const icon = document.getElementById('voiceIcon');
+  const lbl = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+// ════════════════════════════════════════════════
+// SUDOKU SOLVER — STEP GENERATOR
+// ════════════════════════════════════════════════
+function buildSudokuSteps(initialGrid) {
+  const steps = [];
+  const N = 9;
+  const grid = initialGrid.map(row => [...row]);
+  let totalAttempts = 0, totalBacktracks = 0;
+  function pushStep(row, col, num, phase, narration, codeLine, conflict = false) {
+    steps.push({
+      grid: grid.map(r => [...r]), currentRow: row, currentCol: col, currentNum: num, conflict,
+      narration,
+      phase, attempts: totalAttempts, backtracks: totalBacktracks, codeLine,
+    });
+  }
+  function isSafe(row, col, num) {
+    for (let x = 0; x < N; x++) {
+      if (grid[row][x] === num || grid[x][col] === num) return false;
+    }
+    const startRow = row - row % 3, startCol = col - col % 3;
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        if (grid[i + startRow][j + startCol] === num) return false;
+      }
+    }
+    return true;
+  }
+  function findEmpty() {
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < N; j++) {
+        if (grid[i][j] === 0) return [i, j];
+      }
+    }
+    return null;
+  }
+  function solveUtil() {
+    const empty = findEmpty();
+    if (!empty) {
+      pushStep(-1, -1, -1, 'done', 'All cells filled! Solution found.', 8);
+      return true;
+    }
+    const [row, col] = empty;
+    pushStep(row, col, -1, 'active', `Trying to fill cell (${row},${col}).`, 7);
+    for (let num = 1; num <= 9; num++) {
+      totalAttempts++;
+      pushStep(row, col, num, 'attempt', `Attempting number ${num} at (${row},${col}). Checking if safe...`, 11);
+      const safe = isSafe(row, col, num);
+      if (safe) {
+        grid[row][col] = num;
+        pushStep(row, col, num, 'assign', `Number ${num} is safe at (${row},${col}). Proceeding.`, 12);
+        if (solveUtil()) return true;
+        totalBacktracks++;
+        grid[row][col] = 0;
+        pushStep(row, col, num, 'backtrack', `Backtracking from (${row},${col}) with ${num}.`, 14);
+      } else {
+        pushStep(row, col, num, 'conflict', `Number ${num} conflicts at (${row},${col}). Trying next.`, 11, true);
+      }
+    }
+    pushStep(row, col, -1, 'fail', `No valid number for (${row},${col}). Backtracking.`, 15);
+    return false;
+  }
+  pushStep(0, 0, -1, 'active', 'Starting Sudoku Solver.', 6);
+  const success = solveUtil();
+  if (!success) {
+    steps.push({
+      grid: grid.map(r => [...r]), currentRow: -1, currentCol: -1, currentNum: -1, conflict: false,
+      narration: 'No solution found.',
+      phase: 'fail', attempts: totalAttempts, backtracks: totalBacktracks, codeLine: 15,
+    });
+  }
+  return steps;
+}
+// ════════════════════════════════════════════════
+// INTRO SPEECH
+// ════════════════════════════════════════════════
+let introAborted = false;
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const introLines = [
+    "Hello! I am your algorithm teacher. Today we are learning Sudoku Solver using Backtracking.",
+    "Sudoku is a 9x9 grid where each row, column, and 3x3 subgrid must contain digits 1-9 without repetition.",
+    "The backtracking approach finds an empty cell and tries numbers 1-9, checking safety (no conflicts in row, column, box).",
+    "If a number works, it proceeds recursively. If not, it tries the next number.",
+    "If no number works, it backtracks to the previous cell and tries another number there.",
+    "In the visualization, orange cells are being attempted, pink shows conflicts, green are filled, and dark are given.",
+    "Now, turn on Voice Mode and press Play. I will guide you through every single step."
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < introLines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = introLines[i];
+    await speak(introLines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+// ════════════════════════════════════════════════
+// CANVAS
+// ════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+function drawGrid(step, initialGrid) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!step) return;
+ 
+  const computedStyle = getComputedStyle(document.documentElement);
+  const cellEmpty = computedStyle.getPropertyValue('--cell-empty').trim() || '#ffffff';
+  const cellAttempt = computedStyle.getPropertyValue('--cell-attempt').trim() || '#ff8c42';
+  const cellConflict = computedStyle.getPropertyValue('--cell-conflict').trim() || '#ff6b9d';
+  const cellFilled = computedStyle.getPropertyValue('--cell-filled').trim() || '#06d6a0';
+  const cellGiven = computedStyle.getPropertyValue('--cell-given').trim() || '#1a2840';
+ 
+  const { grid, currentRow, currentCol, currentNum, conflict, phase } = step;
+  const N = 9;
+  const cellSize = Math.min(Math.floor(canvas.width / N), Math.floor(canvas.height / N));
+  const offsetX = (canvas.width - N * cellSize) / 2;
+  const offsetY = (canvas.height - N * cellSize) / 2;
+ 
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      let fill = cellEmpty;
+      if (initialGrid[i][j] !== 0) {
+        fill = cellGiven;
+      } else if (grid[i][j] !== 0) {
+        fill = cellFilled;
+      }
+      if (i === currentRow && j === currentCol) {
+        if (phase === 'conflict' || conflict) {
+          fill = cellConflict;
+        } else if (phase === 'attempt' || phase === 'assign') {
+          fill = cellAttempt;
+        }
+      }
+      ctx.fillStyle = fill;
+      ctx.fillRect(offsetX + j * cellSize, offsetY + i * cellSize, cellSize, cellSize);
+ 
+      // Draw number
+      if (grid[i][j] !== 0) {
+        ctx.font = `${cellSize * 0.6}px mono`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = initialGrid[i][j] !== 0 ? '#ffffff' : '#000000';
+        ctx.fillText(grid[i][j], offsetX + j * cellSize + cellSize / 2, offsetY + i * cellSize + cellSize / 2);
+      }
+ 
+      // Draw borders
+      ctx.strokeStyle = '#2a4060';
+      ctx.lineWidth = (j % 3 === 0) ? 3 : 1;
+      ctx.beginPath();
+      ctx.moveTo(offsetX + j * cellSize, offsetY);
+      ctx.lineTo(offsetX + j * cellSize, offsetY + N * cellSize);
+      ctx.stroke();
+      ctx.lineWidth = (i % 3 === 0) ? 3 : 1;
+      ctx.beginPath();
+      ctx.moveTo(offsetX, offsetY + i * cellSize);
+      ctx.lineTo(offsetX + N * cellSize, offsetY + i * cellSize);
+      ctx.stroke();
+    }
+  }
+  // Outer borders
+  ctx.lineWidth = 3;
+  ctx.strokeRect(offsetX, offsetY, N * cellSize, N * cellSize);
+}
+// ════════════════════════════════════════════════
+// CONTROLLER
+// ════════════════════════════════════════════════
+let steps = [];
+let sudoku = parseSudoku("5,3,0,0,7,0,0,0,0;6,0,0,1,9,5,0,0,0;0,9,8,0,0,0,0,6,0;8,0,0,0,6,0,0,0,3;4,0,0,8,0,3,0,0,1;7,0,0,0,2,0,0,0,6;0,6,0,0,0,0,2,8,0;0,0,0,4,1,9,0,0,5;0,0,0,0,8,0,0,7,9"); // Default
+let initialSudoku = sudoku.map(row => [...row]);
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
+function onSpeedChange(val) {
+  speedMult = parseInt(val);
+  document.getElementById('speedVal').textContent = val + '×';
+}
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
+function updateStatusBar(step, idx) {
+  document.getElementById('sPass').textContent = step.currentRow >= 0 ? `(${step.currentRow},${step.currentCol})` : '(0,0)';
+  document.getElementById('sComps').textContent = step.attempts || 0;
+  document.getElementById('sSwaps').textContent = step.backtracks || 0;
+  document.getElementById('statComps').textContent = step.attempts || 0;
+  document.getElementById('statSwaps').textContent = step.backtracks || 0;
+  document.getElementById('statPasses').textContent = step.grid.flat().filter(cell => cell !== 0).length;
+  document.getElementById('arrDisplay').textContent = step.grid.map(row => row.map(v => v || '.').join(' ')).join('\n');
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { active:['ph-active','Filling'], attempt:['ph-compare','Attempting'], conflict:['ph-swap','Conflict'], backtrack:['ph-swap','Backtracking'], assign:['ph-active','Assigning'], done:['ph-done','Done'], fail:['ph-swap','Failed'], idle:['ph-idle','Idle'] };
+  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+  for (let i = 1; i <= 15; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
+  }
+}
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  drawGrid(step, initialSudoku);
+  updateNarration(step);
+  updateStatusBar(step, idx);
+  if (autoAdvance) scheduleNext(step);
+}
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+function nextStep() {
+  clearIntroTimeouts();
+  stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+function resetAll() {
+  stopPlay();
+  introAborted = true;
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  drawGrid(steps[0], initialSudoku);
+  document.getElementById('arrDisplay').textContent = steps[0].grid.map(row => row.map(v => v || '.').join(' ')).join('\n');
+  ['sPass','sComps','sSwaps','statComps','statSwaps'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('statPasses').textContent = '0';
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  for (let i = 1; i <= 15; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; }
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  if (voiceEnabled) playIntroSpeech();
+}
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+function parseSudoku(raw) {
+  return raw.split(';').map(row => row.split(',').map(cell => parseInt(cell.trim())));
+}
+function applySudoku() {
+  const raw = document.getElementById('sudokuInput').value;
+  sudoku = parseSudoku(raw);
+  if (sudoku.length !== 9 || sudoku[0].length !== 9) { alert('Enter a valid 9x9 Sudoku grid.'); return; }
+  initialSudoku = sudoku.map(row => [...row]);
+  init();
+}
+const puzzles = [
+"5,3,0,0,7,0,0,0,0;6,0,0,1,9,5,0,0,0;0,9,8,0,0,0,0,6,0;8,0,0,0,6,0,0,0,3;4,0,0,8,0,3,0,0,1;7,0,0,0,2,0,0,0,6;0,6,0,0,0,0,2,8,0;0,0,0,4,1,9,0,0,5;0,0,0,0,8,0,0,7,9",
+"0,0,0,2,6,0,7,0,1;6,8,0,0,7,0,0,9,0;1,9,0,0,0,4,5,0,0;8,2,0,1,0,0,0,4,0;0,0,4,6,0,2,9,0,0;0,5,0,0,0,3,0,2,8;0,0,9,3,0,0,0,7,4;0,4,0,0,5,0,0,3,6;7,0,3,0,1,8,0,0,0",
+"4,0,0,0,0,5,0,0,0;0,0,2,0,0,0,0,8,0;0,7,0,0,1,0,5,0,0;0,0,0,0,0,9,0,0,0;0,2,0,0,7,0,0,6,0;5,0,0,4,0,0,0,0,3;0,0,1,0,0,0,0,0,9;0,3,0,0,0,0,8,0,0;0,0,0,3,0,0,0,7,0"
+];
+function randomize() {
+  const rand = puzzles[Math.floor(Math.random() * puzzles.length)];
+  document.getElementById('sudokuInput').value = rand;
+  sudoku = parseSudoku(rand);
+  initialSudoku = sudoku.map(row => [...row]);
+  init();
+}
+function init() {
+  resizeCanvas();
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+  document.getElementById('statN').textContent = '9 x 9';
+  document.getElementById('statPasses').textContent = '0';
+  steps = buildSudokuSteps(sudoku);
+  stopPlay();
+  stepIdx = -1;
+  drawGrid(steps[0], initialSudoku);
+  document.getElementById('arrDisplay').textContent = steps[0].grid.map(row => row.map(v => v || '.').join(' ')).join('\n');
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) drawGrid(steps[stepIdx], initialSudoku);
+  else if (steps.length > 0) drawGrid(steps[0], initialSudoku);
+});
+init();
+</script>
 </body>
 </html>
