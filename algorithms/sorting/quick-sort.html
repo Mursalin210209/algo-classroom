@@ -4,76 +4,916 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quick Sort — AlgoClassroom</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #060810;
+  --surface:  #0b0f1a;
+  --surface2: #0f1420;
+  --surface3: #131a28;
+  --border:   #1a2438;
+  --border2:  #22304a;
+  --text:     #d0e2f8;
+  --text-dim: #2e4468;
+  --text-mid: #5878a8;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Outfit', sans-serif;
+
+  /* accent palette — warm red/orange scheme for QuickSort "danger/speed" feel */
+  --red:    #ff3d5a;
+  --orange: #ff7c2a;
+  --gold:   #ffc23a;
+  --teal:   #00e0b8;
+  --blue:   #3d9aff;
+  --green:  #2de89a;
+  --violet: #a78bfa;
+
+  /* tile state colors */
+  --c-pivot:   #ffc23a;
+  --c-left:    #3d9aff;
+  --c-right:   #ff3d5a;
+  --c-swap:    #ff7c2a;
+  --c-sorted:  #2de89a;
+  --c-active:  rgba(255,194,58,0.12);
+  --c-frozen:  rgba(45,232,154,0.07);
+  --c-outside: rgba(30,40,60,0.5);
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+
+[data-theme="light"] {
+  --bg:       #f0f3fa;
+  --surface:  #ffffff;
+  --surface2: #f5f8ff;
+  --surface3: #edf1fb;
+  --border:   #cdd8ef;
+  --border2:  #b8c8e0;
+  --text:     #0f1e38;
+  --text-dim: #aabbd0;
+  --text-mid: #5878a0;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; overflow-x: hidden; }
+
+/* ── SCANLINE BG ── */
+.bg-scan {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,60,90,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,60,90,0.015) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+.bg-glow {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 75% 15%, rgba(255,60,90,0.06) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 35% at 15% 80%, rgba(255,124,42,0.05) 0%, transparent 65%);
+}
+
+/* ── NAVBAR ── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(6,8,16,0.92); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+[data-theme="light"] .navbar { background: rgba(240,243,250,0.94); }
+.nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 28px; height: 56px; display: flex; align-items: center; gap: 28px; }
+.nav-logo { font-family: var(--mono); font-size: 13px; font-weight: 800; color: var(--red); text-decoration: none; letter-spacing: -0.5px; }
+.logo-b { color: var(--text-dim); }
+.logo-d { color: var(--gold); }
+.nav-links { display: flex; gap: 22px; }
+.nav-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; transition: color .2s; font-weight: 500; }
+.nav-links a:hover { color: var(--text); }
+.theme-btn { margin-left: auto; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; cursor: pointer; font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; transition: all .2s; }
+.theme-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* ── PAGE ── */
+.page { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 30px 28px 80px; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-family: var(--mono); color: var(--text-dim); text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 22px; transition: color .2s; }
+.back-link:hover { color: var(--red); }
+
+/* ── HEADER ── */
+.algo-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+.algo-title-row { display: flex; align-items: center; gap: 18px; margin-bottom: 10px; }
+.algo-emoji { font-size: 42px; }
+.algo-title { font-family: var(--sans); font-size: 2.8rem; font-weight: 900; letter-spacing: -2px; line-height: 1; }
+.diff-badge { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; background: rgba(255,61,90,0.1); color: var(--red); border: 1px solid rgba(255,61,90,0.3); margin-left: auto; }
+.algo-desc { color: var(--text-mid); font-size: 14px; line-height: 1.8; max-width: 660px; margin-bottom: 14px; font-weight: 300; }
+.complexity { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+.chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 11px; font-family: var(--mono); font-size: 10px; color: var(--text-mid); }
+.chip span { color: var(--gold); font-weight: 700; }
+
+/* ── CONCEPTS ── */
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 12px; margin-bottom: 22px; }
+.cc { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px 17px; transition: border-color .25s, transform .25s; }
+.cc:hover { border-color: rgba(255,61,90,0.25); transform: translateY(-2px); }
+.cc-icon { font-size: 20px; margin-bottom: 8px; display: block; }
+.cc-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+.cc-desc { font-size: 11px; color: var(--text-mid); line-height: 1.65; font-weight: 300; }
+
+/* ── NARRATION ── */
+.narration { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: 12px; padding: 13px 17px; display: flex; align-items: flex-start; gap: 13px; margin-bottom: 20px; }
+.teacher { font-size: 26px; flex-shrink: 0; margin-top: 2px; }
+.nar-text { font-size: 13px; color: var(--text); line-height: 1.75; flex: 1; font-weight: 300; }
+.nar-text.intro { color: var(--gold); font-weight: 500; animation: glowG 2s infinite; }
+@keyframes glowG { 0%,100%{text-shadow:0 0 5px rgba(255,194,58,.2)} 50%{text-shadow:0 0 18px rgba(255,194,58,.55)} }
+.speak-bars { display: flex; align-items: flex-end; gap: 2px; height: 18px; flex-shrink: 0; }
+.speak-bars span { display: block; width: 3px; background: var(--red); border-radius: 2px; height: 4px; }
+.speak-bars.on span:nth-child(1) { animation: sb .5s ease infinite; }
+.speak-bars.on span:nth-child(2) { animation: sb .5s .1s ease infinite; }
+.speak-bars.on span:nth-child(3) { animation: sb .5s .2s ease infinite; }
+.speak-bars.on span:nth-child(4) { animation: sb .5s .3s ease infinite; }
+.speak-bars.on span:nth-child(5) { animation: sb .5s .4s ease infinite; }
+@keyframes sb { 0%,100%{height:4px} 50%{height:16px} }
+
+/* ── LAYOUT ── */
+.main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
+@media (max-width: 960px) { .main-grid { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
+.panel-hd { font-family: var(--mono); font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; }
+
+/* ══════════════════════════════════════
+   QUICK SORT  —  PARTITION LANE VIZ
+   ══════════════════════════════════════ */
+
+/* The main array row */
+.array-lane {
+  position: relative;
+  padding: 0 4px;
+  min-height: 130px;
+  margin-bottom: 8px;
+}
+
+/* Partition region highlight */
+.partition-region {
+  position: absolute;
+  top: 0; bottom: 0;
+  background: var(--c-active);
+  border-radius: 8px;
+  border: 1px solid rgba(255,194,58,0.18);
+  transition: left .35s ease, width .35s ease;
+  pointer-events: none;
+}
+
+/* Frozen (sorted) region highlight */
+.sorted-region {
+  position: absolute;
+  top: 0; bottom: 0;
+  background: var(--c-frozen);
+  border-radius: 8px;
+  border: 1px solid rgba(45,232,154,0.15);
+  pointer-events: none;
+}
+
+/* Tile row */
+.tile-row {
+  display: flex;
+  gap: 5px;
+  align-items: flex-end;
+  padding: 28px 6px 32px;
+  position: relative;
+  z-index: 1;
+  flex-wrap: nowrap;
+  min-height: 94px;
+}
+
+/* Individual tile */
+.qtile {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  flex-shrink: 0;
+}
+.qtile-val {
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 9px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface3);
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  color: var(--text-mid);
+  transition: background .25s, border-color .25s, color .25s, transform .2s, box-shadow .25s;
+  position: relative;
+}
+.qtile-idx {
+  font-family: var(--mono); font-size: 8px; color: var(--text-dim);
+  letter-spacing: 0.5px;
+}
+
+/* Pointer label above tile */
+.qtile-ptr {
+  position: absolute;
+  top: -22px;
+  left: 50%; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 9px; font-weight: 800;
+  letter-spacing: 1px; white-space: nowrap;
+  padding: 1px 5px; border-radius: 4px;
+}
+
+/* Tile states */
+.qtile-val.st-pivot   { background: rgba(255,194,58,0.2);  border-color: var(--gold);   color: var(--gold);   box-shadow: 0 0 14px rgba(255,194,58,0.35); transform: translateY(-4px) scale(1.05); }
+.qtile-val.st-left    { background: rgba(61,154,255,0.2);  border-color: var(--blue);   color: var(--blue);   box-shadow: 0 0 10px rgba(61,154,255,0.3); }
+.qtile-val.st-right   { background: rgba(255,61,90,0.2);   border-color: var(--red);    color: var(--red);    box-shadow: 0 0 10px rgba(255,61,90,0.3); }
+.qtile-val.st-swap    { background: rgba(255,124,42,0.25); border-color: var(--orange); color: var(--orange); box-shadow: 0 0 14px rgba(255,124,42,0.4); transform: scale(1.08); }
+.qtile-val.st-sorted  { background: rgba(45,232,154,0.15); border-color: var(--green);  color: var(--green); }
+.qtile-val.st-outside { background: rgba(20,30,50,0.4);    border-color: var(--border); color: var(--text-dim); opacity: 0.5; }
+.qtile-val.st-placed  { background: rgba(167,139,250,0.18);border-color: var(--violet); color: var(--violet); }
+
+/* Pointer label colors */
+.ptr-pivot { background: rgba(255,194,58,0.15); color: var(--gold);   border: 1px solid rgba(255,194,58,0.4); }
+.ptr-i     { background: rgba(61,154,255,0.12); color: var(--blue);   border: 1px solid rgba(61,154,255,0.35); }
+.ptr-j     { background: rgba(255,61,90,0.12);  color: var(--red);    border: 1px solid rgba(255,61,90,0.35); }
+
+/* Range bracket below */
+.range-bar {
+  display: flex; align-items: center; gap: 5px;
+  padding: 8px 6px 0;
+  font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+}
+.range-seg {
+  height: 3px; border-radius: 2px; flex: 1;
+  transition: background .3s, width .3s;
+}
+
+/* ── CALL STACK DISPLAY ── */
+.call-stack-wrap {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;
+  max-height: 140px; overflow-y: auto;
+}
+.cs-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 6px; border-radius: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--text-mid);
+  transition: background .2s;
+}
+.cs-row.active { background: rgba(255,194,58,0.08); color: var(--gold); border-left: 2px solid var(--gold); padding-left: 8px; }
+.cs-depth { color: var(--text-dim); min-width: 16px; }
+.cs-range { color: var(--text); font-weight: 600; }
+.cs-pivot { color: var(--gold); }
+
+/* ── LEGEND ── */
+.legend { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; margin-bottom: 14px; }
+.li { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-mid); font-family: var(--mono); }
+.ld { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+/* ── VOICE ── */
+.voice-btn { margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 7px; padding: 4px 11px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--red); letter-spacing: 1px; transition: all .2s; white-space: nowrap; }
+.voice-btn:hover { background: rgba(255,61,90,0.08); border-color: rgba(255,61,90,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+
+/* ── CONTROLS ── */
+.controls { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px 18px; display: flex; flex-direction: column; gap: 11px; }
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-lbl { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; white-space: nowrap; }
+.arr-input { flex: 1; min-width: 180px; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; color: var(--text); font-family: var(--mono); font-size: 11px; outline: none; transition: border-color .2s; }
+.arr-input:focus { border-color: var(--red); }
+.btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-family: var(--mono); font-size: 11px; color: var(--text); letter-spacing: 0.3px; transition: all .2s; white-space: nowrap; }
+.btn:hover { background: var(--surface3); border-color: var(--border2); }
+.btn-primary { background: rgba(255,61,90,0.08); border-color: rgba(255,61,90,0.3); color: var(--red); }
+.btn-primary:hover { background: rgba(255,61,90,0.15); }
+.btn-danger { background: rgba(255,124,42,0.07); border-color: rgba(255,124,42,0.25); color: var(--orange); }
+.btn-danger:hover { background: rgba(255,124,42,0.14); }
+.speed-ctrl { display: flex; align-items: center; gap: 8px; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+.speed-val { font-family: var(--mono); font-size: 10px; color: var(--red); min-width: 24px; }
+input[type=range] { width: 80px; accent-color: var(--red); cursor: pointer; }
+
+/* ── STATUS BAR ── */
+.status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 8px 14px; margin-top: 12px; }
+.si { display: flex; align-items: center; gap: 6px; }
+.sl { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; }
+.sv { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text); }
+.sv.r { color: var(--red); }
+.phase-badge { font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; }
+.ph-idle     { background: rgba(46,68,104,0.15); color: var(--text-dim); border: 1px solid var(--border); }
+.ph-pivot    { background: rgba(255,194,58,0.1);  color: var(--gold);    border: 1px solid rgba(255,194,58,0.3); }
+.ph-scan     { background: rgba(61,154,255,0.08); color: var(--blue);    border: 1px solid rgba(61,154,255,0.3); }
+.ph-swap     { background: rgba(255,124,42,0.1);  color: var(--orange);  border: 1px solid rgba(255,124,42,0.3); }
+.ph-place    { background: rgba(167,139,250,0.1); color: var(--violet);  border: 1px solid rgba(167,139,250,0.3); }
+.ph-done     { background: rgba(45,232,154,0.07); color: var(--green);   border: 1px solid rgba(45,232,154,0.3); }
+.divider-a { flex: 1; }
+.prog-wrap { width: 80px; height: 4px; background: var(--border); border-radius: 2px; }
+.prog-fill { height: 100%; background: var(--red); border-radius: 2px; transition: width .3s; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+
+/* ── CODE BLOCK ── */
+.code-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 14px 16px; font-family: var(--mono); font-size: 11px; line-height: 2.1; overflow-x: auto; }
+.code-line { display: block; padding: 0 8px; border-radius: 4px; transition: background .2s; white-space: pre; }
+.kw  { color: #93c5fd; }
+.fn  { color: var(--teal); }
+.num { color: var(--gold); }
+.cm  { color: var(--text-dim); font-style: italic; }
+
+/* ── STATS ── */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; text-align: center; }
+.stat-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--gold); }
+.stat-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
+
+/* ── PIVOT STRATEGY ── */
+.strat-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.strat-btn { font-family: var(--mono); font-size: 10px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-mid); cursor: pointer; transition: all .2s; letter-spacing: 0.5px; }
+.strat-btn:hover { border-color: var(--gold); color: var(--gold); }
+.strat-btn.active { background: rgba(255,194,58,0.1); border-color: var(--gold); color: var(--gold); }
 </style>
 </head>
 <body>
+<div class="bg-scan"></div>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
 <nav class="navbar">
   <div class="nav-inner">
-    <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <a href="../../index.html" class="nav-logo"><span class="logo-b">{</span>algo<span class="logo-d">.</span>classroom<span class="logo-b">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">☀ Light</button>
   </div>
 </nav>
 
-<div class="algo-page">
+<div class="page">
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">⚡</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Quick Sort</h1>
-    <p class="cs-sub">Choose a pivot, partition array around it, recursively sort each side.</p>
+  <header style="margin-bottom:22px;">
+    <div class="algo-tag">Sorting Algorithm</div>
+    <div class="algo-title-row">
+      <span class="algo-emoji">⚡</span>
+      <h1 class="algo-title">Quick Sort</h1>
+      <span class="diff-badge">Intermediate</span>
+    </div>
+    <p class="algo-desc">
+      Choose a pivot, partition the array so every element left of the pivot is smaller and every element right is larger, then recursively sort each side. In-place and blazingly fast in practice.
+    </p>
+    <div class="complexity">
+      <div class="chip">Best: <span>O(n log n)</span></div>
+      <div class="chip">Average: <span>O(n log n)</span></div>
+      <div class="chip">Worst: <span>O(n²)</span></div>
+      <div class="chip">Space: <span>O(log n)</span></div>
+      <div class="chip">Stable: <span>✗ No</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Pivot selection strategies (random, median)</li>
-        <li>In-place partitioning</li>
-        <li>Average O(n log n), worst O(n²)</li>
-      </ul>
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">🎯</span><div class="cc-title">Pivot Selection</div><div class="cc-desc">Pick one element as the pivot. Its final position after partitioning is exactly correct — it never moves again.</div></div>
+    <div class="cc"><span class="cc-icon">↔️</span><div class="cc-title">Partition</div><div class="cc-desc">Scan with two pointers: i finds elements ≤ pivot (from left), j scans right-to-left. Swap when they're out of order.</div></div>
+    <div class="cc"><span class="cc-icon">📦</span><div class="cc-title">In-Place</div><div class="cc-desc">Unlike Merge Sort, no extra arrays are needed. All swaps happen within the original array using O(log n) stack space.</div></div>
+    <div class="cc"><span class="cc-icon">📊</span><div class="cc-title">Average O(n log n)</span></div><div class="cc-desc">With a good pivot, partitions are roughly balanced. Bad pivots (always min/max) degrade to O(n²).</div></div>
+  </div>
+
+  <div class="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="nar-text" id="narText">Welcome to Quick Sort! Watch how the pivot divides the array and pointers scan for out-of-order pairs.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="main-grid">
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">⚡ Partition Lane — In-Place View</div>
+
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:rgba(255,194,58,0.3);border:1px solid #ffc23a;"></div>Pivot</div>
+          <div class="li"><div class="ld" style="background:rgba(61,154,255,0.3);border:1px solid #3d9aff;"></div>i pointer</div>
+          <div class="li"><div class="ld" style="background:rgba(255,61,90,0.3);border:1px solid #ff3d5a;"></div>j pointer</div>
+          <div class="li"><div class="ld" style="background:rgba(255,124,42,0.3);border:1px solid #ff7c2a;"></div>Swapping</div>
+          <div class="li"><div class="ld" style="background:rgba(45,232,154,0.25);border:1px solid #2de89a;"></div>Sorted</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span><span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+
+        <!-- Pivot strategy selector -->
+        <div style="margin-bottom:12px;">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;">Pivot Strategy</div>
+          <div class="strat-row">
+            <button class="strat-btn active" id="strat-last"  onclick="setPivotStrat('last')">Last Element</button>
+            <button class="strat-btn"         id="strat-first" onclick="setPivotStrat('first')">First Element</button>
+            <button class="strat-btn"         id="strat-mid"   onclick="setPivotStrat('mid')">Middle Element</button>
+            <button class="strat-btn"         id="strat-rand"  onclick="setPivotStrat('rand')">Random</button>
+          </div>
+        </div>
+
+        <!-- Main array lane -->
+        <div class="array-lane" id="arrayLane">
+          <div class="partition-region" id="partRegion" style="display:none;"></div>
+          <div class="tile-row" id="tileRow"></div>
+          <div class="range-bar" id="rangeBar"></div>
+        </div>
+
+        <!-- Call stack -->
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;">📚 Recursion Stack</div>
+        <div class="call-stack-wrap" id="callStack"></div>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <span class="input-lbl">Array (comma-separated):</span>
+          <input class="arr-input" id="arrInput" value="10, 7, 8, 9, 1, 5">
+          <button class="btn" onclick="applyArray()">Apply</button>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="si"><span class="sl">Pivot</span><span class="sv r" id="sPivot">—</span></div>
+        <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
+        <div class="si"><span class="sl">Swaps</span><span class="sv" id="sSwaps">0</span></div>
+        <div class="divider-a"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-n" id="statN">0</div><div class="stat-l">Array Size</div></div>
+          <div class="stat-box"><div class="stat-n" id="statComps">0</div><div class="stat-l">Comparisons</div></div>
+          <div class="stat-box"><div class="stat-n" id="statSwaps">0</div><div class="stat-l">Swaps</div></div>
+          <div class="stat-box"><div class="stat-n" id="statCalls">0</div><div class="stat-l">Recursive Calls</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1"  class="code-line"><span class="kw">function</span> <span class="fn">quickSort</span>(arr, lo, hi):</span>
+<span id="cl2"  class="code-line">  <span class="kw">if</span> lo >= hi: <span class="kw">return</span></span>
+<span id="cl3"  class="code-line">  p = <span class="fn">partition</span>(arr, lo, hi)</span>
+<span id="cl4"  class="code-line">  <span class="fn">quickSort</span>(arr, lo, p-<span class="num">1</span>)</span>
+<span id="cl5"  class="code-line">  <span class="fn">quickSort</span>(arr, p+<span class="num">1</span>, hi)</span>
+<span id="cl6"  class="code-line"></span>
+<span id="cl7"  class="code-line"><span class="kw">function</span> <span class="fn">partition</span>(arr, lo, hi):</span>
+<span id="cl8"  class="code-line">  pivot = arr[hi]  <span class="cm">← last-element strategy</span></span>
+<span id="cl9"  class="code-line">  i = lo - <span class="num">1</span></span>
+<span id="cl10" class="code-line">  <span class="kw">for</span> j = lo <span class="kw">to</span> hi-<span class="num">1</span>:</span>
+<span id="cl11" class="code-line">    <span class="kw">if</span> arr[j] <= pivot:</span>
+<span id="cl12" class="code-line">      i++</span>
+<span id="cl13" class="code-line">      <span class="fn">swap</span>(arr[i], arr[j])</span>
+<span id="cl14" class="code-line">  <span class="fn">swap</span>(arr[i+<span class="num">1</span>], arr[hi])</span>
+<span id="cl15" class="code-line">  <span class="kw">return</span> i+<span class="num">1</span></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Current Array</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:12px;color:var(--text);line-height:2;word-break:break-all;">—</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:6px;" id="rangeLabel">—</div>
+      </div>
+
     </div>
   </div>
 </div>
+
+<script>
+// ══ THEME ══
+function toggleTheme() {
+  const h = document.documentElement, isLight = h.getAttribute('data-theme') !== 'light';
+  h.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  document.getElementById('themeBtn').textContent = isLight ? '🌙 Dark' : '☀ Light';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+(function(){ const s=localStorage.getItem('theme'); if(s==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('themeBtn').textContent='🌙 Dark';} })();
+
+// ══ TTS ══
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices(){ const vv=synth.getVoices(); ttsVoice=vv.find(v=>v.name.includes('Google UK English Female'))||vv.find(v=>v.name.includes('Google US English'))||vv.find(v=>v.lang==='en-US'&&v.localService)||vv.find(v=>v.lang.startsWith('en'))||vv[0]||null; }
+loadVoices(); if(synth.onvoiceschanged!==undefined) synth.onvoiceschanged=loadVoices;
+let voiceEnabled=false;
+function speak(t){ return new Promise(r=>{ if(!voiceEnabled||!synth){r();return;} synth.cancel(); const u=new SpeechSynthesisUtterance(t); u.voice=ttsVoice;u.rate=0.88;u.pitch=1.05;u.volume=1; u.onstart=()=>document.getElementById('speakBars').classList.add('on'); u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');r();}; synth.speak(u); }); }
+function stopSpeech(){ synth&&synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+function toggleVoice(){
+  voiceEnabled=!voiceEnabled;
+  const btn=document.getElementById('voiceToggle'),icon=document.getElementById('voiceIcon'),lbl=document.getElementById('voiceLabel');
+  if(voiceEnabled){icon.textContent='🔊';lbl.textContent='Voice On';btn.classList.remove('off');document.getElementById('speedWrap').style.display='none';if(isPlaying){stopPlay();startPlay();}}
+  else{icon.textContent='🔇';lbl.textContent='Voice Off';btn.classList.add('off');stopSpeech();document.getElementById('speedWrap').style.display='';if(isPlaying){stopPlay();startPlay();}}
+}
+
+// ══ PIVOT STRATEGY ══
+let pivotStrat = 'last';
+function setPivotStrat(s) {
+  pivotStrat = s;
+  document.querySelectorAll('.strat-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('strat-'+s).classList.add('active');
+  init();
+}
+function choosePivotIdx(lo, hi) {
+  if (pivotStrat === 'first') return lo;
+  if (pivotStrat === 'mid')   return Math.floor((lo + hi) / 2);
+  if (pivotStrat === 'rand')  return lo + Math.floor(Math.random() * (hi - lo + 1));
+  return hi; // last (default)
+}
+
+// ══════════════════════════════
+// QUICK SORT STEP GENERATOR
+// Lomuto partition scheme
+// ══════════════════════════════
+function buildQuickSortSteps(inputArr) {
+  const steps = [];
+  const arr = [...inputArr];
+  const n = arr.length;
+  let comps = 0, swaps = 0, calls = 0;
+  const sortedSet = new Set();
+  const callStack = [];  // {lo, hi, pivotVal}
+
+  function snap(opts) {
+    steps.push({
+      arr:       [...arr],
+      sorted:    new Set(sortedSet),
+      callStack: callStack.map(f => ({...f})),
+      ...opts,
+      comps, swaps, calls,
+    });
+  }
+
+  snap({
+    phase: 'pivot', codeLine: 1,
+    lo: 0, hi: n-1, pivotIdx: -1, pivotVal: null,
+    i: -1, j: -1, swapA: -1, swapB: -1,
+    narration: `Starting Quick Sort on [${arr.join(', ')}]. We'll pick a pivot, partition, then recurse on both sides.`,
+  });
+
+  function quickSort(lo, hi) {
+    if (lo >= hi) {
+      if (lo === hi) sortedSet.add(lo);
+      if (lo >= hi) return;
+    }
+    calls++;
+
+    // Choose pivot and move it to hi (for Lomuto)
+    let pivIdx = choosePivotIdx(lo, hi);
+    if (pivIdx !== hi) {
+      [arr[pivIdx], arr[hi]] = [arr[hi], arr[pivIdx]]; swaps++;
+    }
+    const pivotVal = arr[hi];
+
+    callStack.push({ lo, hi, pivotVal, active: true });
+
+    snap({
+      phase: 'pivot', codeLine: 8,
+      lo, hi, pivotIdx: hi, pivotVal,
+      i: lo-1, j: lo, swapA: -1, swapB: -1,
+      narration: `quickSort(${lo}, ${hi}) — Call #${calls}. Pivot = ${pivotVal} (at index ${hi}). i starts at ${lo-1}, j will scan from ${lo} to ${hi-1}.`,
+    });
+
+    // Partition
+    let i = lo - 1;
+    for (let j = lo; j < hi; j++) {
+      comps++;
+      const isLE = arr[j] <= pivotVal;
+      snap({
+        phase: 'scan', codeLine: 11,
+        lo, hi, pivotIdx: hi, pivotVal,
+        i, j, swapA: -1, swapB: -1,
+        narration: `Comparing arr[${j}]=${arr[j]} with pivot ${pivotVal}: ${arr[j]} ${isLE ? '≤' : '>'} ${pivotVal}. ${isLE ? 'Element belongs left — will swap.' : 'Element stays right.'}`,
+      });
+
+      if (isLE) {
+        i++;
+        if (i !== j) {
+          [arr[i], arr[j]] = [arr[j], arr[i]]; swaps++;
+          snap({
+            phase: 'swap', codeLine: 13,
+            lo, hi, pivotIdx: hi, pivotVal,
+            i, j, swapA: i, swapB: j,
+            narration: `Swap! arr[${i}]=${arr[j]} ↔ arr[${j}]=${arr[i]}. Elements ≤ pivot accumulate on the left side. Total swaps: ${swaps}.`,
+          });
+        } else {
+          snap({
+            phase: 'scan', codeLine: 12,
+            lo, hi, pivotIdx: hi, pivotVal,
+            i, j, swapA: -1, swapB: -1,
+            narration: `arr[${j}]=${arr[j]} ≤ pivot. i advances to ${i} — already in place, no swap needed.`,
+          });
+        }
+      }
+    }
+
+    // Place pivot
+    const pivotFinal = i + 1;
+    if (pivotFinal !== hi) {
+      [arr[pivotFinal], arr[hi]] = [arr[hi], arr[pivotFinal]]; swaps++;
+    }
+    sortedSet.add(pivotFinal);
+
+    snap({
+      phase: 'place', codeLine: 14,
+      lo, hi, pivotIdx: pivotFinal, pivotVal,
+      i: pivotFinal, j: -1, swapA: pivotFinal, swapB: -1,
+      narration: `Pivot ${pivotVal} placed at index ${pivotFinal} — its final sorted position! Everything left is ≤ ${pivotVal}, everything right is > ${pivotVal}.`,
+    });
+
+    callStack[callStack.length - 1].active = false;
+    callStack[callStack.length - 1].done = true;
+
+    // Recurse left
+    if (lo < pivotFinal - 1) {
+      snap({
+        phase: 'pivot', codeLine: 4,
+        lo, hi: pivotFinal - 1, pivotIdx: pivotFinal, pivotVal,
+        i: -1, j: -1, swapA: -1, swapB: -1,
+        narration: `Recurse LEFT: quickSort(${lo}, ${pivotFinal-1}) — sorting the left partition [${arr.slice(lo, pivotFinal).join(', ')}].`,
+      });
+      quickSort(lo, pivotFinal - 1);
+    } else if (lo === pivotFinal - 1) {
+      sortedSet.add(lo);
+    }
+
+    // Recurse right
+    if (pivotFinal + 1 < hi) {
+      snap({
+        phase: 'pivot', codeLine: 5,
+        lo: pivotFinal + 1, hi, pivotIdx: pivotFinal, pivotVal,
+        i: -1, j: -1, swapA: -1, swapB: -1,
+        narration: `Recurse RIGHT: quickSort(${pivotFinal+1}, ${hi}) — sorting the right partition [${arr.slice(pivotFinal+1, hi+1).join(', ')}].`,
+      });
+      quickSort(pivotFinal + 1, hi);
+    } else if (pivotFinal + 1 === hi) {
+      sortedSet.add(hi);
+    }
+
+    callStack.pop();
+  }
+
+  quickSort(0, n - 1);
+
+  // Mark all as sorted
+  for (let k = 0; k < n; k++) sortedSet.add(k);
+  snap({
+    phase: 'done', codeLine: 1,
+    lo: 0, hi: n-1, pivotIdx: -1, pivotVal: null,
+    i: -1, j: -1, swapA: -1, swapB: -1,
+    narration: `Quick Sort complete! [${arr.join(', ')}] — fully sorted. ${comps} comparisons, ${swaps} swaps, ${calls} recursive calls.`,
+  });
+
+  return steps;
+}
+
+// ══════════════════════════════
+// RENDER
+// ══════════════════════════════
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+
+  // Build tiles
+  const tileRow = document.getElementById('tileRow');
+  tileRow.innerHTML = '';
+  const n = step.arr.length;
+  step.arr.forEach((val, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'qtile';
+
+    const vEl = document.createElement('div');
+    vEl.className = 'qtile-val';
+
+    // Determine state
+    let state = '';
+    if (step.sorted && step.sorted.has(i)) state = 'st-sorted';
+    else if (i < step.lo || i > step.hi) state = 'st-outside';
+    else if (i === step.swapA || i === step.swapB) state = 'st-swap';
+    else if (i === step.pivotIdx) state = 'st-pivot';
+    else if (i === step.i) state = 'st-left';
+    else if (i === step.j) state = 'st-right';
+
+    if (state) vEl.classList.add(state);
+    vEl.textContent = val;
+
+    // Pointer labels
+    if (i === step.pivotIdx && !(step.sorted && step.sorted.has(i))) {
+      const ptr = document.createElement('span');
+      ptr.className = 'qtile-ptr ptr-pivot';
+      ptr.textContent = 'PIVOT';
+      vEl.appendChild(ptr);
+    } else if (i === step.i && step.i >= 0 && i !== step.pivotIdx) {
+      const ptr = document.createElement('span');
+      ptr.className = 'qtile-ptr ptr-i';
+      ptr.textContent = 'i';
+      vEl.appendChild(ptr);
+    }
+    if (i === step.j && step.j >= 0 && i !== step.i) {
+      const ptr = document.createElement('span');
+      ptr.className = 'qtile-ptr ptr-j';
+      ptr.textContent = 'j';
+      vEl.appendChild(ptr);
+    }
+
+    const idxEl = document.createElement('div');
+    idxEl.className = 'qtile-idx';
+    idxEl.textContent = i;
+
+    wrap.appendChild(vEl);
+    wrap.appendChild(idxEl);
+    tileRow.appendChild(wrap);
+  });
+
+  // Partition region highlight
+  const lane     = document.getElementById('arrayLane');
+  const region   = document.getElementById('partRegion');
+  const tileW    = 38 + 5;  // tile + gap
+  const laneLeft = 6;
+
+  if (step.lo >= 0 && step.hi >= step.lo && step.lo < n) {
+    const rx = laneLeft + step.lo * tileW + 28;    // 28 = tile-row padding-left
+    const rw = (step.hi - step.lo + 1) * tileW - 5;
+    region.style.display = '';
+    region.style.left    = rx + 'px';
+    region.style.width   = rw + 'px';
+    region.style.top     = '28px';
+    region.style.bottom  = '32px';
+  } else {
+    region.style.display = 'none';
+  }
+
+  // Range bar (colored segments)
+  const rangeBar = document.getElementById('rangeBar');
+  rangeBar.innerHTML = '';
+  step.arr.forEach((_, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'range-seg';
+    seg.style.width = tileW + 'px';
+    seg.style.flexShrink = 0;
+    seg.style.flex = 'none';
+    if (step.sorted && step.sorted.has(i)) seg.style.background = 'var(--green)';
+    else if (i < step.lo || i > step.hi)   seg.style.background = 'var(--border)';
+    else if (i <= (step.i >= 0 ? step.i : step.lo - 1)) seg.style.background = 'var(--blue)';
+    else seg.style.background = 'rgba(255,61,90,0.4)';
+    rangeBar.appendChild(seg);
+  });
+
+  // Call stack
+  const csEl = document.getElementById('callStack');
+  csEl.innerHTML = '';
+  if (!step.callStack || step.callStack.length === 0) {
+    csEl.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:4px 6px;">Empty — sort complete or not started.</div>`;
+  } else {
+    [...step.callStack].reverse().forEach((frame, ri) => {
+      const row = document.createElement('div');
+      row.className = 'cs-row' + (ri === 0 ? ' active' : '');
+      const depth = step.callStack.length - 1 - ri;
+      row.innerHTML = `<span class="cs-depth">${'·'.repeat(depth+1)}</span><span class="cs-range">quickSort(${frame.lo}, ${frame.hi})</span>&nbsp;<span class="cs-pivot">pivot=${frame.pivotVal}</span>`;
+      csEl.appendChild(row);
+    });
+  }
+
+  // Narration
+  document.getElementById('narText').classList.remove('intro');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  document.getElementById('narText').textContent = step.narration;
+
+  // Stats
+  document.getElementById('sPivot').textContent    = step.pivotVal !== null ? step.pivotVal : '—';
+  document.getElementById('sComps').textContent    = step.comps;
+  document.getElementById('sSwaps').textContent    = step.swaps;
+  document.getElementById('statComps').textContent = step.comps;
+  document.getElementById('statSwaps').textContent = step.swaps;
+  document.getElementById('statCalls').textContent = step.calls;
+  document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
+  document.getElementById('rangeLabel').textContent =
+    step.lo >= 0 && step.hi >= 0
+      ? `Active range: [${step.lo} … ${step.hi}]  •  Sorted: ${step.sorted ? step.sorted.size : 0}/${n}`
+      : '—';
+
+  // Progress
+  const pct = steps.length > 1 ? (idx / (steps.length-1) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('stepCtr').textContent  = `Step ${idx+1} / ${steps.length}`;
+
+  // Phase badge
+  const badge = document.getElementById('phaseBadge');
+  const pm = { pivot:['ph-pivot','Pivoting'], scan:['ph-scan','Scanning'], swap:['ph-swap','Swapping'], place:['ph-place','Placing'], done:['ph-done','Done'], idle:['ph-idle','Idle'] };
+  const [cls, lbl] = pm[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  // Code highlight
+  for (let i=1;i<=15;i++){ const el=document.getElementById(`cl${i}`); if(el) el.style.background=step.codeLine===i?'rgba(255,194,58,0.09)':''; }
+
+  if (autoAdvance) scheduleNext(step);
+}
+
+// ══ CONTROLLER ══
+let steps=[], arr=[10,7,8,9,1,5], stepIdx=-1, isPlaying=false, playTimer=null, introPlayed=false, speedMult=2;
+const SPEED_DELAYS={1:1600,2:900,3:500,4:250,5:100};
+function getDelay(){ return SPEED_DELAYS[speedMult]||900; }
+function onSpeedChange(v){ speedMult=parseInt(v); document.getElementById('speedVal').textContent=v+'×'; }
+
+function scheduleNext(step){
+  if(!isPlaying) return;
+  if(stepIdx>=steps.length-1){stopPlay();return;}
+  if(voiceEnabled){ speak(step.narration).then(()=>{ if(!isPlaying)return; playTimer=setTimeout(()=>{if(isPlaying)renderStep(stepIdx+1,true);},350); }); }
+  else{ playTimer=setTimeout(()=>{if(isPlaying)renderStep(stepIdx+1,true);},getDelay()); }
+}
+
+let introAborted=false;
+function clearIntro(){ introAborted=true; stopSpeech(); }
+
+async function playIntroSpeech(){
+  introAborted=false; stopSpeech();
+  const lines=[
+    "Hello! Today we're exploring Quick Sort — one of the fastest sorting algorithms in real-world use.",
+    "Quick Sort is a divide-and-conquer algorithm that sorts in place, needing only O log n extra stack space.",
+    "The key operation is partitioning. We pick one element as the pivot and rearrange the array so everything smaller is left, everything larger is right.",
+    "We use two pointers: i tracks the boundary of elements less than or equal to the pivot, and j scans forward looking for such elements.",
+    "When j finds a value less than or equal to the pivot, we swap it with the next position after i.",
+    "After the scan, we drop the pivot into its final position. It never moves again — that index is sorted.",
+    "We then recurse on the left and right partitions. Watch the recursion stack on screen to track where we are.",
+    "You can try different pivot strategies at the top — Last, First, Middle, or Random — and see how they affect performance.",
+    "Enable Voice Mode and press Play. I'll narrate every comparison, swap, and pivot placement!"
+  ];
+  const nt=document.getElementById('narText');
+  nt.classList.add('intro');
+  document.getElementById('teacher').textContent='🧑‍🏫';
+  for(const line of lines){
+    if(introAborted) break;
+    nt.textContent=line;
+    await speak(line);
+    if(introAborted) break;
+    await new Promise(r=>setTimeout(r,250));
+  }
+  nt.classList.remove('intro');
+  document.getElementById('teacher').textContent='🧑‍💻';
+  if(!introAborted&&steps.length) nt.textContent=steps[0].narration;
+}
+
+function nextStep(){ clearIntro(); stopPlay(); if(stepIdx+1<steps.length){renderStep(stepIdx+1,false); if(voiceEnabled)speak(steps[stepIdx].narration);} }
+function startPlay(){ if(stepIdx>=steps.length-1)stepIdx=-1; clearIntro(); isPlaying=true; document.getElementById('btnPlay').textContent='⏸ Pause'; renderStep(stepIdx+1,true); }
+function stopPlay(){ isPlaying=false; if(playTimer){clearTimeout(playTimer);playTimer=null;} document.getElementById('btnPlay').textContent='▶ Play'; stopSpeech(); }
+
+function resetAll(){
+  stopPlay(); introAborted=true; stepIdx=-1;
+  renderStep(0); // show initial state
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('narText').textContent='Ready! Press Play to start, or enable Voice Mode for guided narration.';
+  if(voiceEnabled) playIntroSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click',()=>{ if(isPlaying)stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click',nextStep);
+document.getElementById('btnReset').addEventListener('click',resetAll);
+
+function applyArray(){
+  const raw=document.getElementById('arrInput').value;
+  const parsed=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=999);
+  if(parsed.length<2||parsed.length>14){alert('Enter 2–14 integers.');return;}
+  arr=parsed; init();
+}
+function randomize(){
+  const n=6+Math.floor(Math.random()*5);
+  arr=Array.from({length:n},()=>Math.floor(Math.random()*90)+5);
+  document.getElementById('arrInput').value=arr.join(', ');
+  init();
+}
+
+function init(){
+  const saved=localStorage.getItem('theme');
+  if(saved==='light') document.getElementById('themeBtn').textContent='🌙 Dark';
+  document.getElementById('statN').textContent=arr.length;
+  steps=buildQuickSortSteps(arr);
+  stopPlay(); stepIdx=-1;
+  renderStep(0);
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('speedWrap').style.display=voiceEnabled?'none':'';
+  if(!introPlayed){
+    introPlayed=true;
+    document.getElementById('narText').textContent='Ready! Press Play to start, or enable Voice Mode for a full guided walkthrough.';
+    if(voiceEnabled) setTimeout(playIntroSpeech,500);
+  }
+}
+
+init();
+</script>
 </body>
 </html>

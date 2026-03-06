@@ -3,33 +3,785 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Huffman Coding</title>
+<title>Huffman Coding — AlgoClassroom</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-body { font-family: Arial; background:#0f172a; color:white; padding:40px; }
-h1 { color:#00d4aa; }
-code { background:#1e293b; padding:10px; display:block; margin-top:15px; }
+:root {
+  --node-default: #1a2840;
+  --node-default-stroke: #2a4060;
+  --node-merge: #ff8c42;
+  --node-new: #ff6b9d;
+  --node-leaf: #06d6a0;
+  --node-internal: #4a6a9a;
+}
+
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+#vizCanvas {
+  width: 100%; border-radius: 8px;
+  background: transparent; display: block;
+}
+
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+
+.text-input {
+  flex: 1; min-width: 200px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.text-input:focus { border-color: var(--teal); }
+
+
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:50%; flex-shrink:0; } /* Circles for nodes */
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px; text-align: center;
+}
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+/* Voice toggle */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
 </style>
 </head>
 <body>
-<h1>Huffman Coding</h1>
-<p>This is a demo implementation page for Huffman Coding using Greedy strategy.</p>
 
-<h2>Demo Pseudocode</h2>
-<code>
-Step 1: Sort input based on greedy condition.<br>
-Step 2: Pick best available choice.<br>
-Step 3: Repeat until solution is complete.
-</code>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
 
-<h2>JavaScript Demo (Simple Example)</h2>
-<code>
-function greedyDemo(arr) {
-  arr.sort((a,b) => a-b);
-  return arr;
+<!-- NAVBAR — identical to original, includes theme toggle -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
+  </div>
+</nav>
+
+<div class="algo-page">
+
+  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">📦</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Compression Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Huffman Coding</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      A prefix-free binary code used for lossless data compression. Builds an optimal variable-length code tree based on symbol frequencies.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Build Time: <span>O(n log n)</span></div>
+      <div class="cplx-chip">Space: <span>O(n)</span></div>
+      <div class="cplx-chip">Optimal: <span>✓ Yes (greedy)</span></div>
+    </div>
+  </header>
+
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">📊</span><div class="cc-title">Frequency Count</div><div class="cc-desc">Count occurrences of each symbol in the input data.</div></div>
+    <div class="cc"><span class="cc-icon">📉</span><div class="cc-title">Priority Queue</div><div class="cc-desc">Use a min-heap to always select the two least frequent nodes.</div></div>
+    <div class="cc"><span class="cc-icon">🌳</span><div class="cc-title">Tree Merging</div><div class="cc-desc">Combine two trees into a new internal node with summed frequency.</div></div>
+    <div class="cc"><span class="cc-icon">🔑</span><div class="cc-title">Code Generation</div><div class="cc-desc">Traverse the tree to assign binary codes: left=0, right=1.</div></div>
+  </div>
+
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Huffman Coding! Let me explain how this algorithm works before we begin...</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-row">
+    <div class="si"><span class="sl">Operation</span><span class="sv orange" id="sOp">Building</span></div>
+    <div class="si"><span class="sl">Merges</span><span class="sv" id="sMerges">0</span></div>
+    <div class="si"><span class="sl">Height</span><span class="sv" id="sHeight">0</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <!-- Main layout -->
+  <div class="two-col">
+
+    <!-- LEFT: Canvas -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:var(--node-merge);"></div>Merging</div>
+          <div class="li"><div class="ld" style="background:var(--node-new);"></div>New Node</div>
+          <div class="li"><div class="ld" style="background:var(--node-leaf);"></div>Leaf</div>
+          <div class="li"><div class="ld" style="background:var(--node-internal);"></div>Internal</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="340"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random Text</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Text Input:</label>
+          <input type="text" class="text-input" id="textInput" value="hello world this is a test for huffman coding">
+          <button class="btn" onclick="applyText()">Build Tree</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statMerges">0</div><div class="stat-box-l">Merges</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSymbols">0</div><div class="stat-box-l">Symbols</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statHeight">0</div><div class="stat-box-l">Tree Height</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statAvgLen">0</div><div class="stat-box-l">Avg Code Len</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block" id="pseudoBuild">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">buildHuffmanTree</span>(freqMap):</span>
+<span id="cl2" class="code-line">  minHeap = createMinHeap from freqMap (nodes with char, freq)</span>
+<span id="cl3" class="code-line">  <span class="kw">while</span> minHeap.size > 1:</span>
+<span id="cl4" class="code-line">    left = minHeap.popMin()</span>
+<span id="cl5" class="code-line">    right = minHeap.popMin()</span>
+<span id="cl6" class="code-line">    newNode = new Node(null, left.freq + right.freq, left, right)</span>
+<span id="cl7" class="code-line">    minHeap.insert(newNode)</span>
+<span id="cl8" class="code-line">  <span class="kw">return</span> minHeap.popMin()  // the root</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">🔑 Huffman Codes</div>
+        <div id="codesDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- .algo-page -->
+
+<script>
+// ════════════════════════════════════════════════
+// THEME TOGGLE (unchanged)
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
 }
 
-console.log(greedyDemo([5,3,8,1]));
-</code>
+// Restore saved theme on load
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
 
+// ════════════════════════════════════════════════
+// WEB SPEECH API (unchanged)
+// ════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English'))       ||
+    voices.find(v => v.lang === 'en-US' && v.localService)       ||
+    voices.find(v => v.lang.startsWith('en'))                    ||
+    voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice  = ttsVoice;
+    utt.rate   = 0.88;
+    utt.pitch  = 1.05;
+    utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+
+function stopSpeech() {
+  synth && synth.cancel();
+  document.getElementById('speakBars').classList.remove('on');
+}
+
+// ════════════════════════════════════════════════
+// VOICE TOGGLE — default OFF (unchanged)
+// ════════════════════════════════════════════════
+let voiceEnabled = false;
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn   = document.getElementById('voiceToggle');
+  const icon  = document.getElementById('voiceIcon');
+  const lbl   = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+
+// ════════════════════════════════════════════════
+// HUFFMAN NODE CLASS
+// ════════════════════════════════════════════════
+class Node {
+  constructor(char, freq) {
+    this.char = char;
+    this.freq = freq;
+    this.left = null;
+    this.right = null;
+  }
+}
+
+// ════════════════════════════════════════════════
+// MIN HEAP SIMULATION (simple array sort for demo)
+// ════════════════════════════════════════════════
+class MinHeap {
+  constructor() {
+    this.heap = [];
+  }
+  insert(node) {
+    this.heap.push(node);
+    this.heap.sort((a, b) => a.freq - b.freq);
+  }
+  popMin() {
+    return this.heap.shift();
+  }
+  get size() {
+    return this.heap.length;
+  }
+}
+
+// ════════════════════════════════════════════════
+// HUFFMAN BUILD STEP GENERATOR
+// ════════════════════════════════════════════════
+function buildHuffmanSteps(text) {
+  const steps = [];
+  const freqMap = {};
+  for (let char of text) {
+    if (char !== ' ') freqMap[char] = (freqMap[char] || 0) + 1; // Ignore spaces for simplicity
+  }
+  const symbols = Object.keys(freqMap);
+  if (symbols.length < 2) {
+    steps.push({ forest: [], merge1: null, merge2: null, newNode: null, narration: 'Need at least 2 symbols.', phase: 'done' });
+    return steps;
+  }
+
+  const minHeap = new MinHeap();
+  symbols.forEach(char => minHeap.insert(new Node(char, freqMap[char])));
+
+  steps.push({
+    forest: cloneForest(minHeap.heap), merge1: null, merge2: null, newNode: null,
+    narration: `Starting Huffman Coding with ${symbols.length} symbols.`,
+    phase: 'active', merges: 0, height: 0, codeLine: 1,
+  });
+
+  let mergeCount = 0;
+  while (minHeap.size > 1) {
+    const left = minHeap.popMin();
+    const right = minHeap.popMin();
+    const newFreq = left.freq + right.freq;
+    const newNode = new Node(null, newFreq);
+    newNode.left = left;
+    newNode.right = right;
+    minHeap.insert(newNode);
+
+    mergeCount++;
+    steps.push({
+      forest: cloneForest(minHeap.heap), merge1: left, merge2: right, newNode: newNode,
+      narration: `Merging nodes with freq ${left.freq} and ${right.freq} into new node with ${newFreq}.`,
+      phase: 'merge', merges: mergeCount, height: getHeight(newNode), codeLine: 6,
+      mergeAnim: { left, right, newNode }
+    });
+  }
+
+  const root = minHeap.popMin();
+  steps.push({
+    forest: [cloneTree(root)], merge1: null, merge2: null, newNode: null,
+    narration: `Huffman Tree complete! Height: ${getHeight(root)}.`,
+    phase: 'done', merges: mergeCount, height: getHeight(root), codeLine: 8,
+  });
+
+  return steps;
+}
+
+// Helper functions
+function cloneTree(node) {
+  if (!node) return null;
+  const newNode = new Node(node.char, node.freq);
+  newNode.left = cloneTree(node.left);
+  newNode.right = cloneTree(node.right);
+  return newNode;
+}
+
+function cloneForest(forest) {
+  return forest.map(cloneTree);
+}
+
+function getHeight(node) {
+  if (!node) return 0;
+  return 1 + Math.max(getHeight(node.left), getHeight(node.right));
+}
+
+function generateCodes(root) {
+  const codes = {};
+  function traverse(node, code = '') {
+    if (!node) return;
+    if (node.char !== null) codes[node.char] = code;
+    traverse(node.left, code + '0');
+    traverse(node.right, code + '1');
+  }
+  traverse(root);
+  return codes;
+}
+
+// ════════════════════════════════════════════════
+// INTRO SPEECH (adapted)
+// ════════════════════════════════════════════════
+let introAborted = false;
+
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const introLines = [
+    "Hello! I am your algorithm teacher. Today we are learning Huffman Coding — a greedy algorithm for data compression.",
+    "It assigns shorter binary codes to more frequent symbols using a binary tree.",
+    "We start by counting frequencies and creating leaf nodes in a priority queue.",
+    "Repeatedly merge the two least frequent nodes into a new internal node until one tree remains.",
+    "In the visualization, orange nodes are being merged, pink is the new node, green are leaves, blue are internals.",
+    "The tree ensures optimal prefix-free codes.",
+    "Now, turn on Voice Mode and press Play. I will guide you through each step."
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < introLines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = introLines[i];
+    await speak(introLines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+
+// ════════════════════════════════════════════════
+// CANVAS (adapted for forest and merging)
+// ════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+
+function animateMerge(prevStep, nextStep, onDone) {
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  const { left, right, newNode } = nextStep.mergeAnim;
+  const DURATION = 500, start = performance.now();
+  const displayStep = { ...prevStep, phase: 'merge', newNode: newNode.freq };
+  function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+  function tick(now) {
+    const t = ease(Math.min((now - start) / DURATION, 1));
+    drawForest(displayStep.forest, { mergeLeft: left.freq, mergeRight: right.freq, newFreq: newNode.freq, animT: t });
+    if (t < 1) animRafId = requestAnimationFrame(tick);
+    else { animRafId = null; onDone(); }
+  }
+  animRafId = requestAnimationFrame(tick);
+}
+
+function drawForest(forest, extras = {}) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (forest.length === 0) return;
+
+  const W = canvas.width, H = canvas.height;
+  const nodeR = 18;
+  const sectionW = W / forest.length;
+  const mergeLeft = extras.mergeLeft || null;
+  const mergeRight = extras.mergeRight || null;
+  const newFreq = extras.newFreq || null;
+  const animT = extras.animT || 0;
+
+  // Assign positions for each tree in forest
+  forest.forEach((root, idx) => {
+    const treeX = sectionW * (idx + 0.5);
+    const levelH = (H - 100) / Math.max(1, getHeight(root));
+    assignPositions(root, treeX, 50 + nodeR, sectionW / 4, levelH);
+  });
+
+  // Draw lines and nodes for each tree
+  forest.forEach(root => {
+    drawLines(root);
+    drawNodes(root, { mergeLeft, mergeRight });
+  });
+
+  // Draw animating new merge node (simplified, above the two merging)
+  if (newFreq !== null && animT > 0 && forest.length > 1) {
+    // Find positions of mergeLeft and mergeRight (assume first two for demo)
+    const leftNode = forest[0]; // Simplification: assume order
+    const rightNode = forest[1];
+    const targetX = (leftNode.x + rightNode.x) / 2;
+    const targetY = Math.min(leftNode.y, rightNode.y) - 50;
+    const x = targetX;
+    const y = targetY + (H - targetY) * (1 - animT);
+
+    ctx.beginPath(); ctx.arc(x, y, nodeR, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255,107,157,0.25)'; ctx.fill();
+    ctx.strokeStyle = '#ff6b9d'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px JetBrains Mono';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(newFreq, x, y);
+  }
+}
+
+function assignPositions(node, x, y, dx, levelH) {
+  if (!node) return;
+  node.x = x;
+  node.y = y;
+  assignPositions(node.left, x - dx, y + levelH, dx / 2, levelH);
+  assignPositions(node.right, x + dx, y + levelH, dx / 2, levelH);
+}
+
+function drawLines(node) {
+  if (!node) return;
+  if (node.left) {
+    ctx.beginPath();
+    ctx.moveTo(node.x, node.y + nodeR);
+    ctx.lineTo(node.left.x, node.left.y - nodeR);
+    ctx.strokeStyle = '#2a3d58'; ctx.lineWidth = 2; ctx.stroke();
+  }
+  if (node.right) {
+    ctx.beginPath();
+    ctx.moveTo(node.x, node.y + nodeR);
+    ctx.lineTo(node.right.x, node.right.y - nodeR);
+    ctx.strokeStyle = '#2a3d58'; ctx.lineWidth = 2; ctx.stroke();
+  }
+  drawLines(node.left);
+  drawLines(node.right);
+}
+
+function drawNodes(node, extras) {
+  if (!node) return;
+  let fill = node.char ? '#06d6a0' : '#4a6a9a';
+  let stroke = node.char ? '#06d6a0' : '#4a6a9a';
+  if (node.freq === extras.mergeLeft || node.freq === extras.mergeRight) {
+    fill = '#ff8c42'; stroke = '#ff8c42';
+  }
+  ctx.beginPath(); ctx.arc(node.x, node.y, nodeR, 0, 2 * Math.PI);
+  ctx.fillStyle = fill; ctx.fill();
+  ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke();
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 12px JetBrains Mono';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const label = node.char ? `${node.char}:${node.freq}` : node.freq;
+  ctx.fillText(label, node.x, node.y);
+
+  drawNodes(node.left, extras);
+  drawNodes(node.right, extras);
+}
+
+// ════════════════════════════════════════════════
+// CONTROLLER (adapted)
+// ════════════════════════════════════════════════
+let steps = [];
+let text = "hello world this is a test for huffman coding";
+let currentRoot = null;
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+
+const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
+function onSpeedChange(val) {
+  speedMult = parseInt(val);
+  document.getElementById('speedVal').textContent = val + '×';
+}
+
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
+
+function updateStatusBar(step, idx) {
+  document.getElementById('sOp').textContent  = 'Building';
+  document.getElementById('sMerges').textContent = step.merges || 0;
+  document.getElementById('sHeight').textContent = step.height || 0;
+  document.getElementById('statMerges').textContent  = step.merges || 0;
+  document.getElementById('statHeight').textContent = step.height || 0;
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { 
+    active:['ph-active','Running'], 
+    merge:['ph-merge','Merging'], 
+    done:['ph-done','Done'], 
+    idle:['ph-idle','Idle'] 
+  };
+  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  for (let i = 1; i <= 8; i++) {
+    const el = document.getElementById(`cl${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
+  }
+}
+
+function updateCodes(root) {
+  const codes = generateCodes(root);
+  const display = Object.entries(codes).map(([char, code]) => `${char}: ${code}`).join(', ');
+  document.getElementById('codesDisplay').textContent = display || '—';
+  const symbolsCount = Object.keys(codes).length;
+  document.getElementById('statSymbols').textContent = symbolsCount;
+  let avgLen = 0;
+  if (symbolsCount > 0) {
+    avgLen = Object.values(codes).reduce((sum, code) => sum + code.length, 0) / symbolsCount;
+  }
+  document.getElementById('statAvgLen').textContent = avgLen.toFixed(2);
+}
+
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  const afterDraw = () => {
+    updateNarration(step);
+    updateStatusBar(step, idx);
+    if (step.phase === 'done' && step.forest[0]) updateCodes(step.forest[0]);
+    if (autoAdvance) scheduleNext(step);
+  };
+  const extras = { 
+    mergeLeft: step.merge1 ? step.merge1.freq : null, 
+    mergeRight: step.merge2 ? step.merge2.freq : null 
+  };
+  if (step.mergeAnim && idx > 0) {
+    animateMerge(steps[idx - 1], step, () => { drawForest(step.forest, extras); afterDraw(); });
+  } else {
+    drawForest(step.forest, extras); afterDraw();
+  }
+}
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+
+function nextStep() {
+  clearIntroTimeouts();
+  stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function resetAll() {
+  stopPlay();
+  introAborted = true;
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  drawForest(steps[0].forest);
+  ['sMerges','sHeight','statMerges','statHeight','statAvgLen'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('statSymbols').textContent = '0';
+  document.getElementById('sOp').textContent = 'Building';
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  for (let i = 1; i <= 8; i++) { 
+    let el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; 
+  }
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  document.getElementById('codesDisplay').textContent = '—';
+  if (voiceEnabled) playIntroSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+function applyText() {
+  const raw = document.getElementById('textInput').value.trim();
+  if (raw.length < 2) { alert('Enter longer text.'); return; }
+  text = raw.toLowerCase();
+  init();
+}
+
+function randomize() {
+  const words = ['hello', 'world', 'huffman', 'coding', 'algorithm', 'compression', 'tree', 'greedy'];
+  text = Array.from({length: 20}, () => words[Math.floor(Math.random() * words.length)]).join(' ');
+  document.getElementById('textInput').value = text;
+  init();
+}
+
+function init() {
+  resizeCanvas();
+
+  // Sync theme toggle label on load
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+
+  steps = buildHuffmanSteps(text);
+  if (steps.length > 0) currentRoot = steps[steps.length - 1].forest[0];
+  stopPlay();
+  stepIdx = -1;
+  drawForest(steps[0].forest);
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) {
+    const extras = { 
+      mergeLeft: steps[stepIdx].merge1 ? steps[stepIdx].merge1.freq : null, 
+      mergeRight: steps[stepIdx].merge2 ? steps[stepIdx].merge2.freq : null 
+    };
+    drawForest(steps[stepIdx].forest, extras);
+  } else if (steps.length > 0) drawForest(steps[0].forest);
+});
+
+init();
+</script>
 </body>
 </html>

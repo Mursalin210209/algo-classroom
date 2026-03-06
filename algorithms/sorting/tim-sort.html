@@ -3,77 +3,1140 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tim Sort — AlgoClassroom</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
+<title>Timsort — AlgoClassroom</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #07090f;
+  --surface: #0d1117;
+  --surface2: #111820;
+  --surface3: #161f2c;
+  --border: #1c2a3d;
+  --border2: #243348;
+  --text: #c8d8f0;
+  --text-dim: #3d5a7a;
+  --text-mid: #6888aa;
+  --mono: 'JetBrains Mono', monospace;
+  --serif: 'DM Serif Display', serif;
+  --sans: 'DM Sans', sans-serif;
+  --cyan: #00e5c8;
+  --blue: #4d9fff;
+  --amber: #f5a623;
+  --rose: #ff5f7e;
+  --violet: #9b7fff;
+  --green: #36e0a0;
+  --orange: #ff8c42;
+  --tile-default: #131f33;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+[data-theme="light"] {
+  --bg: #f2f5fc;
+  --surface: #ffffff;
+  --surface2:#f7f9ff;
+  --surface3:#eef2fa;
+  --border: #d0dcea;
+  --border2: #c0cedf;
+  --text: #1a2840;
+  --text-dim:#aabbcc;
+  --text-mid:#6882a2;
 }
-.preview-box {
-  background: var(--surface);
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,140,66,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,140,66,0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.bg-glow {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 35% at 20% 10%, rgba(255,140,66,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 30% at 85% 80%, rgba(0,229,200,0.05) 0%, transparent 70%);
+}
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(7,9,15,0.88); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+[data-theme="light"] .navbar { background: rgba(242,245,252,0.9); }
+.nav-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 28px;
+  height: 58px; display: flex; align-items: center; gap: 28px;
+}
+.nav-logo {
+  font-family: var(--mono); font-size: 13px; font-weight: 800;
+  color: var(--orange); text-decoration: none; letter-spacing: -0.5px;
+}
+.logo-b { color: var(--text-dim); }
+.logo-d { color: var(--amber); }
+.nav-links { display: flex; gap: 22px; }
+.nav-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; transition: color .2s; font-weight: 500; }
+.nav-links a:hover { color: var(--text); }
+.theme-btn {
+  margin-left: auto; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 12px; cursor: pointer;
+  font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px;
+  transition: all .2s;
+}
+.theme-btn:hover { border-color: var(--orange); color: var(--orange); }
+.page {
+  position: relative; z-index: 1;
+  max-width: 1280px; margin: 0 auto; padding: 32px 28px 80px;
+}
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-family: var(--mono); color: var(--text-dim);
+  text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 24px; transition: color .2s;
+}
+.back-link:hover { color: var(--orange); }
+.algo-header { margin-bottom: 28px; }
+.algo-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+.algo-title-row { display: flex; align-items: center; gap: 18px; margin-bottom: 10px; }
+.algo-emoji { font-size: 44px; }
+.algo-title { font-family: var(--serif); font-size: 2.6rem; letter-spacing: -1.5px; line-height: 1; }
+.diff-badge {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; padding: 4px 12px; border-radius: 20px;
+  background: rgba(255,140,66,0.1); color: var(--orange); border: 1px solid rgba(255,140,66,0.3);
+  margin-left: auto;
+}
+.algo-desc { color: var(--text-mid); font-size: 14px; line-height: 1.75; max-width: 680px; margin-bottom: 14px; font-weight: 300; }
+.complexity { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 11px; font-family: var(--mono);
+  font-size: 10px; color: var(--text-mid); letter-spacing: 0.3px;
+}
+.chip span { color: var(--orange); font-weight: 700; }
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap: 12px; margin-bottom: 24px; }
+.cc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  transition: border-color .25s, transform .25s;
+}
+.cc:hover { border-color: rgba(255,140,66,0.28); transform: translateY(-2px); }
+.cc-icon { font-size: 22px; margin-bottom: 8px; display: block; }
+.cc-title { font-weight: 600; font-size: 13px; margin-bottom: 5px; }
+.cc-desc { font-size: 11px; color: var(--text-mid); line-height: 1.65; font-weight: 300; }
+.narration {
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--orange);
+  border-radius: 12px; padding: 14px 18px;
+  display: flex; align-items: flex-start; gap: 13px;
+  margin-bottom: 20px;
+}
+.teacher { font-size: 26px; flex-shrink: 0; margin-top: 1px; }
+.nar-text { font-size: 13px; color: var(--text); line-height: 1.75; flex: 1; font-weight: 300; }
+.nar-text.intro { color: var(--orange); font-weight: 500; animation: glow 2s infinite; }
+@keyframes glow { 0%,100%{text-shadow:0 0 5px rgba(255,140,66,.2)} 50%{text-shadow:0 0 18px rgba(255,140,66,.5)} }
+.speak-bars { display: flex; align-items: flex-end; gap: 2px; height: 18px; flex-shrink: 0; }
+.speak-bars span { display: block; width: 3px; background: var(--orange); border-radius: 2px; height: 4px; }
+.speak-bars.on span:nth-child(1) { animation: sb .5s ease infinite; }
+.speak-bars.on span:nth-child(2) { animation: sb .5s .1s ease infinite; }
+.speak-bars.on span:nth-child(3) { animation: sb .5s .2s ease infinite; }
+.speak-bars.on span:nth-child(4) { animation: sb .5s .3s ease infinite; }
+.speak-bars.on span:nth-child(5) { animation: sb .5s .4s ease infinite; }
+@keyframes sb { 0%,100%{height:4px} 50%{height:16px} }
+.main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
+@media (max-width: 960px) { .main-grid { grid-template-columns: 1fr; } }
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px; margin-bottom: 16px;
+}
+.panel-hd {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px;
+}
+#vizScroll {
+  overflow-x: auto; overflow-y: auto;
+  max-height: 540px;
+  border-radius: 10px;
+  background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+  padding: 12px;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+#treeContainer {
+  position: relative;
+  min-height: 300px;
+}
+#connSvg {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; overflow: visible;
+}
+.tree-node {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.node-label {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 1px;
+  color: var(--text-dim); text-transform: uppercase; white-space: nowrap;
+}
+.tile-strip {
+  display: flex; gap: 3px; align-items: center;
+  padding: 5px 6px; border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface3);
+  transition: border-color .3s, background .3s, box-shadow .3s;
+  white-space: nowrap;
+  position: relative;
+  overflow: visible;
+}
+.tile-strip.st-run { border-color: rgba(255,140,66,0.5); background: rgba(255,140,66,0.08); box-shadow: 0 0 10px rgba(255,140,66,0.1); }
+.tile-strip.st-insert { border-color: rgba(155,127,255,0.5); background: rgba(155,127,255,0.08); box-shadow: 0 0 10px rgba(155,127,255,0.1); }
+.tile-strip.st-compare { border-color: rgba(245,166,35,0.5); background: rgba(245,166,35,0.08); box-shadow: 0 0 10px rgba(245,166,35,0.1); }
+.tile-strip.st-merge { border-color: rgba(0,229,200,0.5); background: rgba(0,229,200,0.08); box-shadow: 0 0 14px rgba(0,229,200,0.12); }
+.tile-strip.st-sorted { border-color: rgba(54,224,160,0.4); background: rgba(54,224,160,0.07); box-shadow: 0 0 10px rgba(54,224,160,0.08); }
+.tile {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 28px; padding: 0 4px;
+  border-radius: 6px; border: 1px solid var(--border2);
+  background: var(--tile-default);
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: var(--text-mid);
+  /* NO transition on transform — we control it via JS for swap animation */
+  transition: background .25s, border-color .25s, color .25s;
+  user-select: none;
+  position: relative;
+  z-index: 1;
+}
+.tile.hl-run { background: rgba(255,140,66,0.2); border-color: var(--orange); color: var(--orange); }
+.tile.hl-insert { background: rgba(155,127,255,0.25);border-color: var(--violet); color: var(--violet); }
+.tile.hl-compare { background: rgba(245,166,35,0.2); border-color: var(--amber); color: var(--amber); }
+.tile.hl-merge { background: rgba(0,229,200,0.2); border-color: var(--cyan); color: var(--cyan); }
+.tile.hl-sorted { background: rgba(54,224,160,0.15); border-color: var(--green); color: var(--green); }
+/* Swap animation state — tiles being animated get z-index boost */
+.tile.animating { z-index: 10; }
+.legend {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+  padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; margin-bottom: 14px;
+}
+.li { display: flex; align-items: center; gap: 7px; font-size: 10px; color: var(--text-mid); }
+.ld { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 11px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--orange);
+  letter-spacing: 1px; transition: all .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(255,140,66,0.08); border-color: rgba(255,140,66,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.phase-track {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; margin-bottom: 14px;
+}
+.phase-pill {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+  padding: 3px 9px; border-radius: 20px;
+  background: var(--surface3); border: 1px solid var(--border);
+  color: var(--text-dim); transition: all .3s;
+}
+.phase-pill.active { background: rgba(255,140,66,0.1); border-color: var(--orange); color: var(--orange); }
+.phase-pill.done { background: rgba(54,224,160,0.07); border-color: var(--green); color: var(--green); }
+.phase-pill.merging { background: rgba(0,229,200,0.08); border-color: var(--cyan); color: var(--cyan); }
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-lbl { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; white-space: nowrap; }
+.arr-input {
+  flex: 1; min-width: 180px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--orange); }
+.btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 14px; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; color: var(--text);
+  letter-spacing: 0.3px; transition: all .2s; white-space: nowrap;
+}
+.btn:hover { background: var(--surface3); border-color: var(--border2); }
+.btn-primary { background: rgba(255,140,66,0.08); border-color: rgba(255,140,66,0.3); color: var(--orange); }
+.btn-primary:hover { background: rgba(255,140,66,0.15); }
+.btn-danger { background: rgba(255,95,126,0.07); border-color: rgba(255,95,126,0.25); color: var(--rose); }
+.btn-danger:hover { background: rgba(255,95,126,0.13); }
+.speed-ctrl { display: flex; align-items: center; gap: 8px; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+.speed-val { font-family: var(--mono); font-size: 10px; color: var(--orange); min-width: 24px; }
+input[type=range] { width: 80px; accent-color: var(--orange); cursor: pointer; }
+.status-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 8px 14px; margin-top: 12px;
+}
+.si { display: flex; align-items: center; gap: 6px; }
+.sl { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; }
+.sv { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text); }
+.sv.c { color: var(--amber); }
+.phase-badge {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 3px 9px; border-radius: 20px;
+}
+.ph-idle { background: rgba(61,90,122,0.15); color: var(--text-dim); border: 1px solid var(--border); }
+.ph-run { background: rgba(255,140,66,0.1); color: var(--orange); border: 1px solid rgba(255,140,66,0.3); }
+.ph-insert { background: rgba(155,127,255,0.1); color: var(--violet); border: 1px solid rgba(155,127,255,0.3); }
+.ph-merge { background: rgba(0,229,200,0.08); color: var(--cyan); border: 1px solid rgba(0,229,200,0.3); }
+.ph-done { background: rgba(54,224,160,0.08); color: var(--green); border: 1px solid rgba(54,224,160,0.3); }
+.divider-a { flex: 1; }
+.prog-wrap { width: 80px; height: 4px; background: var(--border); border-radius: 2px; }
+.prog-fill { height: 100%; background: var(--orange); border-radius: 2px; transition: width .3s; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+.code-block {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 14px 16px; font-family: var(--mono);
+  font-size: 11px; line-height: 2.1; overflow-x: auto;
+}
+.code-line { display: block; padding: 0 8px; border-radius: 4px; transition: background .2s; white-space: pre; }
+.kw { color: #7dd3fc; }
+.fn { color: var(--orange); }
+.cm { color: var(--text-dim); font-style: italic; }
+.num { color: var(--amber); }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; text-align: center; }
+.stat-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--orange); }
+.stat-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
 <nav class="navbar">
   <div class="nav-inner">
-    <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <a href="../../index.html" class="nav-logo"><span class="logo-b">{</span>algo<span class="logo-d">.</span>classroom<span class="logo-b">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">☀ Light</button>
   </div>
 </nav>
-
-<div class="algo-page">
+<div class="page">
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
-
-  <div class="coming-soon">
-    <span class="cs-icon">⏱️</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Tim Sort</h1>
-    <p class="cs-sub">Hybrid merge+insertion sort — the algorithm powering Python and Java.</p>
-
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Run detection in real data</li>
-        <li>Adaptive merge strategy</li>
-        <li>Galloping mode optimization</li>
-      </ul>
+  <header class="algo-header">
+    <div class="algo-tag">Sorting Algorithm</div>
+    <div class="algo-title-row">
+      <span class="algo-emoji">⚡</span>
+      <h1 class="algo-title">Timsort</h1>
+      <span class="diff-badge">Advanced</span>
     </div>
-
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <p class="algo-desc">
+      The hybrid algorithm powering Python's <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--orange)">sorted()</code> and Java's <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--orange)">Arrays.sort()</code>.
+      Timsort slices the array into fixed-size <em>runs</em>, sorts each with Insertion Sort, then merges adjacent runs in successive passes — combining the best of both algorithms.
+    </p>
+    <div class="complexity">
+      <div class="chip">Best: <span>O(n)</span></div>
+      <div class="chip">Average: <span>O(n log n)</span></div>
+      <div class="chip">Worst: <span>O(n log n)</span></div>
+      <div class="chip">Space: <span>O(n)</span></div>
+      <div class="chip">Stable: <span>✓ Yes</span></div>
+      <div class="chip">MIN_RUN: <span>4 (demo)</span></div>
+    </div>
+  </header>
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">✂️</span><div class="cc-title">Slice into Runs</div><div class="cc-desc">The array is divided into fixed chunks called runs (MIN_RUN = 32–64 in production; 4 here for clarity).</div></div>
+    <div class="cc"><span class="cc-icon">📌</span><div class="cc-title">Insertion Sort</div><div class="cc-desc">Each run is sorted in-place with Insertion Sort — optimal for tiny subarrays due to low overhead and great cache behaviour.</div></div>
+    <div class="cc"><span class="cc-icon">🔀</span><div class="cc-title">Merge Passes</div><div class="cc-desc">Sorted runs are merged pairwise in log₂(n/MIN_RUN) passes, just like the merge step of Merge Sort.</div></div>
+    <div class="cc"><span class="cc-icon">🌍</span><div class="cc-title">Production Born</div><div class="cc-desc">Used in CPython, PyPy, Java SE, Android, and V8. Beats quicksort on partially-sorted real-world data.</div></div>
+  </div>
+  <div class="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="nar-text" id="narText">Welcome to Timsort! Phase 1 builds sorted runs with Insertion Sort. Phase 2 merges them — watch the tiles below.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div class="main-grid">
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">🗂️ Timsort Tile Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:rgba(255,140,66,0.35);border:1px solid #ff8c42;"></div>Active Run</div>
+          <div class="li"><div class="ld" style="background:rgba(155,127,255,0.35);border:1px solid #9b7fff;"></div>Inserting</div>
+          <div class="li"><div class="ld" style="background:rgba(245,166,35,0.35);border:1px solid #f5a623;"></div>Comparing</div>
+          <div class="li"><div class="ld" style="background:rgba(0,229,200,0.35);border:1px solid #00e5c8;"></div>Merging</div>
+          <div class="li"><div class="ld" style="background:rgba(54,224,160,0.25);border:1px solid #36e0a0;"></div>Sorted</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span><span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <div class="phase-track" id="phaseTrack"></div>
+        <div id="vizScroll">
+          <div id="treeContainer">
+            <svg id="connSvg"></svg>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <span class="input-lbl">Array (4–12 items, 1–99):</span>
+          <input class="arr-input" id="arrInput" value="38, 27, 43, 3, 9, 82, 10, 56">
+          <button class="btn" onclick="applyArray()">Apply</button>
+        </div>
+      </div>
+      <div class="status-row">
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="si"><span class="sl">Run</span><span class="sv c" id="sRun">—</span></div>
+        <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
+        <div class="si"><span class="sl">Merges</span><span class="sv" id="sMerges">0</span></div>
+        <div class="divider-a"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
+    </div>
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-n" id="statN">0</div><div class="stat-l">Array Size</div></div>
+          <div class="stat-box"><div class="stat-n" id="statRuns">0</div><div class="stat-l">Runs Built</div></div>
+          <div class="stat-box"><div class="stat-n" id="statComps">0</div><div class="stat-l">Comparisons</div></div>
+          <div class="stat-box"><div class="stat-n" id="statMerges">0</div><div class="stat-l">Merges Done</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="fn">timsort</span>(arr, MIN_RUN=<span class="num">4</span>):</span>
+<span id="cl2" class="code-line"> n = arr.<span class="fn">length</span></span>
+<span id="cl3" class="code-line"> <span class="cm">// Phase 1: insertion-sort each run</span></span>
+<span id="cl4" class="code-line"> <span class="kw">for</span> i=<span class="num">0</span>; i&lt;n; i+=MIN_RUN:</span>
+<span id="cl5" class="code-line"> end = <span class="fn">min</span>(i+MIN_RUN-<span class="num">1</span>, n-<span class="num">1</span>)</span>
+<span id="cl6" class="code-line"> <span class="fn">insertionSort</span>(arr, i, end)</span>
+<span id="cl7" class="code-line"></span>
+<span id="cl8" class="code-line"> <span class="cm">// Phase 2: merge sorted runs</span></span>
+<span id="cl9" class="code-line"> size = MIN_RUN</span>
+<span id="cl10" class="code-line"> <span class="kw">while</span> size &lt; n:</span>
+<span id="cl11" class="code-line"> <span class="kw">for</span> left=<span class="num">0</span>; left&lt;n; left+=size*<span class="num">2</span>:</span>
+<span id="cl12" class="code-line"> mid = left + size - <span class="num">1</span></span>
+<span id="cl13" class="code-line"> right = <span class="fn">min</span>(left+<span class="num">2</span>*size-<span class="num">1</span>, n-<span class="num">1</span>)</span>
+<span id="cl14" class="code-line"> <span class="kw">if</span> mid &lt; right:</span>
+<span id="cl15" class="code-line"> <span class="fn">merge</span>(arr, left, mid, right)</span>
+<span id="cl16" class="code-line"> size *= <span class="num">2</span></span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">📋 Current Subarray</div>
+        <div id="curDisplay" style="font-family:var(--mono);font-size:12px;color:var(--text);line-height:2;word-break:break-all;">—</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;font-family:var(--mono);" id="curLabel">—</div>
+      </div>
     </div>
   </div>
 </div>
+<script>
+// ══ THEME ══
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('themeBtn').textContent = isNowLight ? '🌙 Dark' : '☀ Light';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+(function(){
+  const s=localStorage.getItem('theme');
+  if(s==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('themeBtn').textContent='🌙 Dark';}
+})();
+
+// ══ TTS ══
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices(){const vv=synth.getVoices();ttsVoice=vv.find(v=>v.name.includes('Google UK English Female'))||vv.find(v=>v.name.includes('Google US English'))||vv.find(v=>v.lang==='en-US'&&v.localService)||vv.find(v=>v.lang.startsWith('en'))||vv[0]||null;}
+loadVoices();
+if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=loadVoices;
+let voiceEnabled=false;
+function speak(t){return new Promise(r=>{if(!voiceEnabled||!synth){r();return;}synth.cancel();const u=new SpeechSynthesisUtterance(t);u.voice=ttsVoice;u.rate=0.88;u.pitch=1.05;u.volume=1;u.onstart=()=>document.getElementById('speakBars').classList.add('on');u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');r();};synth.speak(u);});}
+function stopSpeech(){synth&&synth.cancel();document.getElementById('speakBars').classList.remove('on');}
+function toggleVoice(){
+  voiceEnabled=!voiceEnabled;
+  const btn=document.getElementById('voiceToggle'),icon=document.getElementById('voiceIcon'),lbl=document.getElementById('voiceLabel');
+  if(voiceEnabled){icon.textContent='🔊';lbl.textContent='Voice On';btn.classList.remove('off');document.getElementById('speedWrap').style.display='none';if(isPlaying){stopPlay();startPlay();}}
+  else{icon.textContent='🔇';lbl.textContent='Voice Off';btn.classList.add('off');stopSpeech();document.getElementById('speedWrap').style.display='';if(isPlaying){stopPlay();startPlay();}}
+}
+
+// ══════════════════════════════════════════
+// TIMSORT STEP BUILDER
+// ══════════════════════════════════════════
+const MIN_RUN = 4;
+let nodeRegistry = [];
+
+function buildTimsortSteps(inputArr) {
+  const steps = [];
+  const arr = [...inputArr];
+  const n = arr.length;
+  let comps = 0, merges = 0;
+  nodeRegistry = [];
+  let nodeId = 0;
+
+  function newNode(label, slice, row, col, parentIds) {
+    const nd = { id: nodeId++, label, arr: [...slice], row, col, parentIds: parentIds||[], state: 'default' };
+    nodeRegistry.push(nd);
+    return nd;
+  }
+  function captureStates() {
+    return nodeRegistry.map(n => ({
+      id:n.id, label:n.label, arr:[...n.arr],
+      row:n.row, col:n.col, parentIds:[...n.parentIds], state:n.state
+    }));
+  }
+  function snap(opts) {
+    steps.push({
+      action: opts.action,
+      activeId: opts.activeId !== undefined ? opts.activeId : -1,
+      tileHl: opts.tileHl || {},
+      phase: opts.phase,
+      codeLine: opts.codeLine,
+      narration: opts.narration,
+      comps, merges,
+      runLabel: opts.runLabel || '—',
+      nodeStates: captureStates(),
+      subArr: opts.subArr || null,
+      // swapAnim carries { nodeId, idxA, idxB, prevNodeArr }
+      // prevNodeArr = the tile values BEFORE the swap (used to render during flight)
+      swapAnim: opts.swapAnim || null,
+    });
+  }
+
+  // ── Intro ──
+  snap({ action:'intro', phase:'idle', codeLine:1,
+    narration:`Starting Timsort on [${arr.join(', ')}] — ${n} elements. MIN_RUN=${MIN_RUN}. Phase 1 sorts each run with Insertion Sort; Phase 2 merges them pairwise.`,
+    subArr:[...arr] });
+
+  // ── Phase 1 ──
+  const totalRuns = Math.ceil(n / MIN_RUN);
+  const runNodes = [];
+  const idByRange = {};
+
+  for (let r = 0; r < totalRuns; r++) {
+    const left = r * MIN_RUN;
+    const right = Math.min(left + MIN_RUN - 1, n - 1);
+    const rNode = newNode(`Run ${r+1}`, arr.slice(left, right+1), 0, r, []);
+    rNode.state = 'run';
+    runNodes.push(rNode);
+
+    snap({ action:'run-start', activeId:rNode.id, phase:'run', codeLine:4,
+      narration:`Run ${r+1}: indices ${left}–${right} → [${arr.slice(left,right+1).join(', ')}]. Will sort this chunk with Insertion Sort.`,
+      subArr:arr.slice(left,right+1), runLabel:`Run ${r+1}` });
+
+    // ── Insertion sort on this run ──
+    // We use the same swap-based approach as Insertion Sort visualizer.
+    // Each comparison gets a step; each swap gets a step with swapAnim
+    // carrying prevNodeArr (the pre-swap values) so animation can show correct tile movement.
+    for (let j = left + 1; j <= right; j++) {
+      let k = j;
+      // "pick" step — show the element we are about to insert
+      const relJ = k - left;
+      rNode.arr = arr.slice(left, right+1);
+      snap({ action:'pick', activeId:rNode.id, phase:'insert', codeLine:6,
+        tileHl:{ [rNode.id]:{ [relJ]:'insert' } },
+        narration:`Pass ${j-left}: inserting a[${relJ}]=${arr[k]} into sorted prefix [0..${relJ-1}].`,
+        subArr:[...rNode.arr], runLabel:`Run ${r+1}` });
+
+      while (k > left) {
+        comps++;
+        const relK = k - left;       // index being compared (the element moving left)
+        const relPrev = relK - 1;    // index to its left
+
+        rNode.arr = arr.slice(left, right+1);
+        const needSwap = arr[k-1] > arr[k];
+
+        snap({ action:'compare-insert', activeId:rNode.id, phase:'insert', codeLine:6,
+          tileHl:{ [rNode.id]:{ [relPrev]:'compare', [relK]:'insert' } },
+          narration: needSwap
+            ? `${arr[k-1]} > ${arr[k]}: swap and shift left. Comparisons: ${comps}.`
+            : `${arr[k-1]} ≤ ${arr[k]}: correct position found! Comparisons: ${comps}.`,
+          subArr:[...rNode.arr], runLabel:`Run ${r+1}` });
+
+        if (!needSwap) break;
+
+        // Capture pre-swap node array for the animation
+        const prevNodeArr = arr.slice(left, right+1);
+
+        // Perform the actual swap in arr
+        [arr[k-1], arr[k]] = [arr[k], arr[k-1]];
+
+        rNode.arr = arr.slice(left, right+1);
+
+        snap({ action:'swap-insert', activeId:rNode.id, phase:'insert', codeLine:6,
+          tileHl:{ [rNode.id]:{ [relPrev]:'insert', [relK]:'compare' } },
+          // ↓ KEY FIX: carry prevNodeArr so renderStep can show pre-swap values during flight
+          swapAnim:{ nodeId:rNode.id, idxA:relPrev, idxB:relK, prevNodeArr },
+          narration:`Swapped! ${arr[k]} shifted left. Run ${r+1} so far: [${rNode.arr.join(', ')}].`,
+          subArr:[...rNode.arr], runLabel:`Run ${r+1}` });
+
+        k--;
+      }
+    }
+
+    rNode.arr = arr.slice(left, right+1);
+    rNode.state = 'sorted';
+    idByRange[`${left},${right}`] = rNode.id;
+    snap({ action:'run-sorted', activeId:rNode.id, phase:'run', codeLine:6,
+      narration:`Run ${r+1} sorted: [${rNode.arr.join(', ')}]. ${r+1 < totalRuns ? `Moving to Run ${r+2}.` : 'All runs sorted! Starting merge phase.'}`,
+      subArr:[...rNode.arr], runLabel:`Run ${r+1}` });
+  }
+
+  snap({ action:'phase1-done', phase:'merge', codeLine:8,
+    narration:`Phase 1 complete! ${totalRuns} sorted runs. Array: [${arr.join(', ')}]. Starting merge passes.`,
+    subArr:[...arr] });
+
+  // ── Phase 2 ──
+  let size = MIN_RUN;
+  let mergeRow = 1;
+  let currentIdByRange = { ...idByRange };
+
+  while (size < n) {
+    const nextIdByRange = {};
+    let mergeCol = 0;
+
+    snap({ action:'merge-pass', phase:'merge', codeLine:10,
+      narration:`Merge pass: merging pairs with window size ${size*2} (each side ≤ ${size} elements).`,
+      subArr:[...arr] });
+
+    for (let left = 0; left < n; left += size * 2) {
+      const mid = Math.min(left + size - 1, n - 1);
+      const right = Math.min(left + 2*size - 1, n - 1);
+
+      if (mid >= right) {
+        const key = `${left},${right}`;
+        const fwd = currentIdByRange[key] || currentIdByRange[`${left},${mid}`];
+        if (fwd !== undefined) nextIdByRange[`${left},${right}`] = fwd;
+        mergeCol++;
+        continue;
+      }
+
+      merges++;
+      const leftPid = currentIdByRange[`${left},${mid}`];
+      const rightPid = currentIdByRange[`${mid+1},${right}`];
+      const pids = [leftPid, rightPid].filter(x => x !== undefined);
+      const mNode = newNode(`[${left}–${right}]`, arr.slice(left, right+1), mergeRow, mergeCol, pids);
+      mNode.state = 'merging';
+      mergeCol++;
+
+      snap({ action:'merge-start', activeId:mNode.id, phase:'merge', codeLine:15,
+        narration:`Merge #${merges}: [${arr.slice(left,mid+1).join(', ')}] + [${arr.slice(mid+1,right+1).join(', ')}] → indices ${left}–${right}.`,
+        subArr:arr.slice(left,right+1) });
+
+      const L=[...arr.slice(left,mid+1)], R=[...arr.slice(mid+1,right+1)];
+      let li=0, ri=0, wi=left;
+      const placed=[];
+
+      while (li<L.length && ri<R.length) {
+        comps++;
+        const takeLeft = L[li]<=R[ri];
+        mNode.arr = [...placed, ...L.slice(li), ...R.slice(ri)];
+        const hl={};
+        hl[mNode.id]={ [placed.length]:'compare', [placed.length+(L.length-li)]:'compare' };
+        snap({ action:'compare-merge', activeId:mNode.id, phase:'merge', codeLine:15,
+          tileHl:hl,
+          narration:`Compare ${L[li]} vs ${R[ri]}: take ${takeLeft?L[li]+' (left)':R[ri]+' (right)'}. Comparisons: ${comps}.`,
+          subArr:arr.slice(left,right+1) });
+        const val = takeLeft ? L[li++] : R[ri++];
+        placed.push(val);
+        arr[wi++] = val;
+      }
+      while(li<L.length){placed.push(L[li]);arr[wi++]=L[li++];}
+      while(ri<R.length){placed.push(R[ri]);arr[wi++]=R[ri++];}
+      mNode.arr = [...placed];
+      mNode.state = 'sorted';
+      nextIdByRange[`${left},${right}`] = mNode.id;
+
+      snap({ action:'merged', activeId:mNode.id, phase:'merge', codeLine:15,
+        narration:`Merge #${merges} done → [${placed.join(', ')}] sorted.`,
+        subArr:[...placed] });
+    }
+
+    currentIdByRange = { ...currentIdByRange, ...nextIdByRange };
+    size *= 2;
+    mergeRow++;
+  }
+
+  nodeRegistry.forEach(nd => { nd.state = 'sorted'; });
+  snap({ action:'done', phase:'done', codeLine:16,
+    narration:`Timsort complete! [${arr.join(', ')}] — fully sorted. ${comps} comparisons, ${merges} merges, ${totalRuns} initial runs.`,
+    subArr:[...arr] });
+
+  return steps;
+}
+
+// ══════════════════════════════════════════
+// LAYOUT + RENDER
+// ══════════════════════════════════════════
+const TILE_W = 32;
+const TILE_GAP = 3;
+const NODE_HPAD = 10;
+const NODE_GAP_X= 20;
+const LEVEL_H = 90;
+let domNodes = {};
+
+function stripW(ns) {
+  return ns.arr.length * (TILE_W + TILE_GAP) - TILE_GAP + NODE_HPAD * 2;
+}
+
+function buildTreeDOM(nodeStates) {
+  const container = document.getElementById('treeContainer');
+  const svg = document.getElementById('connSvg');
+  Object.values(domNodes).forEach(el=>el.remove());
+  domNodes={};
+  svg.innerHTML='';
+  if (!nodeStates || nodeStates.length===0) { container.style.height='200px'; return; }
+
+  const byRow={};
+  let maxRow=0;
+  nodeStates.forEach(n=>{
+    byRow[n.row]=byRow[n.row]||[];
+    byRow[n.row].push(n);
+    if(n.row>maxRow) maxRow=n.row;
+  });
+  Object.values(byRow).forEach(row=>row.sort((a,b)=>a.col-b.col));
+
+  let containerW=0;
+  for(let r=0;r<=maxRow;r++){
+    const row=byRow[r]||[];
+    if(!row.length) continue;
+    const tw=row.reduce((acc,n)=>acc+stripW(n),0)+NODE_GAP_X*(row.length-1);
+    containerW=Math.max(containerW,tw);
+  }
+  const scrollEl=document.getElementById('treeContainer').parentElement;
+  containerW=Math.max(containerW+60,(scrollEl?scrollEl.clientWidth-28:700));
+
+  const posMap={};
+  for(let r=0;r<=maxRow;r++){
+    const row=byRow[r]||[];
+    if(!row.length) continue;
+    const tw=row.reduce((acc,n)=>acc+stripW(n),0)+NODE_GAP_X*(row.length-1);
+    let x=(containerW-tw)/2;
+    row.forEach(n=>{
+      const sw=stripW(n);
+      posMap[n.id]={cx:x+sw/2, y:r*LEVEL_H+20, sw};
+      x+=sw+NODE_GAP_X;
+    });
+  }
+
+  const containerH=(maxRow+1)*LEVEL_H+60;
+  container.style.width=containerW+'px';
+  container.style.height=containerH+'px';
+  svg.setAttribute('viewBox',`0 0 ${containerW} ${containerH}`);
+  svg.style.width=containerW+'px';
+  svg.style.height=containerH+'px';
+
+  nodeStates.forEach(n=>{
+    (n.parentIds||[]).forEach(pid=>{
+      const p=posMap[pid], c=posMap[n.id];
+      if(!p||!c) return;
+      const line=document.createElementNS('http://www.w3.org/2000/svg','path');
+      const x1=p.cx,y1=p.y+48,x2=c.cx,y2=c.y,my=(y1+y2)/2;
+      line.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
+      line.setAttribute('stroke','rgba(40,65,100,0.6)');
+      line.setAttribute('stroke-width','1.5');
+      line.setAttribute('fill','none');
+      svg.appendChild(line);
+    });
+  });
+
+  nodeStates.forEach(n=>{
+    const pos=posMap[n.id];
+    if(!pos) return;
+    const div=document.createElement('div');
+    div.className='tree-node';
+    div.id=`tn-${n.id}`;
+    div.style.left=(pos.cx-pos.sw/2)+'px';
+    div.style.top=pos.y+'px';
+    div.style.width=pos.sw+'px';
+    const lbl=document.createElement('div');
+    lbl.className='node-label';
+    lbl.textContent=n.label;
+    div.appendChild(lbl);
+    const strip=document.createElement('div');
+    strip.className='tile-strip';
+    n.arr.forEach(v=>{
+      const tile=document.createElement('div');
+      tile.className='tile';
+      tile.textContent=v;
+      strip.appendChild(tile);
+    });
+    div.appendChild(strip);
+    container.appendChild(div);
+    domNodes[n.id]=div;
+  });
+}
+
+// Apply step to tile tree — optionally override tile values for a specific node
+// (used during swap animation to keep showing pre-swap values while tiles fly)
+function applyStepToTree(step, prevStep, tileValueOverrides) {
+  if(!step.nodeStates||step.nodeStates.length===0) return;
+  const prevCount=prevStep&&prevStep.nodeStates?prevStep.nodeStates.length:-1;
+  if(step.nodeStates.length!==prevCount) buildTreeDOM(step.nodeStates);
+
+  const activeId=step.activeId;
+  const tileHl=step.tileHl||{};
+
+  step.nodeStates.forEach(n=>{
+    const el=document.getElementById(`tn-${n.id}`);
+    if(!el) return;
+    const strip=el.querySelector('.tile-strip');
+    if(!strip) return;
+    strip.className='tile-strip';
+    const isActive=n.id===activeId;
+    if(n.state==='sorted'){
+      strip.classList.add('st-sorted');
+    } else if(isActive&&step.phase==='merge'){
+      strip.classList.add('st-merge');
+    } else if(isActive&&step.phase==='insert'){
+      strip.classList.add('st-insert');
+    } else if(isActive){
+      strip.classList.add('st-run');
+    }
+    const nodeHl=tileHl[n.id]||{};
+    const tiles=strip.querySelectorAll('.tile');
+
+    // Use overridden values for this node if provided (pre-swap snapshot)
+    const displayArr = (tileValueOverrides && tileValueOverrides.nodeId === n.id)
+      ? tileValueOverrides.arr
+      : n.arr;
+
+    tiles.forEach((tile,ti)=>{
+      tile.className='tile';
+      tile.style.transform = '';   // clear any leftover inline transforms
+      tile.textContent = displayArr[ti] !== undefined ? displayArr[ti] : '';
+      if(n.state==='sorted'){
+        tile.classList.add('hl-sorted');
+      } else if(nodeHl[ti]){
+        tile.classList.add('hl-'+nodeHl[ti]);
+      } else if(isActive&&step.phase==='merge'){
+        tile.classList.add('hl-merge');
+      } else if(isActive){
+        tile.classList.add('hl-run');
+      }
+    });
+  });
+
+  // scroll active into view
+  const activeEl=document.getElementById(`tn-${activeId}`);
+  if(activeEl){
+    const sc=document.getElementById('vizScroll');
+    sc.scrollTo({top:Math.max(0,activeEl.offsetTop-60),left:Math.max(0,activeEl.offsetLeft-40),behavior:'smooth'});
+  }
+}
+
+function updatePhaseTrack(step, totalRuns) {
+  const track=document.getElementById('phaseTrack');
+  track.innerHTML='';
+  for(let r=1;r<=totalRuns;r++){
+    const pill=document.createElement('div');
+    pill.className='phase-pill';
+    const label=`Run ${r}`;
+    if(step.phase==='done'||step.phase==='merge'){
+      pill.classList.add('done');
+    } else if(step.runLabel===label){
+      pill.classList.add('active');
+    } else if(step.nodeStates){
+      const nd=step.nodeStates.find(x=>x.label===label);
+      if(nd&&nd.state==='sorted') pill.classList.add('done');
+    }
+    pill.textContent=label;
+    track.appendChild(pill);
+  }
+  if(step.phase==='merge'||step.phase==='done'){
+    const sep=document.createElement('span');
+    sep.style.cssText='font-family:var(--mono);font-size:9px;color:var(--text-dim);margin:0 4px;';
+    sep.textContent='→';
+    track.appendChild(sep);
+    const mp=document.createElement('div');
+    mp.className='phase-pill '+(step.phase==='done'?'done':'merging');
+    mp.textContent='Merge Phase';
+    track.appendChild(mp);
+  }
+}
+
+// ══════════════════════════════════════════
+// SWAP ANIMATION — mirrors Insertion Sort's animateSwap exactly
+//
+// Called with the PREVIOUS step (pre-swap DOM state is already rendered)
+// and the CURRENT step (which has swapAnim.prevNodeArr = pre-swap tile values).
+//
+// Strategy:
+//  1. Render the tree using prevNodeArr so tiles show pre-swap values.
+//  2. Read the pixel positions of tiles A and B.
+//  3. Apply CSS transform translations via rAF loop, using ease + arc.
+//  4. On completion: snap DOM to post-swap values (call applyStepToTree normally).
+// ══════════════════════════════════════════
+let swapRafId = null;
+
+function animateTileSwap(prevStep, step) {
+  return new Promise(resolve => {
+    if (!step.swapAnim) { resolve(); return; }
+    const { nodeId, idxA, idxB, prevNodeArr } = step.swapAnim;
+
+    // Cancel any in-flight animation
+    if (swapRafId) { cancelAnimationFrame(swapRafId); swapRafId = null; }
+
+    // Step 1: render the tree with pre-swap values for the animated node
+    applyStepToTree(step, prevStep, { nodeId, arr: prevNodeArr });
+
+    const nodeEl = document.getElementById(`tn-${nodeId}`);
+    if (!nodeEl) { resolve(); return; }
+    const strip = nodeEl.querySelector('.tile-strip');
+    if (!strip) { resolve(); return; }
+    const tiles = strip.querySelectorAll('.tile');
+    const tileA = tiles[idxA];
+    const tileB = tiles[idxB];
+    if (!tileA || !tileB) { resolve(); return; }
+
+    // Step 2: measure travel distance (both tiles are same width, just offset by 1 slot)
+    const tileSlotW = TILE_W + TILE_GAP;  // 35px per slot
+    const travelX = tileSlotW;             // B is exactly one slot to the right of A
+
+    const DURATION = 420;
+    const ARC = 18;  // pixels of vertical arc
+    const start = performance.now();
+
+    // Mark tiles as animating for z-index
+    tileA.classList.add('animating');
+    tileB.classList.add('animating');
+
+    // Apply swap highlight colours up front
+    tileA.classList.add('hl-compare');
+    tileB.classList.add('hl-insert');
+
+    function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+    function tick(now) {
+      const rawT = Math.min((now - start) / DURATION, 1);
+      const t = ease(rawT);
+      const arc = Math.sin(rawT * Math.PI) * ARC;
+
+      // A (left tile, larger value) moves RIGHT and arcs UP
+      tileA.style.transform = `translate(${t * travelX}px, ${-arc}px)`;
+      // B (right tile, smaller value) moves LEFT and arcs DOWN
+      tileB.style.transform = `translate(${-t * travelX}px, ${arc * 0.5}px)`;
+
+      if (rawT < 1) {
+        swapRafId = requestAnimationFrame(tick);
+      } else {
+        swapRafId = null;
+        // Clear transforms — applyStepToTree will clear them too via style.transform=''
+        tileA.style.transform = '';
+        tileB.style.transform = '';
+        tileA.classList.remove('animating');
+        tileB.classList.remove('animating');
+        // Step 4: snap to post-swap values
+        applyStepToTree(step, prevStep, null);
+        resolve();
+      }
+    }
+    swapRafId = requestAnimationFrame(tick);
+  });
+}
+
+// ══════════════════════════════════════════
+// CONTROLLER
+// ══════════════════════════════════════════
+let steps=[], arr=[38,27,43,3,9,82,10,56];
+let stepIdx=-1, isPlaying=false, playTimer=null, introPlayed=false, speedMult=2;
+let totalRuns=0;
+const SPEED_DELAYS={1:1600,2:900,3:500,4:250,5:100};
+function getDelay(){return SPEED_DELAYS[speedMult]||900;}
+function onSpeedChange(v){speedMult=parseInt(v);document.getElementById('speedVal').textContent=v+'×';}
+
+function updateStatusUI(step, idx) {
+  document.getElementById('narText').classList.remove('intro');
+  document.getElementById('teacher').textContent='🧑‍💻';
+  document.getElementById('narText').textContent=step.narration;
+  document.getElementById('sComps').textContent=step.comps;
+  document.getElementById('sMerges').textContent=step.merges;
+  document.getElementById('statComps').textContent=step.comps;
+  document.getElementById('statMerges').textContent=step.merges;
+  document.getElementById('sRun').textContent=step.runLabel||'—';
+  const pct=steps.length>1?(idx/(steps.length-1)*100).toFixed(1):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
+  const badge=document.getElementById('phaseBadge');
+  const pm={idle:['ph-idle','Idle'],run:['ph-run','Building Run'],insert:['ph-insert','Inserting'],merge:['ph-merge','Merging'],done:['ph-done','Done']};
+  const [cls,lbl]=pm[step.phase]||['ph-idle','Idle'];
+  badge.className=`phase-badge ${cls}`;badge.textContent=lbl;
+  for(let i=1;i<=16;i++){const el=document.getElementById(`cl${i}`);if(el)el.style.background=step.codeLine===i?'rgba(255,140,66,0.12)':'';}
+  if(step.subArr){
+    document.getElementById('curDisplay').textContent=`[${step.subArr.join(', ')}]`;
+    document.getElementById('curLabel').textContent=`Phase: ${step.phase} • Action: ${step.action}`;
+  }
+  updatePhaseTrack(step, totalRuns);
+}
+
+function renderStep(idx, autoAdvance=false){
+  if(idx<0||idx>=steps.length) return;
+  const prev = stepIdx >= 0 ? steps[stepIdx] : null;
+  stepIdx = idx;
+  const step = steps[idx];
+
+  // Cancel any in-flight swap animation
+  if(swapRafId){ cancelAnimationFrame(swapRafId); swapRafId=null; }
+
+  // Update all status UI immediately
+  updateStatusUI(step, idx);
+
+  // ── Swap animation path (mirrors Insertion Sort's animateSwap) ──
+  // Only animate when voice is off (voice path is step-by-step, no animation needed).
+  if(step.swapAnim && !voiceEnabled) {
+    // Run the arc animation.
+    // animateTileSwap internally calls applyStepToTree with prevNodeArr first (shows pre-swap),
+    // then snaps to post-swap values when animation lands.
+    animateTileSwap(prev, step).then(() => {
+      if(autoAdvance) scheduleNext(step);
+    });
+  } else {
+    // Normal path: just apply step to tree immediately
+    applyStepToTree(step, prev, null);
+    if(autoAdvance) scheduleNext(step);
+  }
+}
+
+function scheduleNext(step){
+  if(!isPlaying) return;
+  if(stepIdx>=steps.length-1){stopPlay();return;}
+  if(voiceEnabled){
+    speak(step.narration).then(()=>{
+      if(!isPlaying) return;
+      playTimer=setTimeout(()=>{if(isPlaying)renderStep(stepIdx+1,true);},400);
+    });
+  } else {
+    playTimer=setTimeout(()=>{if(isPlaying)renderStep(stepIdx+1,true);},getDelay());
+  }
+}
+
+let introAborted=false;
+function clearIntro(){introAborted=true;stopSpeech();}
+async function playIntroSpeech(){
+  introAborted=false;stopSpeech();
+  const lines=[
+    "Welcome to Timsort — the algorithm that actually sorts your Python lists and Java arrays!",
+    "Timsort is a brilliant hybrid of two algorithms: Insertion Sort and Merge Sort.",
+    "Phase one: we slice the array into small chunks called runs, and sort each one with Insertion Sort.",
+    "Insertion Sort is perfect here — it runs in near-linear time when the input is small or nearly sorted.",
+    "Phase two: we merge adjacent sorted runs together, pass by pass, exactly like Merge Sort.",
+    "The tile strips represent subarrays. Orange is an active run. Violet means inserting. Teal means merging. Green means sorted.",
+    "Enable Voice Mode and press Play to get a narrated walkthrough!"
+  ];
+  const nt=document.getElementById('narText');
+  nt.classList.add('intro');
+  document.getElementById('teacher').textContent='🧑‍🏫';
+  for(const line of lines){
+    if(introAborted) break;
+    nt.textContent=line;
+    await speak(line);
+    if(introAborted) break;
+    await new Promise(r=>setTimeout(r,260));
+  }
+  nt.classList.remove('intro');
+  document.getElementById('teacher').textContent='🧑‍💻';
+  if(!introAborted&&steps.length) nt.textContent=steps[0].narration;
+}
+
+function nextStep(){
+  clearIntro();stopPlay();
+  if(stepIdx+1<steps.length){
+    renderStep(stepIdx+1, false);
+    if(voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+function startPlay(){if(stepIdx>=steps.length-1)stepIdx=-1;clearIntro();isPlaying=true;document.getElementById('btnPlay').textContent='⏸ Pause';renderStep(stepIdx+1,true);}
+function stopPlay(){isPlaying=false;if(playTimer){clearTimeout(playTimer);playTimer=null;}document.getElementById('btnPlay').textContent='▶ Play';stopSpeech();}
+
+function resetAll(){
+  stopPlay();
+  introAborted=true;
+  if(swapRafId){cancelAnimationFrame(swapRafId);swapRafId=null;}
+  stepIdx=-1;
+  buildTreeDOM([]);
+  ['sComps','sMerges','statComps','statMerges'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('sRun').textContent='—';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('curDisplay').textContent=`[${arr.join(', ')}]`;
+  document.getElementById('curLabel').textContent='Press Play to start';
+  for(let i=1;i<=16;i++){const el=document.getElementById(`cl${i}`);if(el)el.style.background='';}
+  document.getElementById('narText').textContent='Ready! Press Play to start, or enable Voice Mode for a guided tour.';
+  document.getElementById('phaseTrack').innerHTML='';
+  if(voiceEnabled) playIntroSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click',()=>{if(isPlaying)stopPlay();else startPlay();});
+document.getElementById('btnNext').addEventListener('click',nextStep);
+document.getElementById('btnReset').addEventListener('click',resetAll);
+
+function applyArray(){
+  const raw=document.getElementById('arrInput').value;
+  const parsed=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=99);
+  if(parsed.length<4||parsed.length>12){alert('Enter 4–12 integers between 1 and 99.');return;}
+  arr=parsed;init();
+}
+function randomize(){
+  const n=8+Math.floor(Math.random()*4);
+  arr=Array.from({length:n},()=>Math.floor(Math.random()*90)+5);
+  document.getElementById('arrInput').value=arr.join(', ');
+  init();
+}
+function init(){
+  document.getElementById('statN').textContent=arr.length;
+  totalRuns=Math.ceil(arr.length/MIN_RUN);
+  document.getElementById('statRuns').textContent=totalRuns;
+  steps=buildTimsortSteps(arr);
+  stopPlay();stepIdx=-1;
+  if(swapRafId){cancelAnimationFrame(swapRafId);swapRafId=null;}
+  buildTreeDOM([]);
+  document.getElementById('curDisplay').textContent=`[${arr.join(', ')}]`;
+  document.getElementById('curLabel').textContent='Press Play to start';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('speedWrap').style.display=voiceEnabled?'none':'';
+  document.getElementById('phaseTrack').innerHTML='';
+  if(!introPlayed){
+    introPlayed=true;
+    document.getElementById('narText').textContent='Ready! Press Play to start, or enable Voice Mode for a guided tour.';
+    if(voiceEnabled) setTimeout(playIntroSpeech,500);
+  }
+}
+
+window.addEventListener('resize',()=>{
+  if(stepIdx>=0&&steps[stepIdx]&&steps[stepIdx].nodeStates){
+    buildTreeDOM(steps[stepIdx].nodeStates);
+    applyStepToTree(steps[stepIdx],null,null);
+  }
+});
+
+init();
+</script>
 </body>
 </html>

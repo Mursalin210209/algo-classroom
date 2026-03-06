@@ -452,7 +452,7 @@ function toggleTheme() {
   html.setAttribute('data-theme', light ? 'light' : 'dark');
   document.getElementById('toggleLabel').textContent = light ? 'Dark mode' : 'Light mode';
   localStorage.setItem('theme', light ? 'light' : 'dark');
-  if (currentStep) drawCanvas(currentStep);
+  if (currentStep) drawCanvas(currentStep, 0);
 }
 (function() {
   const s = localStorage.getItem('theme');
@@ -637,7 +637,7 @@ const MAX_DISPLAY = 10;
 
 function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
 
-function drawCanvas(step, animOffset) {
+function drawCanvas(step, animOffset = 0) {
   resizeCanvas();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const W = canvas.width, H = canvas.height;
@@ -689,7 +689,7 @@ function drawCanvas(step, animOffset) {
     }
 
     let drawCy = cy;
-    if (animOffset && hl && hl.idx === realIdx) {
+    if (hl && hl.idx === realIdx) {
       drawCy += animOffset;
     }
 
@@ -796,7 +796,7 @@ function updateUI(step, idx) {
   for (let i=1;i<=16;i++) { const el=document.getElementById(`cl${i}`); if(el) el.style.background=''; }
   if (step.codeLine) { const el=document.getElementById(`cl${step.codeLine}`); if(el) el.style.background='rgba(0,212,170,0.12)'; }
 
-  drawCanvas(step);
+  drawCanvas(step, 0);
 }
 
 function renderStep(idx, autoAdv=false) {
@@ -875,13 +875,45 @@ function interactivePush() {
   const raw = document.getElementById('pushVal').value;
   const val = parseInt(raw);
   if (isNaN(val)) { alert('Enter a valid number.'); return; }
-  liveStack.push(val); totalPushes++;
-  const step = { stack:[...liveStack], highlight:{idx:liveStack.length-1,type:'push'}, narration:`Pushed ${val} onto the stack. Stack size: ${liveStack.length}.`, phase:'push', codeLine:5, pushes:totalPushes, pops:totalPops };
-  updateUI(step, 0);
-  document.getElementById('progFill').style.width='0%';
-  document.getElementById('stepCtr').textContent='Interactive';
+  liveStack.push(val);
+  totalPushes++;
+  syncInteractiveUI();
   addLog('push', `Pushed ${val} → stack size: ${liveStack.length}`);
-  if (voiceEnabled) speak(step.narration);
+  const hlIdx = liveStack.length - 1;
+  let animT = 0;
+  const animDur = voiceEnabled ? 1200 : 600;
+  const animStart = performance.now();
+  const animFrom = -50; // Approximate cell height for animation start offset
+  const animatePush = () => {
+    const elapsed = performance.now() - animStart;
+    animT = Math.min(elapsed / animDur, 1);
+    const ease = 1 - Math.pow(1 - animT, 3); // Ease out cubic
+    const offset = animFrom * (1 - ease); // From -50 to 0
+    const step = {
+      stack: [...liveStack],
+      highlight: { idx: hlIdx, type: 'push' },
+      narration: `Pushing ${val} onto the stack.`,
+      phase: 'push',
+      codeLine: 5,
+      pushes: totalPushes,
+      pops: totalPops
+    };
+    updateUI(step, 0);
+    drawCanvas(step, offset);
+    if (animT < 1) {
+      requestAnimationFrame(animatePush);
+    } else {
+      step.narration = `Pushed ${val} onto the stack. It is now the top element. Stack size is now ${liveStack.length}.`;
+      updateUI(step, 0);
+      drawCanvas(step, 0);
+      if (voiceEnabled) speak(step.narration);
+      // Change input value to random between 1 and 999
+      document.getElementById('pushVal').value = Math.floor(Math.random() * 999) + 1;
+    }
+  };
+  requestAnimationFrame(animatePush);
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('stepCtr').textContent = 'Interactive';
 }
 
 function interactivePop() {
@@ -959,7 +991,7 @@ function init() {
 
 window.addEventListener('resize', ()=>{
   resizeCanvas();
-  if (currentStep) drawCanvas(currentStep);
+  if (currentStep) drawCanvas(currentStep, 0);
 });
 
 init();

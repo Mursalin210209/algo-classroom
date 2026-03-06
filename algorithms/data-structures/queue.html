@@ -3,77 +3,941 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Queue — AlgoClassroom</title>
+<title>Queue Operations — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+/* ── CSS RESET & VARIABLES ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #07101f;
+  --surface: #0d1b2e;
+  --surface2: #111f35;
+  --border: #1e3352;
+  --text: #c9d8ef;
+  --text-dim: #4a6a9a;
+  --teal: #00d4aa;
+  --orange: #ff8c42;
+  --pink: #ff6b9d;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+  --clr-push: #ff8c42;
+  --clr-pop: #ff6b9d;
+  --clr-peek: #7eb8ff;
+  --clr-empty: #1a2840;
+  --clr-sorted: #06d6a0;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+[data-theme="light"] {
+  --bg: #f0f4fb;
+  --surface: #ffffff;
+  --surface2: #e8eef8;
+  --border: #cdd8ee;
+  --text: #162032;
+  --text-dim: #5a7a9a;
+  --teal: #009e7e;
+  --clr-empty: #d0ddef;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+/* ── BACKGROUND ── */
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.bg-glow {
+  position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 600px; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse at center, rgba(0,212,170,0.06) 0%, transparent 70%);
+}
+/* ── NAVBAR ── */
+/* ── PAGE WRAPPER ── */
+.algo-page {
+  max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px;
+  position: relative; z-index: 1;
+}
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+  text-decoration: none; margin-bottom: 18px;
+  transition: color .2s;
+}
+.back-link:hover { color: var(--teal); }
+/* ── HEADER ── */
+.card-difficulty {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+  border: 1px solid;
+}
+.beginner { color: #06d6a0; border-color: rgba(6,214,160,.3); background: rgba(6,214,160,.08); }
+.complexity { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.cplx-chip {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+}
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+/* ── CONCEPT CARDS ── */
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.cc {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; transition: border-color .2s;
+}
+.cc:hover { border-color: rgba(0,212,170,.3); }
+.cc-icon { font-size: 22px; display: block; margin-bottom: 8px; }
+.cc-title { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 5px; }
+.cc-desc { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+/* ── NARRATION ── */
+.narration {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 16px;
+}
+.teacher { font-size: 24px; flex-shrink: 0; }
+.narration-text { font-size: 13px; color: var(--text); line-height: 1.65; flex: 1; }
+.speak-bars { display: flex; align-items: flex-end; gap: 2px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+.speak-bars span {
+  width: 3px; background: var(--teal); border-radius: 2px; height: 4px;
+  animation: none; opacity: .3;
+}
+.speak-bars.on span { animation: barPulse 0.5s ease-in-out infinite alternate; opacity: 1; }
+.speak-bars.on span:nth-child(2) { animation-delay: .1s; }
+.speak-bars.on span:nth-child(3) { animation-delay: .2s; }
+.speak-bars.on span:nth-child(4) { animation-delay: .3s; }
+.speak-bars.on span:nth-child(5) { animation-delay: .4s; }
+@keyframes barPulse { from { height: 3px; } to { height: 14px; } }
+/* ── PANEL ── */
+.panel {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 18px; margin-bottom: 0;
+}
+.panel-hd {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 12px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+/* ── CONTROLS ── */
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;
+  margin-top: 14px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+.arr-input {
+  flex: 1; min-width: 160px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus { border-color: var(--teal); }
+.btn {
+  padding: 7px 14px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text); font-family: var(--mono);
+  font-size: 11px; cursor: pointer; transition: background .2s, border-color .2s, color .2s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface); border-color: var(--text-dim); }
+.btn-primary { background: rgba(0,212,170,.12); border-color: rgba(0,212,170,.3); color: var(--teal); }
+.btn-primary:hover { background: rgba(0,212,170,.2); }
+.btn-danger { background: rgba(255,107,157,.1); border-color: rgba(255,107,157,.3); color: var(--pink); }
+.btn-danger:hover { background: rgba(255,107,157,.2); }
+.btn-enqueue { background: rgba(255,140,66,.1); border-color: rgba(255,140,66,.3); color: var(--orange); }
+.btn-enqueue:hover { background: rgba(255,140,66,.2); }
+.btn-dequeue { background: rgba(255,107,157,.1); border-color: rgba(255,107,157,.3); color: var(--pink); }
+.btn-dequeue:hover { background: rgba(255,107,157,.2); }
+.speed-ctrl { display: flex; align-items: center; gap: 7px; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+.speed-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 20px; }
+input[type=range] { accent-color: var(--teal); cursor: pointer; }
+/* ── STATUS ROW ── */
+.status-row {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 10px 14px; margin-top: 12px;
+}
+.si { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sl { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+.sv { font-family: var(--mono); font-size: 14px; font-weight: 800; color: var(--teal); }
+.orange { color: var(--orange) !important; }
+.phase-badge {
+  font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 5px;
+  border: 1px solid; font-weight: 700; letter-spacing: 1px;
+}
+.ph-idle { color: var(--text-dim); border-color: var(--border); background: transparent; }
+.ph-enqueue { color: var(--orange); border-color: rgba(255,140,66,.3); background: rgba(255,140,66,.1); }
+.ph-dequeue { color: var(--pink); border-color: rgba(255,107,157,.3); background: rgba(255,107,157,.1); }
+.ph-peek { color: #7eb8ff; border-color: rgba(126,184,255,.3); background: rgba(126,184,255,.1); }
+.ph-done { color: var(--teal); border-color: rgba(0,212,170,.3); background: rgba(0,212,170,.1); }
+.ph-empty { color: var(--text-dim); border-color: var(--border); background: var(--surface2); }
+.divider-auto { flex: 1; }
+.prog-wrap {
+  width: 100px; height: 4px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; overflow: hidden;
+}
+.prog-fill { height: 100%; background: var(--teal); border-radius: 4px; width: 0%; transition: width .3s; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+/* ── LEGEND ── */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+.li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+.ld { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+.voice-btn {
+  margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,.08); border-color: rgba(0,212,170,.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+/* ── TWO COLUMN LAYOUT ── */
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+/* ── STACK CANVAS ── */
+#vizCanvas { width: 100%; border-radius: 8px; background: transparent; display: block; }
+/* ── STATS GRID ── */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; text-align: center; }
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+/* ── CODE BLOCK ── */
+/* ── OP LOG ── */
+.op-log {
+  max-height: 180px; overflow-y: auto; font-family: var(--mono); font-size: 11px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.log-entry {
+  padding: 5px 9px; border-radius: 5px; border: 1px solid var(--border);
+  background: var(--surface2); display: flex; align-items: center; gap: 8px;
+  animation: fadeIn .3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.log-tag {
+  font-size: 9px; padding: 2px 6px; border-radius: 4px; border: 1px solid;
+  font-weight: 800; letter-spacing: 1px; flex-shrink: 0;
+}
+.log-enqueue { color: var(--orange); border-color: rgba(255,140,66,.4); background: rgba(255,140,66,.1); }
+.log-dequeue { color: var(--pink); border-color: rgba(255,107,157,.4); background: rgba(255,107,157,.1); }
+.log-peek { color: #7eb8ff; border-color: rgba(126,184,255,.4); background: rgba(126,184,255,.1); }
+.log-init { color: var(--teal); border-color: rgba(0,212,170,.4); background: rgba(0,212,170,.1); }
+.log-msg { color: var(--text-dim); }
+.narration-text.intro-mode { color: var(--teal); font-weight: 600; }
+/* ── INTERACTIVE OP BUTTONS ── */
+.op-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  margin-top: 14px;
+}
+.op-panel-hd { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+.op-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.enq-val {
+  width: 80px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 10px; color: var(--text); font-family: var(--mono);
+  font-size: 12px; text-align: center; outline: none; transition: border-color .2s;
+}
+.enq-val:focus { border-color: var(--orange); }
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
+<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
-    <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <a href="#" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="#">Sorting</a>
+      <a href="#">Searching</a>
+      <a href="#">Graph</a>
+      <a href="#">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+      <span id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
-
 <div class="algo-page">
-  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
-
-  <div class="coming-soon">
-    <span class="cs-icon">🚶</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Queue</h1>
-    <p class="cs-sub">FIFO structure — enqueue, dequeue with circular buffer.</p>
-
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Enqueue and dequeue</li>
-        <li>Circular buffer implementation</li>
-        <li>BFS queue connection</li>
-      </ul>
+  <a href="#" class="back-link">← Back to All Algorithms</a>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">📥</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Data Structure</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Queue Operations</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty beginner">Beginner</span></div>
     </div>
-
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      A Queue is a <strong>First-In, First-Out (FIFO)</strong> data structure. Elements are added to the rear and removed from the front. Visualize Enqueue, Dequeue, Peek, and isEmpty operations step by step.
+    </p>
+    <div class="complexity">
+      <div class="cplx-chip">Enqueue: <span>O(1)</span></div>
+      <div class="cplx-chip">Dequeue: <span>O(1)</span></div>
+      <div class="cplx-chip">Peek: <span>O(1)</span></div>
+      <div class="cplx-chip">Search: <span>O(n)</span></div>
+      <div class="cplx-chip">Space: <span>O(n)</span></div>
+    </div>
+  </header>
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">➕</span><div class="cc-title">Enqueue</div><div class="cc-desc">Add an element to the rear of the queue. The new element becomes the new rear.</div></div>
+    <div class="cc"><span class="cc-icon">➖</span><div class="cc-title">Dequeue</div><div class="cc-desc">Remove and return the front element. The element after it becomes the new front.</div></div>
+    <div class="cc"><span class="cc-icon">👁️</span><div class="cc-title">Peek / Front</div><div class="cc-desc">Look at the front element without removing it. Useful for checking what comes next.</div></div>
+    <div class="cc"><span class="cc-icon">📋</span><div class="cc-title">FIFO Principle</div><div class="cc-desc">First In, First Out — like a queue of people. The first one added is the first one removed.</div></div>
+  </div>
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Queue Operations! A queue works like a line of people — you can only add to the rear or remove from the front. Let's explore it step by step.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+  <!-- Main two-col layout -->
+  <div class="two-col">
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:var(--clr-push);"></div>Enqueued</div>
+          <div class="li"><div class="ld" style="background:var(--clr-pop);"></div>Dequeuing</div>
+          <div class="li"><div class="ld" style="background:var(--clr-peek);"></div>Peeking</div>
+          <div class="li"><div class="ld" style="background:var(--clr-sorted);"></div>Front</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="380"></canvas>
+      </div>
+      <!-- Controls: Auto-play sequence -->
+      <div class="controls">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;">AUTO DEMO</div>
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play Demo</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomizeDemo()">🎲 New Demo</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+      </div>
+      <!-- Interactive operations -->
+      <div class="op-panel">
+        <div class="op-panel-hd">⚡ Interactive Operations</div>
+        <div class="op-row">
+          <input type="number" class="enq-val" id="enqVal" value="42" min="1" max="999" placeholder="Value">
+          <button class="btn btn-enqueue" onclick="interactiveEnqueue()">📥 Enqueue</button>
+          <button class="btn btn-dequeue" onclick="interactiveDequeue()">📤 Dequeue</button>
+          <button class="btn" style="color:#7eb8ff;border-color:rgba(126,184,255,.3);background:rgba(126,184,255,.08);" onclick="interactivePeek()">👁️ Peek</button>
+          <button class="btn" onclick="interactiveIsEmpty()">❓ isEmpty</button>
+          <button class="btn" onclick="clearQueue()">🗑️ Clear Queue</button>
+        </div>
+      </div>
+      <!-- Status row -->
+      <div class="status-row">
+        <div class="si"><span class="sl">Size</span><span class="sv orange" id="sSize">0</span></div>
+        <div class="si"><span class="sl">Enqueues</span><span class="sv" id="sEnqueues">0</span></div>
+        <div class="si"><span class="sl">Dequeues</span><span class="sv" id="sDequeues">0</span></div>
+        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+        <div class="divider-auto"></div>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+      </div>
+    </div>
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+     
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">class</span> <span class="fn">Queue</span>:</span>
+<span id="cl2" class="code-line"> queue = []</span>
+<span id="cl3" class="code-line"> </span>
+<span id="cl4" class="code-line"> <span class="kw">def</span> <span class="fn">enqueue</span>(val):</span>
+<span id="cl5" class="code-line"> queue.<span class="fn">append</span>(val)</span>
+<span id="cl6" class="code-line"> </span>
+<span id="cl7" class="code-line"> <span class="kw">def</span> <span class="fn">dequeue</span>():</span>
+<span id="cl8" class="code-line"> <span class="kw">if</span> <span class="fn">isEmpty</span>(): <span class="kw">return</span> <span class="num">null</span></span>
+<span id="cl9" class="code-line"> <span class="kw">return</span> queue.<span class="fn">pop</span>(0)</span>
+<span id="cl10" class="code-line"> </span>
+<span id="cl11" class="code-line"> <span class="kw">def</span> <span class="fn">peek</span>():</span>
+<span id="cl12" class="code-line"> <span class="kw">if</span> <span class="fn">isEmpty</span>(): <span class="kw">return</span> <span class="num">null</span></span>
+<span id="cl13" class="code-line"> <span class="kw">return</span> queue[<span class="num">0</span>]</span>
+<span id="cl14" class="code-line"> </span>
+<span id="cl15" class="code-line"> <span class="kw">def</span> <span class="fn">isEmpty</span>():</span>
+<span id="cl16" class="code-line"> <span class="kw">return</span> queue.length == <span class="num">0</span></span>
+        </div>
+      </div>
+            <div class="panel">
+        <div class="panel-hd">📋 Operation Log</div>
+        <div class="op-log" id="opLog">
+          <div class="log-entry"><span class="log-tag log-init">INIT</span><span class="log-msg">Queue initialized (empty)</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statSize">0</div><div class="stat-box-l">Queue Size</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statFront">—</div><div class="stat-box-l">Front Element</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statEnqueues">0</div><div class="stat-box-l">Total Enqueues</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statDequeues">0</div><div class="stat-box-l">Total Dequeues</div></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+<script>
+// ──────────────────────────────────────────────
+// THEME
+// ──────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const light = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', light ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = light ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  if (currentStep) drawCanvas(currentStep, 0);
+}
+(function() {
+  const s = localStorage.getItem('theme');
+  if (s === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('toggleLabel').textContent = 'Dark mode';
+  }
+})();
+// ──────────────────────────────────────────────
+// SPEECH
+// ──────────────────────────────────────────────
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const v = synth.getVoices();
+  ttsVoice = v.find(x=>x.name.includes('Google UK English Female'))
+           || v.find(x=>x.name.includes('Google US English'))
+           || v.find(x=>x.lang==='en-US'&&x.localService)
+           || v.find(x=>x.lang.startsWith('en')) || v[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = ttsVoice; u.rate = 0.88; u.pitch = 1.05; u.volume = 1;
+    u.onstart = () => document.getElementById('speakBars').classList.add('on');
+    u.onend = u.onerror = () => { document.getElementById('speakBars').classList.remove('on'); resolve(); };
+    synth.speak(u);
+  });
+}
+function stopSpeech() { synth&&synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const icon = document.getElementById('voiceIcon'), lbl = document.getElementById('voiceLabel');
+  const btn = document.getElementById('voiceToggle');
+  if (voiceEnabled) { icon.textContent='🔊'; lbl.textContent='Voice On'; btn.classList.remove('off'); document.getElementById('speedWrap').style.display='none'; }
+  else { icon.textContent='🔇'; lbl.textContent='Voice Off'; btn.classList.add('off'); stopSpeech(); document.getElementById('speedWrap').style.display=''; }
+}
+// ──────────────────────────────────────────────
+// STEP BUILDER
+// ──────────────────────────────────────────────
+// Each step: { queue:[], highlight: null | {idx,type:'enqueue'|'dequeue'|'peek'}, narration, phase, codeLine, enqueues, dequeues, op? }
+function buildSteps(operations) {
+  const steps = [];
+  const q = [];
+  let enqueues = 0, dequeues = 0;
+  steps.push({
+    queue: [...q], highlight: null,
+    narration: 'Queue initialized. It is empty. The queue follows the FIFO principle — First In, First Out.',
+    phase: 'idle', codeLine: 1, enqueues, dequeues
+  });
+  for (const op of operations) {
+    if (op.type === 'enqueue') {
+      steps.push({
+        queue: [...q], highlight: null,
+        narration: `Calling enqueue(${op.val}). We will add ${op.val} to the rear of the queue.`,
+        phase: 'enqueue', codeLine: 4, enqueues, dequeues, op
+      });
+      q.push(op.val); enqueues++;
+      steps.push({
+        queue: [...q], highlight: { idx: q.length-1, type: 'enqueue' },
+        narration: `Enqueued ${op.val} onto the queue. It is now the rear element. Queue size is now ${q.length}.`,
+        phase: 'enqueue', codeLine: 5, enqueues, dequeues, op
+      });
+    } else if (op.type === 'dequeue') {
+      if (q.length === 0) {
+        steps.push({
+          queue: [...q], highlight: null,
+          narration: 'Calling dequeue() — but the queue is empty! We return null. This is called a queue underflow.',
+          phase: 'idle', codeLine: 8, enqueues, dequeues, op
+        });
+      } else {
+        const frontVal = q[0];
+        steps.push({
+          queue: [...q], highlight: { idx: 0, type: 'dequeue' },
+          narration: `Calling dequeue(). The front element is ${frontVal}. We will remove it and return its value.`,
+          phase: 'dequeue', codeLine: 7, enqueues, dequeues, op
+        });
+        q.shift(); dequeues++;
+        steps.push({
+          queue: [...q], highlight: null,
+          narration: `Dequeued ${frontVal} from the queue. Queue size is now ${q.length}.${q.length>0?' New front is '+q[0]+'.':' Queue is now empty.'}`,
+          phase: 'dequeue', codeLine: 9, enqueues, dequeues, op
+        });
+      }
+    } else if (op.type === 'peek') {
+      if (q.length === 0) {
+        steps.push({
+          queue: [...q], highlight: null,
+          narration: 'Calling peek() — but the queue is empty! We return null.',
+          phase: 'idle', codeLine: 12, enqueues, dequeues, op
+        });
+      } else {
+        const frontVal = q[0];
+        steps.push({
+          queue: [...q], highlight: { idx: 0, type: 'peek' },
+          narration: `Calling peek(). Looking at the front element — it is ${frontVal}. We do NOT remove it.`,
+          phase: 'peek', codeLine: 11, enqueues, dequeues, op
+        });
+        steps.push({
+          queue: [...q], highlight: { idx: 0, type: 'peek' },
+          narration: `Peek returned ${frontVal}. The queue is unchanged. Queue size is still ${q.length}.`,
+          phase: 'peek', codeLine: 13, enqueues, dequeues, op
+        });
+      }
+    } else if (op.type === 'isEmpty') {
+      const empty = q.length === 0;
+      steps.push({
+        queue: [...q], highlight: null,
+        narration: `Calling isEmpty(). Queue length is ${q.length}, so isEmpty returns ${empty}. ${empty?'The queue has no elements.':'The queue has elements.'}`,
+        phase: empty ? 'idle' : 'peek', codeLine: 15, enqueues, dequeues, op
+      });
+    }
+  }
+  steps.push({
+    queue: [...q], highlight: null,
+    narration: `Demo complete! Queue has ${q.length} element${q.length!==1?'s':''}, ${enqueues} enqueue${enqueues!==1?'s':''} and ${dequeues} dequeue${dequeues!==1?'s':''} were performed.`,
+    phase: 'done', codeLine: null, enqueues, dequeues
+  });
+  return steps;
+}
+// ──────────────────────────────────────────────
+// DEFAULT DEMO
+// ──────────────────────────────────────────────
+function makeDefaultOps() {
+  return [
+    { type:'enqueue', val:5 },
+    { type:'enqueue', val:13 },
+    { type:'enqueue', val:8 },
+    { type:'peek' },
+    { type:'enqueue', val:21 },
+    { type:'dequeue' },
+    { type:'dequeue' },
+    { type:'enqueue', val:7 },
+    { type:'isEmpty' },
+    { type:'enqueue', val:42 },
+    { type:'dequeue' },
+    { type:'isEmpty' },
+  ];
+}
+function randomOps() {
+  const ops = [];
+  const pool = [7,14,22,3,55,88,11,37,60,9,27,44];
+  let size = 0;
+  for (let i = 0; i < 14; i++) {
+    const canDeq = size > 0;
+    const r = Math.random();
+    if (r < 0.55 || !canDeq) {
+      const v = pool[Math.floor(Math.random()*pool.length)];
+      ops.push({ type:'enqueue', val:v }); size++;
+    } else if (r < 0.75) {
+      ops.push({ type:'dequeue' }); size--;
+    } else if (r < 0.88) {
+      ops.push({ type:'peek' });
+    } else {
+      ops.push({ type:'isEmpty' });
+    }
+  }
+  ops.push({ type:'isEmpty' });
+  return ops;
+}
+// ──────────────────────────────────────────────
+// CANVAS DRAWING
+// ──────────────────────────────────────────────
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+function drawCanvas(step, animOffset = 0) {
+  resizeCanvas();
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const hl = step.highlight;
+  const queue = step.queue;
+  // Queue container outline
+  const cellW = 50;
+  const MAX_VISIBLE = Math.floor((W - 40) / cellW);
+  const totalVisible = Math.min(queue.length, MAX_VISIBLE);
+  const startIdx = 0;
+  const sw = cellW * totalVisible;
+  const sx = (W - sw) / 2;
+  const sy = H / 2 - 25;
+  const ch = 50;
+  // Bottom line
+  ctx.strokeStyle = '#2a5080';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(sx, sy + ch); ctx.lineTo(sx + sw, sy + ch); ctx.stroke();
+  // Top line
+  ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + sw, sy); ctx.stroke();
+  // Left wall (front)
+  ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy + ch); ctx.stroke();
+  // Right wall (rear)
+  ctx.beginPath(); ctx.moveTo(sx + sw, sy); ctx.lineTo(sx + sw, sy + ch); ctx.stroke();
+  // Labels
+  ctx.fillStyle = '#2a4060';
+  ctx.font = '9px JetBrains Mono';
+  ctx.textAlign = 'center';
+  if (totalVisible > 0) {
+    ctx.fillText('FRONT', sx, sy + ch + 16);
+    ctx.fillText('REAR', sx + sw, sy + ch + 16);
+  }
+  // Draw elements
+  for (let di = 0; di < totalVisible; di++) {
+    const realIdx = startIdx + di;
+    const val = queue[realIdx];
+    let cx = sx + di * cellW;
+    let cy = sy;
+    let fillColor = 'rgba(26,40,64,0.8)', strokeColor = '#2a4060', glowColor = null, textColor = '#4a6a9a';
+    const isFront = realIdx === 0;
+    if (isFront) { fillColor = 'rgba(6,214,160,0.12)'; strokeColor = '#06d6a0'; textColor = '#06d6a0'; }
+    if (hl && hl.idx === realIdx) {
+      if (hl.type === 'enqueue') { fillColor='rgba(255,140,66,0.2)'; strokeColor='#ff8c42'; glowColor='rgba(255,140,66,0.3)'; textColor='#ff8c42'; }
+      else if (hl.type === 'dequeue') { fillColor='rgba(255,107,157,0.2)'; strokeColor='#ff6b9d'; glowColor='rgba(255,107,157,0.3)'; textColor='#ff6b9d'; }
+      else { fillColor='rgba(126,184,255,0.15)'; strokeColor='#7eb8ff'; glowColor='rgba(126,184,255,0.3)'; textColor='#7eb8ff'; }
+    }
+    let drawCx = cx;
+    let drawCy = cy;
+    if (hl && hl.idx === realIdx) {
+      drawCx += animOffset;
+    }
+    if (glowColor) {
+      ctx.beginPath(); ctx.roundRect(drawCx - 3, drawCy - 3, cellW + 6, ch + 6, 5);
+      ctx.fillStyle = glowColor; ctx.fill();
+    }
+    ctx.beginPath(); ctx.roundRect(drawCx, drawCy, cellW, ch, 4);
+    ctx.fillStyle = fillColor; ctx.fill();
+    ctx.strokeStyle = strokeColor; ctx.lineWidth = 1.5; ctx.stroke();
+    // Value
+    ctx.fillStyle = textColor;
+    ctx.font = `bold 14px JetBrains Mono`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(val, drawCx + cellW / 2, drawCy + ch / 2);
+    // Index label
+    ctx.fillStyle = '#2a4060';
+    ctx.font = '9px JetBrains Mono';
+    ctx.fillText(`[${realIdx}]`, drawCx + cellW / 2, drawCy + ch + 10);
+  }
+  // Empty queue hint
+  if (queue.length === 0) {
+    ctx.fillStyle = '#2a4060';
+    ctx.font = '13px JetBrains Mono';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('[ EMPTY QUEUE ]', W / 2, H / 2);
+  }
+  // More elements hint
+  if (queue.length > totalVisible) {
+    ctx.fillStyle = '#2a4060';
+    ctx.font = '11px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText('... + ' + (queue.length - totalVisible) + ' more', sx + sw + 10, sy + ch / 2);
+  }
+  // Size badge top-right
+  ctx.fillStyle = '#162032';
+  ctx.font = '10px JetBrains Mono';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+  const sizeText = `size: ${queue.length}`;
+  const tw = ctx.measureText(sizeText).width + 16;
+  ctx.beginPath(); ctx.roundRect(W - tw - 10, 10, tw, 22, 5);
+  ctx.fillStyle = 'rgba(0,212,170,0.08)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,212,170,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#00d4aa'; ctx.font = '10px JetBrains Mono';
+  ctx.fillText(sizeText, W - 10 - 8, 16);
+}
+// ──────────────────────────────────────────────
+// OP LOG
+// ──────────────────────────────────────────────
+function addLog(type, msg) {
+  const log = document.getElementById('opLog');
+  const tagClass = { enqueue:'log-enqueue', dequeue:'log-dequeue', peek:'log-peek', isEmpty:'log-peek', init:'log-init' }[type] || 'log-init';
+  const tag = type.toUpperCase();
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-tag ${tagClass}">${tag}</span><span class="log-msg">${msg}</span>`;
+  log.insertBefore(entry, log.firstChild);
+  while (log.children.length > 20) log.removeChild(log.lastChild);
+}
+// ──────────────────────────────────────────────
+// CONTROLLER (Auto Demo)
+// ──────────────────────────────────────────────
+let steps = [], stepIdx = -1, isPlaying = false, playTimer = null, speedMult = 2;
+let currentStep = null;
+let liveQueue = []; // for interactive mode
+let totalEnqueues = 0, totalDequeues = 0;
+const SPEED_DELAYS = { 1:1600, 2:900, 3:500, 4:250, 5:100 };
+function getDelay() { return SPEED_DELAYS[speedMult]||900; }
+function onSpeedChange(v) { speedMult=parseInt(v); document.getElementById('speedVal').textContent=v+'×'; }
+function updateUI(step, idx) {
+  currentStep = step;
+  document.getElementById('narText').textContent = step.narration;
+  document.getElementById('narText').classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  const sz = step.queue.length;
+  document.getElementById('sSize').textContent = sz;
+  document.getElementById('sEnqueues').textContent = step.enqueues;
+  document.getElementById('sDequeues').textContent = step.dequeues;
+  document.getElementById('statSize').textContent = sz;
+  document.getElementById('statFront').textContent = sz > 0 ? step.queue[0] : '—';
+  document.getElementById('statEnqueues').textContent = step.enqueues;
+  document.getElementById('statDequeues').textContent = step.dequeues;
+  document.getElementById('stepCtr').textContent = `Step ${idx+1} / ${steps.length}`;
+  const pct = steps.length>1 ? (idx/(steps.length-1)*100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = { enqueue:['ph-enqueue','Enqueue'], dequeue:['ph-dequeue','Dequeue'], peek:['ph-peek','Peek'], done:['ph-done','Done'], idle:['ph-idle','Idle'] };
+  const [cls, lbl] = phaseMap[step.phase]||['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+  for (let i=1;i<=16;i++) { const el=document.getElementById(`cl${i}`); if(el) el.style.background=''; }
+  if (step.codeLine) { const el=document.getElementById(`cl${step.codeLine}`); if(el) el.style.background='rgba(0,212,170,0.12)'; }
+  drawCanvas(step, 0);
+}
+function renderStep(idx, autoAdv=false) {
+  if (idx<0||idx>=steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  updateUI(step, idx);
+  if (autoAdv) scheduleNext(step);
+}
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length-1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(()=>{ if(isPlaying) playTimer=setTimeout(()=>{ if(isPlaying) renderStep(stepIdx+1,true); },400); });
+  } else {
+    playTimer = setTimeout(()=>{ if(isPlaying) renderStep(stepIdx+1,true); }, getDelay());
+  }
+}
+function startPlay() {
+  if (stepIdx >= steps.length-1) stepIdx=-1;
+  isPlaying=true;
+  document.getElementById('btnPlay').textContent='⏸ Pause';
+  renderStep(stepIdx+1, true);
+}
+function stopPlay() {
+  isPlaying=false;
+  if(playTimer){clearTimeout(playTimer);playTimer=null;}
+  document.getElementById('btnPlay').textContent='▶ Play Demo';
+  stopSpeech();
+}
+function nextStep() {
+  stopPlay();
+  if (stepIdx+1 < steps.length) {
+    renderStep(stepIdx+1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+function resetAll() {
+  stopPlay();
+  steps = buildSteps(currentOps);
+  stepIdx = -1;
+  liveQueue = [...steps[0].queue];
+  totalEnqueues = 0; totalDequeues = 0;
+  updateUI(steps[0], 0);
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('opLog').innerHTML = '<div class="log-entry"><span class="log-tag log-init">INIT</span><span class="log-msg">Queue reset</span></div>';
+}
+let currentOps = makeDefaultOps();
+function randomizeDemo() { currentOps = randomOps(); resetAll(); }
+document.getElementById('btnPlay').addEventListener('click', ()=>{ isPlaying?stopPlay():startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+// ──────────────────────────────────────────────
+// INTERACTIVE MODE
+// ──────────────────────────────────────────────
+function syncInteractiveUI() {
+  const sz = liveQueue.length;
+  document.getElementById('sSize').textContent = sz;
+  document.getElementById('sEnqueues').textContent = totalEnqueues;
+  document.getElementById('sDequeues').textContent = totalDequeues;
+  document.getElementById('statSize').textContent = sz;
+  document.getElementById('statFront').textContent = sz>0?liveQueue[0]:'—';
+  document.getElementById('statEnqueues').textContent = totalEnqueues;
+  document.getElementById('statDequeues').textContent = totalDequeues;
+}
+function interactiveEnqueue() {
+  stopPlay(); stepIdx=-1;
+  const raw = document.getElementById('enqVal').value;
+  const val = parseInt(raw);
+  if (isNaN(val)) { alert('Enter a valid number.'); return; }
+  const cellW = 50;
+  const W = canvas.width;
+  const MAX_VISIBLE = Math.floor((W - 40) / cellW);
+  if (liveQueue.length >= MAX_VISIBLE) {
+    liveQueue.push(val);
+    totalEnqueues++;
+    syncInteractiveUI();
+    addLog('enqueue', `Enqueued ${val} → queue size: ${liveQueue.length}`);
+    const step = {
+      queue: [...liveQueue], highlight: null,
+      narration: `Enqueued ${val} to the rear. Queue size now ${liveQueue.length}.`,
+      phase: 'enqueue', codeLine: 5, enqueues: totalEnqueues, dequeues: totalDequeues
+    };
+    updateUI(step, 0);
+    if (voiceEnabled) speak(step.narration);
+  } else {
+    liveQueue.push(val);
+    totalEnqueues++;
+    syncInteractiveUI();
+    addLog('enqueue', `Enqueued ${val} → queue size: ${liveQueue.length}`);
+    let animT = 0;
+    const animDur = voiceEnabled ? 1200 : 600;
+    const animStart = performance.now();
+    const animFrom = cellW;
+    const animateEnqueue = () => {
+      const elapsed = performance.now() - animStart;
+      animT = Math.min(elapsed / animDur, 1);
+      const ease = 1 - Math.pow(1 - animT, 3);
+      const offset = animFrom * (1 - ease);
+      const step = {
+        queue: [...liveQueue], highlight: { idx: liveQueue.length-1, type: 'enqueue' },
+        narration: `Enqueuing ${val} to the rear.`,
+        phase: 'enqueue', codeLine: 4, enqueues: totalEnqueues, dequeues: totalDequeues
+      };
+      updateUI(step, 0);
+      drawCanvas(step, offset);
+      if (animT < 1) {
+        requestAnimationFrame(animateEnqueue);
+      } else {
+        step.narration = `Enqueued ${val} to the rear. It is now the rear element. Queue size is now ${liveQueue.length}.`;
+        step.codeLine = 5;
+        updateUI(step, 0);
+        drawCanvas(step, 0);
+        if (voiceEnabled) speak(step.narration);
+        // Change input value to random between 1 and 999
+        document.getElementById('enqVal').value = Math.floor(Math.random() * 999) + 1;
+      }
+    };
+    requestAnimationFrame(animateEnqueue);
+  }
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('stepCtr').textContent = 'Interactive';
+}
+function interactiveDequeue() {
+  stopPlay(); stepIdx=-1;
+  if (liveQueue.length === 0) {
+    const step = { queue:[], highlight:null, narration:'Dequeue called on empty queue! Returns null. This is a queue underflow error.', phase:'idle', codeLine:8, enqueues:totalEnqueues, dequeues:totalDequeues };
+    updateUI(step, 0);
+    addLog('dequeue', 'Dequeue on empty queue → null (underflow)');
+    if (voiceEnabled) speak(step.narration);
+    return;
+  }
+  const frontVal = liveQueue[0];
+  let animT = 0;
+  const animDur = voiceEnabled ? 1200 : 600;
+  const animStart = performance.now();
+  const animFrom = -50; // cellW approximate
+  const animateDequeue = () => {
+    const elapsed = performance.now() - animStart;
+    animT = Math.min(elapsed / animDur, 1);
+    const ease = 1 - Math.pow(1 - animT, 3);
+    const offset = animFrom * ease;
+    const step = {
+      queue: [...liveQueue], highlight: { idx: 0, type: 'dequeue' },
+      narration: `Dequeuing ${frontVal} from the front.`,
+      phase: 'dequeue', codeLine:7, enqueues:totalEnqueues, dequeues:totalDequeues
+    };
+    updateUI(step, 0);
+    drawCanvas(step, offset);
+    if (animT < 1) {
+      requestAnimationFrame(animateDequeue);
+    } else {
+      liveQueue.shift();
+      totalDequeues++;
+      syncInteractiveUI();
+      addLog('dequeue', `Dequeued ${frontVal} → queue size: ${liveQueue.length}`);
+      step.highlight = null;
+      step.narration = `Dequeued ${frontVal}. Queue size: ${liveQueue.length}.${liveQueue.length>0?' New front: '+liveQueue[0]+'.':' Queue is now empty.'}`;
+      step.codeLine = 9;
+      updateUI(step, 0);
+      drawCanvas(step, 0);
+      if (voiceEnabled) speak(step.narration);
+    }
+  };
+  requestAnimationFrame(animateDequeue);
+  document.getElementById('stepCtr').textContent='Interactive';
+}
+function interactivePeek() {
+  stopPlay(); stepIdx=-1;
+  if (liveQueue.length===0) {
+    const step = { queue:[], highlight:null, narration:'Peek called on empty queue! Returns null.', phase:'idle', codeLine:12, enqueues:totalEnqueues, dequeues:totalDequeues };
+    updateUI(step, 0);
+    addLog('peek', 'Peek on empty queue → null');
+    if (voiceEnabled) speak(step.narration);
+    return;
+  }
+  const val = liveQueue[0];
+  const step = { queue:[...liveQueue], highlight:{idx:0,type:'peek'}, narration:`Peek: front element is ${val}. The queue remains unchanged.`, phase:'peek', codeLine:13, enqueues:totalEnqueues, dequeues:totalDequeues };
+  updateUI(step, 0);
+  addLog('peek', `Peek → front is ${val}`);
+  if (voiceEnabled) speak(step.narration);
+  document.getElementById('stepCtr').textContent='Interactive';
+}
+function interactiveIsEmpty() {
+  stopPlay(); stepIdx=-1;
+  const empty = liveQueue.length===0;
+  const step = { queue:[...liveQueue], highlight:null, narration:`isEmpty() → ${empty}. Queue length is ${liveQueue.length}.`, phase: empty?'idle':'peek', codeLine:16, enqueues:totalEnqueues, dequeues:totalDequeues };
+  updateUI(step, 0);
+  addLog('isEmpty', `isEmpty() → ${empty} (size: ${liveQueue.length})`);
+  if (voiceEnabled) speak(step.narration);
+  document.getElementById('stepCtr').textContent='Interactive';
+}
+function clearQueue() {
+  stopPlay(); stepIdx=-1;
+  liveQueue=[];
+  const step = { queue:[], highlight:null, narration:'Queue cleared. All elements removed. Queue is now empty.', phase:'idle', codeLine:null, enqueues:totalEnqueues, dequeues:totalDequeues };
+  updateUI(step, 0);
+  addLog('init', 'Queue cleared');
+  if (voiceEnabled) speak(step.narration);
+  document.getElementById('stepCtr').textContent='Interactive';
+}
+// ──────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────
+function init() {
+  resizeCanvas();
+  steps = buildSteps(currentOps);
+  stepIdx = -1;
+  liveQueue = [];
+  totalEnqueues = 0; totalDequeues = 0;
+  updateUI(steps[0], 0);
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+}
+window.addEventListener('resize', ()=>{
+  resizeCanvas();
+  if (currentStep) drawCanvas(currentStep, 0);
+});
+init();
+</script>
 </body>
 </html>
