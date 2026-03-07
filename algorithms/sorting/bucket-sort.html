@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hash Table — block array · fixed containers</title>
+<title>Bucket Sort — block array · fixed containers</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/css/main.css">
 <style>
@@ -11,19 +11,22 @@
   --container-border: #2a4060;
   --container-bg: #1a2840;
   --digit-highlight: #ff8c42;
-  --compare-highlight: #42a5ff;
+  --placing-highlight: #ff6b9d;
   --sorted-color: #06d6a0;
   --block-bg: #1e2c42;
   --block-text: #eef4ff;
   --block-border: #3e5570;
   --current-array-highlight: #ffd166;
 }
+
 .two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
 @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
 #vizCanvas {
   width: 100%; border-radius: 8px;
   background: transparent; display: block;
 }
+
 .controls {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 12px; padding: 16px 18px;
@@ -32,6 +35,7 @@
 .ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
 .input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
 .input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+
 .arr-input {
   flex: 1; min-width: 200px;
   background: var(--surface2); border: 1px solid var(--border);
@@ -40,9 +44,11 @@
   outline: none; transition: border-color .2s;
 }
 .arr-input:focus { border-color: var(--teal); }
+
 .legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
 .li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
 .ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .stat-box {
   background: var(--surface2); border: 1px solid var(--border);
@@ -50,6 +56,7 @@
 }
 .stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
 .stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
 .voice-btn {
   margin-left: auto; background: none;
   border: 1px solid var(--border); border-radius: 7px;
@@ -62,6 +69,7 @@
 .voice-btn.off { color: var(--text-dim); border-color: var(--border); }
 .voice-btn.off:hover { background: rgba(74,106,154,0.1); }
 .voice-icon { font-size: 14px; }
+
 .narration-text.intro-mode {
   color: var(--teal); font-weight: 600;
   animation: glowPulse 2s infinite;
@@ -71,6 +79,7 @@
   50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
   100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
 }
+
 .digit-badge {
   background: var(--surface2);
   padding: 4px 10px;
@@ -79,6 +88,7 @@
   font-family: var(--mono);
   border: 1px solid var(--border);
 }
+
 /* ===== CONTAINER VISUALIZATION ===== */
 .containers-wrapper {
   display: flex;
@@ -91,17 +101,19 @@
   border-radius: 8px;
   border: 1px solid var(--border);
 }
+
 .container {
   flex: 1;
   background: var(--container-bg);
   border: 1px solid var(--container-border);
   border-radius: 4px;
-  min-height: 192px; /* fixed height – no scroll needed */
-  max-height: 192px; /* lock height – containers never overflow */
+  min-height: 96px;           /* fixed height – no scroll needed */
+  max-height: 96px;           /* lock height – containers never overflow */
   display: flex;
   flex-direction: column;
   position: relative;
 }
+
 .container-label {
   text-align: center;
   font-size: 10px;
@@ -112,6 +124,7 @@
   background: rgba(0,0,0,0.2);
   flex-shrink: 0;
 }
+
 .container-items {
   flex: 1;
   display: flex;
@@ -119,9 +132,10 @@
   align-items: center;
   justify-content: flex-start;
   padding: 4px 2px;
-  overflow: visible; /* NO scroll */
-  max-height: 168px; /* room for ~5 blocks, but limited by fixed container */
+  overflow: visible;           /* NO scroll */
+  max-height: 72px;            /* room for ~5 blocks, but limited by fixed container */
 }
+
 /* block style — square per element */
 .container-item {
   width: 24px;
@@ -140,6 +154,7 @@
   box-shadow: 0 2px 3px rgba(0,0,0,0.3);
   transition: all 0.15s;
 }
+
 .container-item.highlight {
   background: var(--digit-highlight);
   color: black;
@@ -148,23 +163,20 @@
   transform: scale(1.05);
   box-shadow: 0 0 8px gold;
 }
-.container-item.compare {
-  background: var(--compare-highlight);
+
+.container-item.placing {
+  background: var(--placing-highlight);
   color: black;
   border-color: white;
   animation: pulse 1s;
 }
-.container-item.found {
-  background: var(--sorted-color);
-  color: black;
-  border-color: white;
-  animation: pulse 1s;
-}
+
 @keyframes pulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+  50% { transform: scale(1.2); background: #ff9ebb; }
   100% { transform: scale(1); }
 }
+
 /* Array display blocks (current array) */
 .array-blocks {
   display: flex;
@@ -173,7 +185,6 @@
   align-items: center;
   margin-top: 8px;
   min-height: 50px;
-  max-width: 500px;
 }
 .array-block {
   width: 40px;
@@ -191,6 +202,11 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   transition: all 0.2s ease;
 }
+.array-block.sorted {
+  background: rgba(6,214,160,0.25);
+  border-color: var(--sorted-color);
+  color: var(--sorted-color);
+}
 .array-block.current-highlight {
   background: var(--current-array-highlight);
   border-color: white;
@@ -200,6 +216,7 @@
   box-shadow: 0 0 15px gold;
   z-index: 10;
 }
+
 /* count badge */
 .count-badge {
   background: var(--surface);
@@ -211,8 +228,10 @@
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
+
 <!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
@@ -233,50 +252,59 @@
     </button>
   </div>
 </nav>
+
 <div class="algo-page">
+
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+
   <header style="margin-bottom:20px;">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
       <span style="font-size:40px;">🗂️</span>
       <div>
-        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Data Structure</div>
-        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Hash Table · Square Blocks</h1>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Sorting Algorithm</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Bucket Sort · Square Blocks</h1>
       </div>
       <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
     </div>
     <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
-      Each key becomes a <strong>square block</strong>. Fixed‑height containers (no scroll). Insert into 10 buckets based on <code>hash(key) % 10</code>. Then search for the key in the bucket. <span style="color:#ffd166; font-weight:bold;">Current element highlighted in yellow during insert</span>
+      Each number becomes a <strong>square block</strong>. Fixed‑height containers (no scroll). Distribute into 10 buckets based on value range. <span style="color:#ffd166; font-weight:bold;">Current element highlighted in yellow</span>
     </p>
     <div class="complexity" style="margin-top:10px;">
-      <div class="cplx-chip">Best: <span>O(1)</span></div>
-      <div class="cplx-chip">Average: <span>O(1)</span></div>
-      <div class="cplx-chip">Worst: <span>O(n)</span></div>
+      <div class="cplx-chip">Best: <span>O(n)</span></div>
+      <div class="cplx-chip">Average: <span>O(n)</span></div>
+      <div class="cplx-chip">Worst: <span>O(n^2)</span></div>
       <div class="cplx-chip">Space: <span>O(n)</span></div>
+      <div class="cplx-chip">Stable: <span>✓ Yes (if stable inner sort)</span></div>
     </div>
   </header>
+
   <!-- Concept cards (short) -->
   <div class="concepts">
-    <div class="cc"><span class="cc-icon">🗂️</span><div class="cc-title">10 Buckets</div><div class="cc-desc">Fixed height, blocks show keys.</div></div>
-    <div class="cc"><span class="cc-icon">📥</span><div class="cc-title">Hash & Insert</div><div class="cc-desc">Hash(key) % 10 → bucket.</div></div>
-    <div class="cc"><span class="cc-icon">🔍</span><div class="cc-title">Search</div><div class="cc-desc">Hash to bucket, linear search.</div></div>
+    <div class="cc"><span class="cc-icon">🗂️</span><div class="cc-title">10 Buckets</div><div class="cc-desc">Fixed height, blocks show numbers.</div></div>
+    <div class="cc"><span class="cc-icon">📥</span><div class="cc-title">Distribute & Collect</div><div class="cc-desc">Value → bucket → sort → collect.</div></div>
+    <div class="cc"><span class="cc-icon">⬛</span><div class="cc-title">Square blocks</div><div class="cc-desc">Each element = one block.</div></div>
   </div>
+
   <!-- Narration -->
   <div class="narration" id="narration">
     <span class="teacher" id="teacher">🧑‍🏫</span>
-    <div class="narration-text" id="narText">Welcome! Blocks replace numbers – containers have fixed height. Current array element is highlighted in yellow during insertion.</div>
+    <div class="narration-text" id="narText">Welcome! Blocks replace numbers – containers have fixed height. Current array element is highlighted in yellow.</div>
     <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
   </div>
+
   <!-- Status bar -->
   <div class="status-row">
-    <div class="si"><span class="sl">Operation</span><span class="sv orange" id="sDigitPlace">Insertion</span></div>
+    <div class="si"><span class="sl">Stage</span><span class="sv orange" id="sDigitPlace">Distribution</span></div>
     <div class="si"><span class="sl">Pass</span><span class="sv" id="sPass">1/1</span></div>
     <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
     <div class="divider-auto"></div>
     <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
     <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
   </div>
+
   <!-- Main two‑col -->
   <div class="two-col">
+
     <!-- LEFT: containers + array blocks -->
     <div>
       <div class="panel">
@@ -284,26 +312,27 @@
         <div class="legend">
           <div class="li"><div class="ld" style="background:var(--container-bg);border:1px solid var(--container-border);"></div>Bucket</div>
           <div class="li"><div class="ld" style="background:var(--digit-highlight);"></div>Current Bucket</div>
-          <div class="li"><div class="ld" style="background:var(--compare-highlight);"></div>Comparing</div>
+          <div class="li"><div class="ld" style="background:var(--placing-highlight);"></div>Placing</div>
           <div class="li"><div class="ld" style="background:var(--current-array-highlight);"></div>Current Element</div>
-          <div class="li"><div class="ld" style="background:var(--sorted-color);"></div>Found</div>
+          <div class="li"><div class="ld" style="background:var(--sorted-color);"></div>Sorted</div>
           <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice">
             <span class="voice-icon" id="voiceIcon">🔇</span>
             <span id="voiceLabel">Voice Off</span>
           </button>
         </div>
-       
+        
         <!-- Container visualization (fixed height, no scroll) -->
         <div id="containersView" class="containers-wrapper"></div>
-       
+        
         <!-- Current array as square blocks with current element highlighted -->
         <div style="margin-top: 18px; padding: 10px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border);">
           <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px; font-family: var(--mono);">
-            📋 KEYS TO INSERT (square blocks): <span style="color:#ffd166;">yellow = current element</span>
+            📋 CURRENT ARRAY (square blocks): <span style="color:#ffd166;">yellow = current element</span>
           </div>
           <div id="arrayBlocksContainer" class="array-blocks"></div>
         </div>
       </div>
+
       <div class="controls">
         <div class="ctrl-row">
           <button class="btn btn-primary" id="btnPlay">▶ Play</button>
@@ -318,51 +347,53 @@
         </div>
         <div class="input-row">
           <label>Array (comma-separated):</label>
-          <input type="text" class="arr-input" id="arrInput" value="170, 45, 75, 90, 2, 802, 24, 66, 108, 3, 110, 121, 132, 143, 154, 165, 176, 187, 198, 209, 210, 221, 232, 243, 254, 265, 276, 287, 298, 309, 310, 321, 332, 343, 354, 365, 376, 387, 398, 409">
-        </div>
-        <div class="input-row">
-          <label>Search Key:</label>
-          <input type="text" class="arr-input" id="searchInput" value="75">
-          <button class="btn" onclick="applyInputs()">Apply</button>
+          <input type="text" class="arr-input" id="arrInput" value="170, 45, 75, 90, 2, 802, 24, 66, 108, 3">
+          <button class="btn" onclick="applyArray()">Apply</button>
         </div>
       </div>
     </div>
+
     <!-- RIGHT panels (unchanged) -->
     <div style="display:flex;flex-direction:column;gap:14px;">
+
       <div class="panel">
         <div class="panel-hd">📈 Statistics</div>
         <div class="stats-grid">
-          <div class="stat-box"><div class="stat-box-n" id="statPass">0</div><div class="stat-box-l">Current Operation</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPass">0</div><div class="stat-box-l">Current Pass</div></div>
           <div class="stat-box"><div class="stat-box-n" id="statTotalPasses">1</div><div class="stat-box-l">Total Passes</div></div>
           <div class="stat-box"><div class="stat-box-n" id="statMaxDigits">10</div><div class="stat-box-l">Bucket Count</div></div>
           <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Size</div></div>
         </div>
       </div>
+
       <div class="panel">
         <div class="panel-hd">💻 Pseudocode</div>
         <div class="code-block">
-<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">hash</span>(key):</span>
-<span id="cl2" class="code-line"> <span class="kw">return</span> key % 10</span>
-<span id="cl3" class="code-line"><span class="kw">function</span> <span class="fn">insert</span>(arr):</span>
-<span id="cl4" class="code-line"> buckets = new Array(10) // each is []</span>
-<span id="cl5" class="code-line"> <span class="kw">for</span> num <span class="kw">in</span> arr:</span>
-<span id="cl6" class="code-line"> idx = <span class="fn">hash</span>(num)</span>
-<span id="cl7" class="code-line"> buckets[idx].<span class="fn">push</span>(num)</span>
-<span id="cl8" class="code-line"><span class="kw">function</span> <span class="fn">search</span>(key):</span>
-<span id="cl9" class="code-line"> idx = <span class="fn">hash</span>(key)</span>
-<span id="cl10" class="code-line"> <span class="kw">for</span> num <span class="kw">in</span> buckets[idx]:</span>
-<span id="cl11" class="code-line"> <span class="kw">if</span> num == key:</span>
-<span id="cl12" class="code-line"> <span class="kw">return</span> true</span>
-<span id="cl13" class="code-line"> <span class="kw">return</span> false</span>
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">bucketSort</span>(arr):</span>
+<span id="cl2" class="code-line">  n = arr.length</span>
+<span id="cl3" class="code-line">  buckets = new Array(10)  // each is []</span>
+<span id="cl4" class="code-line">  minVal = min(arr)</span>
+<span id="cl5" class="code-line">  maxVal = max(arr)</span>
+<span id="cl6" class="code-line">  range = maxVal - minVal + 1</span>
+<span id="cl7" class="code-line">  <span class="kw">for</span> num <span class="kw">in</span> arr:</span>
+<span id="cl8" class="code-line">    idx = floor((num - minVal) * 9 / (maxVal - minVal))  // 0-9</span>
+<span id="cl9" class="code-line">    buckets[idx].push(num)</span>
+<span id="cl10" class="code-line">  <span class="kw">for</span> bucket <span class="kw">in</span> buckets:</span>
+<span id="cl11" class="code-line">    sort(bucket)  // e.g., insertion sort</span>
+<span id="cl12" class="code-line">  return [].concat(...buckets)</span>
         </div>
       </div>
+
       <div class="panel">
         <div class="panel-hd">📊 Bucket Contents</div>
         <div id="containerContents" style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.8;">—</div>
       </div>
+
     </div>
   </div>
+
 </div>
+
 <script>
 // ==================== THEME ====================
 function toggleTheme() {
@@ -376,6 +407,7 @@ function toggleTheme() {
   const saved = localStorage.getItem('theme');
   if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
 })();
+
 // ==================== SPEECH ====================
 const synth = window.speechSynthesis;
 let ttsVoice = null;
@@ -389,6 +421,7 @@ function loadVoices() {
 }
 loadVoices();
 if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
 function speak(text) {
   return new Promise(resolve => {
     if (!voiceEnabled || !synth) { resolve(); return; }
@@ -405,6 +438,7 @@ function speak(text) {
   });
 }
 function stopSpeech() { synth && synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
 // ==================== VOICE TOGGLE ====================
 let voiceEnabled = false;
 function toggleVoice() {
@@ -425,195 +459,215 @@ function toggleVoice() {
     if (isPlaying) { stopPlay(); startPlay(); }
   }
 }
-// ==================== STEP GENERATOR ====================
-function buildHashSearchSteps(initialArr, searchKey) {
+
+// ==================== STEP GENERATOR (with highlightIndex for current array element) ====================
+function buildBucketSortSteps(initialArr) {
   const steps = [];
   const arr = [...initialArr];
+  const minVal = Math.min(...arr);
+  const maxVal = Math.max(...arr);
   const bucketCount = 10;
+  const range = maxVal - minVal + 1;
+
   // initial idle step
-  steps.push({
-    arr: [...arr],
-    containers: [[],[],[],[],[],[],[],[],[],[]],
-    phase:'idle',
-    pass:0,
-    totalPasses:1,
-    stage:'Insertion',
-    bucketCount,
-    highlightBucket:null,
-    highlightIndex:null,
+  steps.push({ 
+    arr: [...arr], 
+    containers: [[],[],[],[],[],[],[],[],[],[]], 
+    phase:'idle', 
+    pass:0, 
+    totalPasses:1, 
+    stage:'Distribution', 
+    bucketCount, 
+    highlightBucket:null, 
+    highlightIndex:null,      // no array highlight
     currentNum:null,
-    narration:'Hash table search ready.',
-    codeLine:1
+    narration:'Bucket sort ready.', 
+    codeLine:1 
   });
+
   let currentArr = [...arr];
   let containers = [[],[],[],[],[],[],[],[],[],[]];
-  // start of insert
-  steps.push({
-    arr:[...currentArr],
-    containers:JSON.parse(JSON.stringify(containers)),
-    phase:'new-insert',
-    pass:1,
-    totalPasses:1,
-    stage:'Insertion',
-    bucketCount,
+
+  // start of pass (single pass)
+  steps.push({ 
+    arr:[...currentArr], 
+    containers:JSON.parse(JSON.stringify(containers)), 
+    phase:'new-pass', 
+    pass:1, 
+    totalPasses:1, 
+    stage:'Distribution', 
+    bucketCount, 
     highlightBucket:null,
-    highlightIndex:null,
-    narration:`Starting insertions into hash table.`,
-    codeLine:5
+    highlightIndex:null, 
+    narration:`Starting bucket sort with ${bucketCount} buckets.`, 
+    codeLine:3 
   });
-  // insert each element
+
+  // distribute each element – highlight current array element
   for (let i = 0; i < currentArr.length; i++) {
     const num = currentArr[i];
-    const bucketIdx = num % 10;
+    let bucketIdx = Math.floor((num - minVal) * (bucketCount - 1) / (maxVal - minVal));
+    if (num === maxVal) bucketIdx = bucketCount - 1;
     containers[bucketIdx].push(num);
-    steps.push({
-      arr:[...currentArr],
-      containers:JSON.parse(JSON.stringify(containers)),
-      phase:'insert',
-      pass:1,
-      totalPasses:1,
-      stage:'Insertion',
-      bucketCount,
+    steps.push({ 
+      arr:[...currentArr], 
+      containers:JSON.parse(JSON.stringify(containers)), 
+      phase:'distribute', 
+      pass:1, 
+      totalPasses:1, 
+      stage:'Distribution', 
+      bucketCount, 
       highlightBucket:bucketIdx,
-      highlightIndex:i,
-      currentNum:num,
-      currentBucket:bucketIdx,
-      narration:`${num} → bucket ${bucketIdx}`,
-      codeLine:7
+      highlightIndex:i,                     // ← current element index in array
+      currentNum:num, 
+      currentBucket:bucketIdx, 
+      narration:`${num} → bucket ${bucketIdx}`, 
+      codeLine:8 
     });
   }
-  // insertion complete
-  steps.push({
-    arr:[...currentArr],
-    containers:JSON.parse(JSON.stringify(containers)),
-    phase:'insert-complete',
-    pass:1,
-    totalPasses:1,
-    stage:'Insertion',
-    bucketCount,
+
+  // distribution complete
+  steps.push({ 
+    arr:[...currentArr], 
+    containers:JSON.parse(JSON.stringify(containers)), 
+    phase:'distribute-complete', 
+    pass:1, 
+    totalPasses:1, 
+    stage:'Distribution', 
+    bucketCount, 
     highlightBucket:null,
-    highlightIndex:null,
-    narration:`Insertions done. Now searching for ${searchKey}.`,
-    codeLine:8
+    highlightIndex:null, 
+    narration:`Distribution done. Now sorting buckets.`, 
+    codeLine:9 
   });
-  // search bucket
-  const bucketIdx = searchKey % 10;
-  steps.push({
-    arr:[...currentArr],
-    containers:JSON.parse(JSON.stringify(containers)),
-    phase:'search-bucket',
-    pass:1,
-    totalPasses:1,
-    stage:'Search',
-    bucketCount,
-    highlightBucket:bucketIdx,
-    highlightIndex:null,
-    narration:`Hash for ${searchKey} points to bucket ${bucketIdx}.`,
-    codeLine:9
+
+  // sort buckets (single step for simplicity, no inner viz)
+  for (let d = 0; d < bucketCount; d++) {
+    containers[d].sort((a, b) => a - b);
+  }
+  steps.push({ 
+    arr:[...currentArr], 
+    containers:JSON.parse(JSON.stringify(containers)), 
+    phase:'sort-buckets', 
+    pass:1, 
+    totalPasses:1, 
+    stage:'Sorting', 
+    bucketCount, 
+    highlightBucket:null,
+    highlightIndex:null, 
+    narration:`Buckets sorted (using inner sort).`, 
+    codeLine:11 
   });
-  let found = false;
-  let foundIdx = -1;
-  for (let j = 0; j < containers[bucketIdx].length; j++) {
-    const item = containers[bucketIdx][j];
-    steps.push({
-      arr:[...currentArr],
-      containers:JSON.parse(JSON.stringify(containers)),
-      phase:'compare',
-      pass:1,
-      totalPasses:1,
-      stage:'Search',
-      bucketCount,
-      highlightBucket:bucketIdx,
-      compareIndex:j,
-      highlightIndex:null,
-      narration:`Compare ${item} with ${searchKey}.`,
-      codeLine:11
-    });
-    if (item === searchKey) {
-      found = true;
-      foundIdx = j;
-      break;
+
+  // collect from buckets
+  const newArr = [];
+  for (let d = 0; d < bucketCount; d++) {
+    if (containers[d].length) {
+      steps.push({ 
+        arr:[...newArr], 
+        containers:JSON.parse(JSON.stringify(containers)), 
+        phase:'collect', 
+        pass:1, 
+        totalPasses:1, 
+        stage:'Collection', 
+        bucketCount, 
+        collectingBucket:d, 
+        highlightBucket:d,
+        highlightIndex:null,                  // during collect, no specific array element highlighted
+        narration:`Collect bucket ${d}`, 
+        codeLine:12 
+      });
+      newArr.push(...containers[d]);
     }
   }
-  // final result
-  if (found) {
-    steps.push({
-      arr:[...currentArr],
-      containers:JSON.parse(JSON.stringify(containers)),
-      phase:'found',
-      sorted:true,
-      pass:1,
-      totalPasses:1,
-      bucketCount,
-      highlightBucket:bucketIdx,
-      foundIndex:foundIdx,
-      highlightIndex:null,
-      narration:`Found ${searchKey}!`,
-      codeLine:12
-    });
-  } else {
-    steps.push({
-      arr:[...currentArr],
-      containers:JSON.parse(JSON.stringify(containers)),
-      phase:'not-found',
-      pass:1,
-      totalPasses:1,
-      bucketCount,
-      highlightBucket:null,
-      highlightIndex:null,
-      narration:`${searchKey} not found.`,
-      codeLine:13
-    });
-  }
- 
+  
+  currentArr = [...newArr];
+  
+  // pass complete
+  steps.push({ 
+    arr:[...currentArr], 
+    containers:[[],[],[],[],[],[],[],[],[],[]], 
+    phase:'pass-complete', 
+    pass:1, 
+    totalPasses:1, 
+    stage:'Collection', 
+    bucketCount, 
+    highlightBucket:null,
+    highlightIndex:null, 
+    narration:`Bucket sort complete.`, 
+    codeLine:12 
+  });
+  
+  // final sorted
+  steps.push({ 
+    arr:[...currentArr], 
+    containers:[[],[],[],[],[],[],[],[],[],[]], 
+    phase:'done', 
+    sorted:true, 
+    pass:1, 
+    totalPasses:1, 
+    bucketCount, 
+    highlightBucket:null,
+    highlightIndex:null, 
+    narration:`Sorted!`, 
+    codeLine:12 
+  });
+  
   return steps;
 }
-// ==================== RENDER ====================
+
+// ==================== RENDER (blocks + fixed containers + current array highlight) ====================
 function renderContainers(step) {
   const containersView = document.getElementById('containersView');
   const containerContents = document.getElementById('containerContents');
   if (!step || !step.containers) return;
+
   let html = '';
   for (let d = 0; d < 10; d++) {
     const items = step.containers[d] || [];
     const isHighlight = step.highlightBucket === d;
+    const isCollecting = step.collectingBucket === d;
     html += `<div class="container"><div class="container-label">${d}</div><div class="container-items">`;
     items.forEach((item, idx) => {
-      const isCurrent = step.phase === 'insert' && step.currentNum === item && isHighlight && idx === items.length-1;
+      const isCurrent = step.phase === 'distribute' && step.currentNum === item && isHighlight && idx === items.length-1;
       let cls = 'container-item';
       if (isCurrent) cls += ' highlight';
-      if (step.phase === 'compare' && step.compareIndex === idx && d === step.highlightBucket) cls += ' compare';
-      if (step.phase === 'found' && step.foundIndex === idx && d === step.highlightBucket) cls += ' found';
+      else if (isCollecting) cls += ' placing';
       html += `<div class="${cls}">${item}</div>`;
     });
     html += `</div></div>`;
   }
   containersView.innerHTML = html;
+
   let text = '';
-  for (let d=0; d<10; d++) if(step.containers[d].length) text += `[${d}]:${step.containers[d].join(',')} `;
+  for (let d=0; d<10; d++) if(step.containers[d].length) text += `[${d}]:${step.containers[d].join(',')}  `;
   containerContents.textContent = text || 'All empty';
+
   // render array as square blocks with current element highlighted
   const arrayBlocks = document.getElementById('arrayBlocksContainer');
   let blocksHtml = '';
   step.arr.forEach((val, idx) => {
+    const sortedClass = step.phase === 'done' ? 'sorted' : '';
     // highlight if this index matches highlightIndex (current element being processed)
-    const highlightClass = (step.highlightIndex === idx && step.phase === 'insert') ? 'current-highlight' : '';
-    blocksHtml += `<div class="array-block ${highlightClass}">${val}</div>`;
+    const highlightClass = (step.highlightIndex === idx && step.phase === 'distribute') ? 'current-highlight' : '';
+    blocksHtml += `<div class="array-block ${sortedClass} ${highlightClass}">${val}</div>`;
   });
   arrayBlocks.innerHTML = blocksHtml || '<span style="color:gray;">—</span>';
 }
+
 // ==================== CONTROLLER ====================
-let steps = [], arr = [170, 45, 75, 90, 2, 802, 24, 66, 108, 3, 110, 121, 132, 143, 154, 165, 176, 187, 198, 209, 210, 221, 232, 243, 254, 265, 276, 287, 298, 309, 310, 321, 332, 343, 354, 365, 376, 387, 398, 409], searchKey = 75;
+let steps = [], arr = [170,45,75,90,2,802,24,66,108,3];
 let stepIdx = -1, isPlaying = false, playTimer = null, introPlayed = false, speedMult = 2;
 const SPEED_DELAYS = {1:2000,2:1200,3:700,4:350,5:150};
 function getDelay() { return SPEED_DELAYS[speedMult]; }
 function onSpeedChange(v) { speedMult=parseInt(v); document.getElementById('speedVal').textContent=v+'×'; }
+
 function updateNarration(step) {
   document.getElementById('narText').textContent = step.narration;
   document.getElementById('teacher').textContent = '🧑‍💻';
 }
 function updateStatusBar(step, idx) {
-  document.getElementById('sDigitPlace').textContent = step.stage || 'Insertion';
+  document.getElementById('sDigitPlace').textContent = step.stage || 'Distribution';
   document.getElementById('sPass').textContent = `${step.pass||0}/${step.totalPasses||0}`;
   document.getElementById('statPass').textContent = step.pass||0;
   document.getElementById('statTotalPasses').textContent = step.totalPasses||0;
@@ -623,24 +677,25 @@ function updateStatusBar(step, idx) {
   const pct = steps.length>1 ? ((idx/(steps.length-1))*100).toFixed(1) : 0;
   document.getElementById('progFill').style.width = pct+'%';
   const badge = document.getElementById('phaseBadge');
-  const map = {
-    'idle':['ph-idle','Idle'],
-    'new-insert':['ph-active','New Insert'],
-    'insert':['ph-compare','Insert'],
-    'insert-complete':['ph-compare','Inserted'],
-    'search-bucket':['ph-active','Hashing'],
-    'compare':['ph-compare','Comparing'],
-    'found':['ph-done','Found'],
-    'not-found':['ph-idle','Not Found']
+  const map = { 
+    'idle':['ph-idle','Idle'], 
+    'new-pass':['ph-active','New Pass'], 
+    'distribute':['ph-compare','Distribute'], 
+    'distribute-complete':['ph-compare','Distributed'], 
+    'sort-buckets':['ph-active','Sorting Buckets'], 
+    'collect':['ph-swap','Collect'], 
+    'pass-complete':['ph-active','Pass Complete'], 
+    'done':['ph-done','Done'] 
   };
   const [cls, lbl] = map[step.phase] || ['ph-idle','Idle'];
   badge.className = `phase-badge ${cls}`;
   badge.textContent = lbl;
-  for (let i=1;i<=13;i++) {
+  for (let i=1;i<=12;i++) {
     const el = document.getElementById(`cl${i}`);
     if(el) el.style.background = step.codeLine===i ? 'rgba(0,212,170,0.12)' : '';
   }
 }
+
 function renderStep(idx, autoAdvance = false) {
   if (idx<0 || idx>=steps.length) return;
   stepIdx = idx;
@@ -650,6 +705,7 @@ function renderStep(idx, autoAdvance = false) {
   updateStatusBar(step, idx);
   if (autoAdvance) scheduleNext(step);
 }
+
 function scheduleNext(step) {
   if (!isPlaying) return;
   if (stepIdx >= steps.length-1) { stopPlay(); return; }
@@ -662,6 +718,7 @@ function scheduleNext(step) {
     playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx+1, true); }, getDelay());
   }
 }
+
 function nextStep() {
   stopPlay();
   if (stepIdx+1 < steps.length) {
@@ -691,33 +748,28 @@ function resetAll() {
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
   document.getElementById('phaseBadge').textContent = 'Idle';
-  for (let i=1;i<=13;i++) { const el = document.getElementById(`cl${i}`); if(el) el.style.background=''; }
+  for (let i=1;i<=12;i++) { const el = document.getElementById(`cl${i}`); if(el) el.style.background=''; }
   document.getElementById('narText').textContent = 'Ready. Press Play.';
 }
 document.getElementById('btnPlay').addEventListener('click', ()=> isPlaying ? stopPlay() : startPlay());
 document.getElementById('btnNext').addEventListener('click', nextStep);
 document.getElementById('btnReset').addEventListener('click', resetAll);
-function applyInputs() {
+
+function applyArray() {
   const raw = document.getElementById('arrInput').value;
   const parsed = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n>=0);
   if (parsed.length<2) { alert('Enter at least 2 non‑negative numbers'); return; }
-  arr = parsed.slice(0, 50);
+  arr = parsed.slice(0, 15);
   document.getElementById('arrInput').value = arr.join(', ');
-  const skRaw = document.getElementById('searchInput').value.trim();
-  searchKey = parseInt(skRaw);
-  if (isNaN(searchKey)) { alert('Enter a valid search key'); return; }
-  document.getElementById('searchInput').value = searchKey;
   init();
 }
 function randomize() {
-  arr = Array.from({ length: 40 }, () => Math.floor(Math.random() * 999));
+  arr = Array.from({ length: 8 }, () => Math.floor(Math.random() * 999));
   document.getElementById('arrInput').value = arr.join(', ');
-  searchKey = arr[Math.floor(Math.random() * arr.length)];
-  document.getElementById('searchInput').value = searchKey;
   init();
 }
 function init() {
-  steps = buildHashSearchSteps(arr, searchKey);
+  steps = buildBucketSortSteps(arr);
   stopPlay();
   stepIdx = -1;
   renderContainers(steps[0]);
@@ -725,7 +777,7 @@ function init() {
   document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
-  document.getElementById('narText').textContent = 'Square blocks – containers fixed height, no scroll. Yellow = current element during insertion.';
+  document.getElementById('narText').textContent = 'Square blocks – containers fixed height, no scroll. Yellow = current element.';
 }
 init();
 </script>

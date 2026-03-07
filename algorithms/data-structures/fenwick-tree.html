@@ -3,77 +3,1074 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fenwick Tree (BIT) — AlgoClassroom</title>
+<title>Fenwick Tree — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+/* ── Base Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0f1e;
+  --surface: #0f1829;
+  --surface2: #141f30;
+  --border: #1e2d42;
+  --text: #c8d8f0;
+  --text-dim: #4a6a9a;
+  --teal: #00d4aa;
+  --orange: #ff8c42;
+  --pink: #ff6b9d;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+
+  --node-default: #1a2840;
+  --node-default-stroke: #2a4060;
+  --node-active: #ff8c42;
+  --node-update: #ff6b9d;
+  --node-query: #00d4aa;
+  --node-result: #a78bfa;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+
+[data-theme="light"] {
+  --bg: #f0f4fa;
+  --surface: #ffffff;
+  --surface2: #f5f8ff;
+  --border: #dde5f0;
+  --text: #1a2840;
+  --text-dim: #7a9ac0;
+  --node-default: #dde8f8;
+  --node-default-stroke: #99b8dc;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  transition: background .3s, color .3s;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(rgba(0,212,170,.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,212,170,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.bg-glow {
+  position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 600px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0,212,170,.07) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Navbar ── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,15,30,.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  max-width: 1200px; margin: auto;
+  padding: 0 24px; height: 52px;
+  display: flex; align-items: center; gap: 28px;
+}
+.nav-logo {
+  font-family: var(--mono); font-size: 14px; font-weight: 800;
+  color: var(--teal); text-decoration: none; letter-spacing: -0.5px;
+}
+.logo-bracket { color: var(--orange); }
+.logo-dot { color: var(--pink); }
+.nav-links { display: flex; gap: 18px; }
+.nav-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; letter-spacing: .5px; transition: color .2s; }
+.nav-links a:hover { color: var(--teal); }
+
+/* Theme toggle */
+.theme-toggle {
+  margin-left: auto; background: none; border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  transition: border-color .2s, background .2s;
+}
+.theme-toggle:hover { border-color: var(--teal); background: rgba(0,212,170,.06); }
+.toggle-track {
+  width: 30px; height: 16px; background: var(--surface2);
+  border-radius: 8px; border: 1px solid var(--border);
+  display: flex; align-items: center; padding: 2px;
+  transition: background .3s;
+}
+[data-theme="light"] .toggle-track { background: rgba(0,212,170,.3); }
+.toggle-thumb {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--teal); transition: transform .3s;
+  display: flex; align-items: center; justify-content: center;
+}
+[data-theme="light"] .toggle-thumb { transform: translateX(14px); }
+.toggle-icon { font-size: 7px; line-height: 1; }
+.toggle-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; white-space: nowrap; }
+
+/* ── Page Layout ── */
+.algo-page { max-width: 1200px; margin: auto; padding: 24px 20px 60px; position: relative; z-index: 1; }
+.back-link { font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-decoration: none; letter-spacing: 1px; display: inline-block; margin-bottom: 16px; transition: color .2s; }
+.back-link:hover { color: var(--teal); }
+
+/* ── Cards / Concepts ── */
+.card-difficulty {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
+  border-radius: 6px; padding: 3px 9px; text-transform: uppercase;
+}
+.intermediate { background: rgba(255,140,66,.15); color: var(--orange); border: 1px solid rgba(255,140,66,.3); }
+
+.complexity { display: flex; flex-wrap: wrap; gap: 8px; }
+.cplx-chip {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px;
+  font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+}
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 12px; margin-bottom: 20px; }
+.cc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  transition: border-color .2s, transform .2s;
+}
+.cc:hover { border-color: rgba(0,212,170,.3); transform: translateY(-2px); }
+.cc-icon { font-size: 20px; display: block; margin-bottom: 6px; }
+.cc-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.cc-desc { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+
+/* ── Narration ── */
+.narration {
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--teal);
+  border-radius: 10px; padding: 13px 16px;
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 14px;
+}
+.teacher { font-size: 24px; flex-shrink: 0; }
+.narration-text { font-size: 13px; color: var(--text); line-height: 1.7; flex: 1; }
+.speak-bars { display: flex; align-items: center; gap: 3px; height: 20px; margin-left: 8px; flex-shrink: 0; }
+.speak-bars span {
+  display: block; width: 3px; background: var(--teal); border-radius: 2px;
+  height: 4px; transition: height .1s;
+  animation: none;
+}
+.speak-bars.on span { animation: bar 0.6s ease-in-out infinite alternate; }
+.speak-bars span:nth-child(1) { animation-delay: 0s; }
+.speak-bars span:nth-child(2) { animation-delay: .1s; }
+.speak-bars span:nth-child(3) { animation-delay: .2s; }
+.speak-bars span:nth-child(4) { animation-delay: .3s; }
+.speak-bars span:nth-child(5) { animation-delay: .4s; }
+@keyframes bar { from { height: 4px; } to { height: 18px; } }
+
+/* ── Status Row ── */
+.status-row {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 16px;
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.si { display: flex; flex-direction: column; gap: 2px; }
+.sl { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; }
+.sv { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--text); }
+.sv.orange { color: var(--orange); }
+.divider-auto { flex: 1; }
+.prog-wrap { width: 100px; height: 4px; background: var(--border); border-radius: 2px; }
+.prog-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width .3s; width: 0%; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+
+.phase-badge {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 3px 8px; border-radius: 5px;
+}
+.ph-idle    { background: rgba(74,106,154,.15); color: var(--text-dim); }
+.ph-active  { background: rgba(255,140,66,.15); color: var(--orange); }
+.ph-update  { background: rgba(255,107,157,.15); color: var(--pink); }
+.ph-query   { background: rgba(0,212,170,.15); color: var(--teal); }
+.ph-done    { background: rgba(0,212,170,.1); color: var(--teal); }
+
+/* ── Panel ── */
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; margin-bottom: 14px;
+}
+.panel-hd { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+
+/* ── Code Block ── */
+.code-block {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+  font-family: var(--mono); font-size: 11px; line-height: 2;
+  overflow-x: auto;
+}
+.code-line { display: block; padding: 0 6px; border-radius: 4px; transition: background .2s; white-space: pre; }
+.kw { color: var(--pink); }
+.fn { color: var(--teal); }
+.cm { color: var(--text-dim); font-style: italic; }
+
+/* ── Buttons ── */
+.btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 8px 14px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  cursor: pointer; transition: all .2s; letter-spacing: .5px; white-space: nowrap;
+}
+.btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(0,212,170,.06); }
+.btn-primary { background: rgba(0,212,170,.1); border-color: rgba(0,212,170,.4); color: var(--teal); }
+.btn-primary:hover { background: rgba(0,212,170,.2); }
+.btn-danger { border-color: rgba(255,107,157,.3); color: var(--pink); }
+.btn-danger:hover { background: rgba(255,107,157,.08); border-color: var(--pink); }
+.btn-orange { border-color: rgba(255,140,66,.3); color: var(--orange); }
+.btn-orange:hover { background: rgba(255,140,66,.08); border-color: var(--orange); }
+
+/* ── Speed ── */
+.speed-ctrl { display: flex; align-items: center; gap: 7px; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+.speed-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 20px; }
+input[type=range] { accent-color: var(--teal); width: 80px; cursor: pointer; }
+
+/* ── Layout ── */
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── Canvas ── */
+#vizCanvas {
+  width: 100%; border-radius: 8px;
+  background: transparent; display: block;
+}
+
+/* ── Controls ── */
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+
+.arr-input, .query-input {
+  flex: 1; min-width: 160px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus, .query-input:focus { border-color: var(--teal); }
+
+/* ── Legend ── */
+.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.ld { width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+
+/* ── Stats ── */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; text-align: center; }
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+/* ── Voice ── */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
+
+/* ── Array bar vis ── */
+.bar-row { display: flex; align-items: flex-end; gap: 4px; height: 80px; padding: 8px 0 0; }
+.bar-cell { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar-rect { width: 100%; border-radius: 3px 3px 0 0; background: var(--node-default); border: 1px solid var(--node-default-stroke); transition: background .3s, height .3s; min-height: 4px; }
+.bar-idx { font-family: var(--mono); font-size: 9px; color: var(--text-dim); margin-top: 3px; }
+.bar-val { font-family: var(--mono); font-size: 9px; color: var(--text-dim); }
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
+<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
+
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">🌱</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Fenwick Tree (BIT)</h1>
-    <p class="cs-sub">Binary indexed tree for prefix sums.</p>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🌲</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Data Structure</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Fenwick Tree</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7;">
+      Also known as a <strong style="color:var(--teal)">Binary Indexed Tree (BIT)</strong>, the Fenwick Tree enables efficient prefix sum queries and point updates on an array. Each index stores a partial sum determined by the lowest set bit (LSB) of its index.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Update: <span>O(log n)</span></div>
+      <div class="cplx-chip">Query: <span>O(log n)</span></div>
+      <div class="cplx-chip">Build: <span>O(n log n)</span></div>
+      <div class="cplx-chip">Space: <span>O(n)</span></div>
+      <div class="cplx-chip">1-Indexed: <span>✓ Always</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>BIT update and prefix query</li>
-        <li>Lowbit trick</li>
-        <li>Range query from prefix sums</li>
-      </ul>
+  <!-- Concept cards -->
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">📦</span><div class="cc-title">Partial Sums</div><div class="cc-desc">Each cell BIT[i] stores the sum of elements from i − LSB(i) + 1 to i, covering a range determined by the lowest set bit.</div></div>
+    <div class="cc"><span class="cc-icon">⬆️</span><div class="cc-title">Point Update</div><div class="cc-desc">To update index i, propagate changes upward by repeatedly adding LSB(i) to i until out of bounds.</div></div>
+    <div class="cc"><span class="cc-icon">🔢</span><div class="cc-title">Prefix Query</div><div class="cc-desc">Sum A[1..i] by accumulating BIT[i] and moving to i − LSB(i) until i reaches 0.</div></div>
+    <div class="cc"><span class="cc-icon">⚡</span><div class="cc-title">LSB Trick</div><div class="cc-desc">LSB(i) = i & (−i). This bit manipulation is the core of both update and query traversal paths.</div></div>
+  </div>
+
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Fenwick Tree (Binary Indexed Tree)! Let me explain how this data structure works before we begin...</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-row">
+    <div class="si"><span class="sl">Operation</span><span class="sv orange" id="sOp">Build</span></div>
+    <div class="si"><span class="sl">Index</span><span class="sv" id="sIdx">—</span></div>
+    <div class="si"><span class="sl">Running Sum</span><span class="sv" id="sSum">0</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <!-- Main layout -->
+  <div class="two-col">
+
+    <!-- LEFT: Canvas -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization — BIT Array &amp; Active Cells</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:var(--node-active);"></div>Visiting</div>
+          <div class="li"><div class="ld" style="background:var(--node-update);"></div>Updating</div>
+          <div class="li"><div class="ld" style="background:var(--node-query);"></div>Querying</div>
+          <div class="li"><div class="ld" style="background:var(--node-result);"></div>Result</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="380"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Array values (comma-separated, max 16):</label>
+          <input type="text" class="arr-input" id="arrInput" value="3, 2, -1, 6, 5, 4, -3, 3, 7, 2, 3, 1">
+          <button class="btn" onclick="applyArray()">Build BIT</button>
+        </div>
+        <div class="input-row">
+          <label>Prefix query — sum A[1..r]:</label>
+          <input type="text" class="query-input" id="queryR" placeholder="e.g. 6" style="max-width:100px;">
+          <button class="btn btn-orange" onclick="startQuery()">Query</button>
+        </div>
+        <div class="input-row">
+          <label>Point update — add val at index:</label>
+          <input type="text" class="query-input" id="updateIdx" placeholder="index" style="max-width:80px;">
+          <input type="text" class="query-input" id="updateVal" placeholder="delta" style="max-width:80px;">
+          <button class="btn btn-orange" onclick="startUpdate()">Update</button>
+        </div>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statOps">0</div><div class="stat-box-l">Steps</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Array Size</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statResult">—</div><div class="stat-box-l">Query Result</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statLogN">0</div><div class="stat-box-l">Max Steps</div></div>
+        </div>
+      </div>
+
+      <!-- Pseudocode: Build -->
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block" id="pseudoBuild">
+<span id="b1" class="code-line"><span class="kw">function</span> <span class="fn">build</span>(arr[1..n]):</span>
+<span id="b2" class="code-line">  BIT = <span class="kw">new</span> int[n+1]</span>
+<span id="b3" class="code-line">  <span class="kw">for</span> i = 1 to n:</span>
+<span id="b4" class="code-line">    BIT[i] += arr[i]</span>
+<span id="b5" class="code-line">    j = i + LSB(i)</span>
+<span id="b6" class="code-line">    <span class="kw">if</span> j &lt;= n: BIT[j] += BIT[i]</span>
+        </div>
+        <div class="code-block" id="pseudoQuery" style="display:none;margin-top:8px;">
+<span id="q1" class="code-line"><span class="kw">function</span> <span class="fn">query</span>(r): <span class="cm">// prefix sum 1..r</span></span>
+<span id="q2" class="code-line">  sum = 0</span>
+<span id="q3" class="code-line">  <span class="kw">while</span> r &gt; 0:</span>
+<span id="q4" class="code-line">    sum += BIT[r]</span>
+<span id="q5" class="code-line">    r -= LSB(r)  <span class="cm">// r &= r-1</span></span>
+<span id="q6" class="code-line">  <span class="kw">return</span> sum</span>
+        </div>
+        <div class="code-block" id="pseudoUpdate" style="display:none;margin-top:8px;">
+<span id="u1" class="code-line"><span class="kw">function</span> <span class="fn">update</span>(i, delta):</span>
+<span id="u2" class="code-line">  <span class="kw">while</span> i &lt;= n:</span>
+<span id="u3" class="code-line">    BIT[i] += delta</span>
+<span id="u4" class="code-line">    i += LSB(i)  <span class="cm">// i += i & (-i)</span></span>
+<span id="u5" class="code-line">  <span class="kw">return</span></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Original Array A[ ]</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">🗂 BIT Array (1-indexed)</div>
+        <div id="bitDisplay" style="font-family:var(--mono);font-size:12px;color:var(--teal);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
+
     </div>
   </div>
+
 </div>
+
+<script>
+// ════════════════════════════════════════════════
+// THEME
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+  if (stepIdx >= 0 && steps[stepIdx]) renderStep(stepIdx);
+}
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('toggleLabel').textContent = 'Dark mode';
+  }
+})();
+
+// ════════════════════════════════════════════════
+// SPEECH
+// ════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const v = synth.getVoices();
+  ttsVoice = v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = ttsVoice; u.rate = 0.88; u.pitch = 1.05; u.volume = 1;
+    u.onstart = () => document.getElementById('speakBars').classList.add('on');
+    u.onend = u.onerror = () => { document.getElementById('speakBars').classList.remove('on'); resolve(); };
+    synth.speak(u);
+  });
+}
+function stopSpeech() { synth && synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
+// ════════════════════════════════════════════════
+// VOICE TOGGLE
+// ════════════════════════════════════════════════
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('voiceToggle');
+  const icon = document.getElementById('voiceIcon');
+  const lbl = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent='🔊'; lbl.textContent='Voice On'; btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display='none';
+    if (isPlaying){ stopPlay(); startPlay(); }
+  } else {
+    icon.textContent='🔇'; lbl.textContent='Voice Off'; btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display='';
+    if (isPlaying){ stopPlay(); startPlay(); }
+  }
+}
+
+// ════════════════════════════════════════════════
+// FENWICK TREE HELPERS
+// ════════════════════════════════════════════════
+function lsb(i) { return i & (-i); }
+
+function buildBIT(arr) {
+  const n = arr.length;
+  const bit = new Array(n + 1).fill(0);
+  for (let i = 1; i <= n; i++) {
+    bit[i] += arr[i - 1];
+    const j = i + lsb(i);
+    if (j <= n) bit[j] += bit[i];
+  }
+  return bit;
+}
+
+// ════════════════════════════════════════════════
+// STEP GENERATORS
+// ════════════════════════════════════════════════
+
+/* ---------- BUILD ---------- */
+function buildBuildSteps(arr) {
+  const n = arr.length;
+  const steps = [];
+  const bit = new Array(n + 1).fill(0);
+
+  steps.push({
+    bit: [...bit], arr, activeIdx: [], runSum: 0, op: 'build', phase: 'active',
+    opNum: 0, codeLine: 1, label: 'b',
+    narration: `Building Fenwick Tree for ${n} values. We initialize BIT[1..${n}] to zero, then process each element.`
+  });
+
+  for (let i = 1; i <= n; i++) {
+    bit[i] += arr[i - 1];
+    const j = i + lsb(i);
+    const hasParent = j <= n;
+
+    steps.push({
+      bit: [...bit], arr, activeIdx: [i], runSum: bit[i], op: 'build', phase: 'update',
+      opNum: i, codeLine: 4, label: 'b',
+      narration: `Index ${i}: BIT[${i}] += ${arr[i-1]} = ${bit[i]}. LSB(${i}) = ${lsb(i)}, parent index = ${j}.`
+    });
+
+    if (hasParent) {
+      bit[j] += bit[i];
+      steps.push({
+        bit: [...bit], arr, activeIdx: [i, j], runSum: bit[j], op: 'build', phase: 'update',
+        opNum: i, codeLine: 6, label: 'b',
+        narration: `Propagate: BIT[${j}] += BIT[${i}] → BIT[${j}] = ${bit[j]}.`
+      });
+    }
+  }
+
+  steps.push({
+    bit: [...bit], arr, activeIdx: Array.from({length: n}, (_,i) => i+1), runSum: 0,
+    op: 'build', phase: 'done', opNum: n, codeLine: 0, label: 'b',
+    narration: `Build complete! The Fenwick Tree is ready with ${n} elements.`
+  });
+  return { steps, finalBit: bit };
+}
+
+/* ---------- QUERY ---------- */
+function buildQuerySteps(arr, bit, r) {
+  const n = arr.length;
+  const steps = [];
+  let sum = 0;
+  let cur = r;
+
+  steps.push({
+    bit: [...bit], arr, activeIdx: [], runSum: 0, op: 'query', phase: 'query',
+    opNum: 0, codeLine: 1, label: 'q',
+    narration: `Prefix sum query for A[1..${r}]. We traverse BIT from index ${r} downward.`
+  });
+
+  while (cur > 0) {
+    sum += bit[cur];
+    steps.push({
+      bit: [...bit], arr, activeIdx: [cur], runSum: sum, op: 'query', phase: 'query',
+      opNum: cur, codeLine: 4, label: 'q',
+      narration: `Add BIT[${cur}] = ${bit[cur]}. Running sum = ${sum}. Next: ${cur} − LSB(${cur}) = ${cur - lsb(cur)}.`
+    });
+    cur -= lsb(cur);
+  }
+
+  steps.push({
+    bit: [...bit], arr, activeIdx: [], runSum: sum, op: 'query', phase: 'done',
+    opNum: r, codeLine: 6, label: 'q', queryResult: sum,
+    narration: `Query result: prefix sum A[1..${r}] = ${sum}.`
+  });
+  return steps;
+}
+
+/* ---------- UPDATE ---------- */
+function buildUpdateSteps(arr, bit, idx, delta) {
+  const n = arr.length;
+  const arrCopy = [...arr];
+  arrCopy[idx - 1] += delta;
+  const bitCopy = [...bit];
+  const steps = [];
+  let cur = idx;
+
+  steps.push({
+    bit: [...bitCopy], arr: [...arrCopy], activeIdx: [], runSum: delta, op: 'update', phase: 'active',
+    opNum: 0, codeLine: 1, label: 'u',
+    narration: `Point update: adding ${delta} to A[${idx}]. We traverse BIT from index ${idx} upward.`
+  });
+
+  while (cur <= n) {
+    bitCopy[cur] += delta;
+    steps.push({
+      bit: [...bitCopy], arr: [...arrCopy], activeIdx: [cur], runSum: delta, op: 'update', phase: 'update',
+      opNum: cur, codeLine: 3, label: 'u',
+      narration: `BIT[${cur}] += ${delta} → ${bitCopy[cur]}. Next: ${cur} + LSB(${cur}) = ${cur + lsb(cur)}.`
+    });
+    cur += lsb(cur);
+  }
+
+  steps.push({
+    bit: [...bitCopy], arr: [...arrCopy], activeIdx: [], runSum: 0, op: 'update', phase: 'done',
+    opNum: idx, codeLine: 5, label: 'u',
+    narration: `Update complete! All responsible BIT cells have been updated.`
+  });
+  return { steps, newBit: bitCopy, newArr: arrCopy };
+}
+
+// ════════════════════════════════════════════════
+// CANVAS DRAWING
+// ════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+
+function getNodeColor(i, activeSet, phase, op) {
+  const light = document.documentElement.getAttribute('data-theme') === 'light';
+  if (activeSet.includes(i)) {
+    if (op === 'query') return { fill: light ? 'rgba(0,212,170,.25)' : 'rgba(0,212,170,.3)', stroke: '#00d4aa', text: '#00d4aa' };
+    if (op === 'update') return { fill: light ? 'rgba(255,107,157,.2)' : 'rgba(255,107,157,.25)', stroke: '#ff6b9d', text: '#ff6b9d' };
+    return { fill: light ? 'rgba(255,140,66,.2)' : 'rgba(255,140,66,.25)', stroke: '#ff8c42', text: '#ff8c42' };
+  }
+  if (phase === 'done') return { fill: light ? 'rgba(0,212,170,.1)' : 'rgba(0,212,170,.15)', stroke: 'rgba(0,212,170,.5)', text: '#00d4aa' };
+  return { fill: light ? '#dde8f8' : '#1a2840', stroke: light ? '#99b8dc' : '#2a4060', text: light ? '#4a6a9a' : '#4a6a9a' };
+}
+
+function drawStep(step) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const { bit, arr, activeIdx, phase, op, runSum, queryResult } = step;
+  const n = arr.length;
+  const W = canvas.width, H = canvas.height;
+  const light = document.documentElement.getAttribute('data-theme') === 'light';
+
+  const cellW = Math.min(48, (W - 40) / n);
+  const cellH = 40;
+  const radius = 6;
+
+  // ── Row 1: Original Array ──
+  const row1Y = 40;
+  ctx.font = `bold 10px JetBrains Mono`;
+  ctx.fillStyle = light ? '#7a9ac0' : '#4a6a9a';
+  ctx.textAlign = 'left';
+  ctx.fillText('A[ ]  (1-indexed)', 20, row1Y - 10);
+
+  for (let i = 1; i <= n; i++) {
+    const x = 20 + (i - 1) * (cellW + 4);
+    const highlight = activeIdx.includes(i);
+
+    // cell
+    roundRect(ctx, x, row1Y, cellW, cellH, radius);
+    ctx.fillStyle = highlight ? (light ? 'rgba(255,140,66,.2)' : 'rgba(255,140,66,.25)') : (light ? '#dde8f8' : '#1a2840');
+    ctx.fill();
+    ctx.strokeStyle = highlight ? '#ff8c42' : (light ? '#99b8dc' : '#2a4060');
+    ctx.lineWidth = highlight ? 1.5 : 1;
+    ctx.stroke();
+
+    // value
+    ctx.fillStyle = highlight ? '#ff8c42' : (light ? '#1a2840' : '#4a6a9a');
+    ctx.textAlign = 'center';
+    ctx.font = `bold ${cellW < 36 ? 10 : 11}px JetBrains Mono`;
+    ctx.fillText(arr[i - 1], x + cellW / 2, row1Y + cellH / 2 + 4);
+
+    // index label
+    ctx.fillStyle = light ? '#7a9ac0' : '#2a4060';
+    ctx.font = '9px JetBrains Mono';
+    ctx.fillText(i, x + cellW / 2, row1Y + cellH + 12);
+  }
+
+  // ── BIT Structure: tree-like connectors ──
+  const bitRow = row1Y + cellH + 34;
+
+  ctx.font = `bold 10px JetBrains Mono`;
+  ctx.fillStyle = light ? '#7a9ac0' : '#4a6a9a';
+  ctx.textAlign = 'left';
+  ctx.fillText('BIT[ ] (1-indexed)', 20, bitRow - 10);
+
+  // Draw responsibility arcs first
+  for (let i = 1; i <= n; i++) {
+    const span = lsb(i);
+    if (span > 1) {
+      const xCenter = 20 + (i - 1) * (cellW + 4) + cellW / 2;
+      const xLeft = 20 + (i - span - 1) * (cellW + 4) + cellW / 2;
+      const arcH = Math.min(span * (cellW + 4) * 0.22, 28);
+      ctx.beginPath();
+      ctx.moveTo(xLeft, bitRow);
+      ctx.quadraticCurveTo((xLeft + xCenter) / 2, bitRow - arcH, xCenter, bitRow);
+      ctx.strokeStyle = activeIdx.includes(i) ? 'rgba(0,212,170,.5)' : (light ? 'rgba(0,100,200,.12)' : 'rgba(74,106,154,.15)');
+      ctx.lineWidth = activeIdx.includes(i) ? 1.5 : 1;
+      ctx.stroke();
+    }
+  }
+
+  // Draw BIT cells
+  for (let i = 1; i <= n; i++) {
+    const x = 20 + (i - 1) * (cellW + 4);
+    const col = getNodeColor(i, activeIdx, phase, op);
+
+    roundRect(ctx, x, bitRow, cellW, cellH, radius);
+    ctx.fillStyle = col.fill; ctx.fill();
+    ctx.strokeStyle = col.stroke; ctx.lineWidth = activeIdx.includes(i) ? 2 : 1;
+    ctx.stroke();
+
+    // glow for active
+    if (activeIdx.includes(i)) {
+      roundRect(ctx, x - 3, bitRow - 3, cellW + 6, cellH + 6, radius + 3);
+      ctx.strokeStyle = col.stroke + '44'; ctx.lineWidth = 3; ctx.stroke();
+    }
+
+    ctx.fillStyle = col.text;
+    ctx.textAlign = 'center';
+    ctx.font = `bold ${cellW < 36 ? 10 : 11}px JetBrains Mono`;
+    ctx.fillText(bit[i] !== undefined ? bit[i] : 0, x + cellW / 2, bitRow + cellH / 2 + 4);
+
+    // lsb label
+    const span = lsb(i);
+    ctx.fillStyle = light ? 'rgba(0,100,200,.35)' : 'rgba(0,212,170,.3)';
+    ctx.font = '8px JetBrains Mono';
+    ctx.fillText(`+${span}`, x + cellW / 2, bitRow + cellH + 11);
+  }
+
+  // ── LSB visualization: binary column ──
+  const binRow = bitRow + cellH + 30;
+  ctx.font = 'bold 10px JetBrains Mono';
+  ctx.fillStyle = light ? '#7a9ac0' : '#4a6a9a';
+  ctx.textAlign = 'left';
+  ctx.fillText('LSB(i)', 20, binRow - 2);
+
+  for (let i = 1; i <= n; i++) {
+    const x = 20 + (i - 1) * (cellW + 4);
+    const lsbVal = lsb(i);
+    const isActive = activeIdx.includes(i);
+    ctx.fillStyle = isActive ? '#00d4aa' : (light ? '#99b8dc' : '#2a4060');
+    ctx.textAlign = 'center';
+    ctx.font = `${isActive ? 'bold' : ''} 10px JetBrains Mono`;
+    ctx.fillText(lsbVal, x + cellW / 2, binRow + 12);
+  }
+
+  // ── Running sum display ──
+  const sumY = binRow + 38;
+  if (op === 'query' || op === 'update' || (op === 'build' && activeIdx.length > 0)) {
+    const label = op === 'query' ? 'Running Sum:' : 'Delta:';
+    const val = op === 'query' ? runSum : step.runSum;
+    ctx.font = 'bold 13px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = light ? '#1a2840' : '#c8d8f0';
+    ctx.fillText(`${label}  `, 20, sumY);
+    ctx.fillStyle = op === 'query' ? '#00d4aa' : '#ff6b9d';
+    const labelW = ctx.measureText(label + '  ').width;
+    ctx.fillText(`${val}`, 20 + labelW, sumY);
+
+    if (queryResult !== undefined) {
+      ctx.fillStyle = '#a78bfa';
+      ctx.font = 'bold 14px JetBrains Mono';
+      ctx.fillText(`Result = ${queryResult}`, 20 + labelW + 80, sumY);
+    }
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+// ════════════════════════════════════════════════
+// CONTROLLER
+// ════════════════════════════════════════════════
+let steps = [];
+let values = [3, 2, -1, 6, 5, 4, -3, 3, 7, 2, 3, 1];
+let currentBit = [];
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+
+const SPEED_DELAYS = { 1: 1400, 2: 900, 3: 500, 4: 250, 5: 100 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 900; }
+function onSpeedChange(val) { speedMult = parseInt(val); document.getElementById('speedVal').textContent = val + '×'; }
+
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
+
+function updateStatusBar(step, idx) {
+  document.getElementById('sOp').textContent = step.op.charAt(0).toUpperCase() + step.op.slice(1);
+  document.getElementById('sIdx').textContent = step.opNum || '—';
+  document.getElementById('sSum').textContent = step.runSum !== undefined ? step.runSum : 0;
+  document.getElementById('statOps').textContent = idx + 1;
+  document.getElementById('statN').textContent = values.length;
+  document.getElementById('statLogN').textContent = Math.ceil(Math.log2(values.length + 1));
+  if (step.queryResult !== undefined) {
+    document.getElementById('statResult').textContent = step.queryResult;
+  }
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+
+  // Phase badge
+  const badge = document.getElementById('phaseBadge');
+  const map = { active:['ph-active','Running'], update:['ph-update','Updating'], query:['ph-query','Querying'], done:['ph-done','Done'], idle:['ph-idle','Idle'] };
+  const [cls, lbl] = map[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  // Pseudocode highlight
+  const showBuild = step.label === 'b';
+  const showQuery = step.label === 'q';
+  const showUpdate = step.label === 'u';
+  document.getElementById('pseudoBuild').style.display = showBuild ? 'block' : 'none';
+  document.getElementById('pseudoQuery').style.display = showQuery ? 'block' : 'none';
+  document.getElementById('pseudoUpdate').style.display = showUpdate ? 'block' : 'none';
+
+  const pfx = step.label;
+  for (let i = 1; i <= 6; i++) {
+    const el = document.getElementById(`${pfx}${i}`);
+    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,.13)' : '';
+  }
+
+  // Update displays
+  document.getElementById('arrDisplay').textContent = `[${step.arr.join(', ')}]`;
+  const bitArr = step.bit.slice(1); // 1-indexed → show from index 1
+  document.getElementById('bitDisplay').textContent = `[${bitArr.join(', ')}]`;
+}
+
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  drawStep(step);
+  updateNarration(step);
+  updateStatusBar(step, idx);
+  if (autoAdvance) scheduleNext(step);
+}
+
+function scheduleNext(step) {
+  if (!isPlaying) return;
+  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying) return;
+      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 300);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+  }
+}
+
+function nextStep() {
+  stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function resetAll() {
+  stopPlay();
+  stepIdx = -1;
+  const { steps: s, finalBit } = buildBuildSteps(values);
+  steps = s; currentBit = finalBit;
+  drawStep(steps[0]);
+  document.getElementById('arrDisplay').textContent = `[${values.join(', ')}]`;
+  document.getElementById('bitDisplay').textContent = '—';
+  document.getElementById('statResult').textContent = '—';
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  document.getElementById('narText').textContent = 'Ready! Press Play to build the Fenwick Tree, or turn on Voice Mode for a guided walkthrough.';
+}
+
+function applyArray() {
+  const raw = document.getElementById('arrInput').value;
+  const parsed = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+  if (parsed.length < 1) { alert('Enter at least 1 valid number.'); return; }
+  values = parsed.slice(0, 16);
+  init();
+}
+
+function randomize() {
+  values = Array.from({ length: 10 }, () => Math.floor(Math.random() * 18) - 4);
+  document.getElementById('arrInput').value = values.join(', ');
+  init();
+}
+
+function startQuery() {
+  const r = parseInt(document.getElementById('queryR').value.trim());
+  if (isNaN(r) || r < 1 || r > values.length) { alert(`Enter a valid index (1–${values.length}).`); return; }
+  if (!currentBit.length) { alert('Build the tree first.'); return; }
+  steps = buildQuerySteps(values, currentBit, r);
+  stopPlay(); stepIdx = -1;
+  renderStep(0);
+}
+
+function startUpdate() {
+  const idx = parseInt(document.getElementById('updateIdx').value.trim());
+  const delta = parseInt(document.getElementById('updateVal').value.trim());
+  if (isNaN(idx) || idx < 1 || idx > values.length) { alert(`Enter a valid index (1–${values.length}).`); return; }
+  if (isNaN(delta)) { alert('Enter a valid delta value.'); return; }
+  if (!currentBit.length) { alert('Build the tree first.'); return; }
+  const { steps: s, newBit, newArr } = buildUpdateSteps(values, currentBit, idx, delta);
+  steps = s; currentBit = newBit; values = newArr;
+  document.getElementById('arrInput').value = values.join(', ');
+  stopPlay(); stepIdx = -1;
+  renderStep(0);
+}
+
+// ════════════════════════════════════════════════
+// INTRO SPEECH
+// ════════════════════════════════════════════════
+let introAborted = false;
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const lines = [
+    "Hello! Today we're learning about the Fenwick Tree, also called a Binary Indexed Tree or BIT.",
+    "A Fenwick Tree lets you compute prefix sums and update values in O(log n) time, much faster than a naive O(n) approach.",
+    "The key insight is that each cell BIT[i] stores the sum of a range whose length equals the lowest set bit of i.",
+    "To query the prefix sum up to index r, we sum BIT[r], then move to r minus its lowest set bit, repeating until zero.",
+    "To update index i by delta, we add delta to BIT[i], then jump to i plus its lowest set bit, repeating until out of bounds.",
+    "The lowest set bit is computed with the bit trick: i AND negative i.",
+    "Watch the orange cells for active visiting, pink for updates, and teal for query traversal.",
+    "Press Play to see it in action!"
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let line of lines) {
+    if (introAborted) break;
+    narText.textContent = line;
+    await speak(line);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 260));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+function init() {
+  resizeCanvas();
+  document.getElementById('statN').textContent = values.length;
+  document.getElementById('statLogN').textContent = Math.ceil(Math.log2(values.length + 1));
+  document.getElementById('statResult').textContent = '—';
+  const { steps: s, finalBit } = buildBuildSteps(values);
+  steps = s; currentBit = finalBit;
+  stopPlay(); stepIdx = -1;
+  drawStep(steps[0]);
+  document.getElementById('arrDisplay').textContent = `[${values.join(', ')}]`;
+  document.getElementById('bitDisplay').textContent = '—';
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+
+  if (!introPlayed) {
+    introPlayed = true;
+    document.getElementById('narText').textContent = 'Ready! Press Play to build the Fenwick Tree step by step, or turn on Voice Mode for guided teaching.';
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) drawStep(steps[stepIdx]);
+  else if (steps.length > 0) drawStep(steps[0]);
+});
+
+init();
+</script>
 </body>
 </html>

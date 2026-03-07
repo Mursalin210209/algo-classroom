@@ -4,42 +4,170 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Linked List — AlgoClassroom</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#07101f;
+  --surface:#0d1b2e;
+  --surface2:#111f33;
+  --border:#1b2d45;
+  --text:#ccddf0;
+  --text-dim:#4a6a9a;
+  --teal:#00d4aa;
+  --orange:#ff8c42;
+  --pink:#ff6b9d;
+  --blue:#4a9eff;
+  --purple:#a78bfa;
+  --yellow:#ffd166;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Syne',sans-serif;
+  --node-w:72px;
+  --node-h:52px;
+  --gap:64px;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+[data-theme="light"]{
+  --bg:#eef3fa;--surface:#fff;--surface2:#f4f7fd;
+  --border:#d8e4f2;--text:#0d1b2e;--text-dim:#7a9ac0;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
-}
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;transition:background .3s,color .3s}
+
+/* background */
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,212,170,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,.025) 1px,transparent 1px);
+  background-size:48px 48px}
+.bg-glow{position:fixed;top:-160px;left:50%;transform:translateX(-50%);width:900px;height:500px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(0,212,170,.06) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+/* navbar */
+.navbar{position:sticky;top:0;z-index:100;background:rgba(7,16,31,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1200px;margin:auto;padding:0 24px;height:52px;display:flex;align-items:center;gap:28px}
+.nav-logo{font-family:var(--mono);font-size:14px;font-weight:800;color:var(--teal);text-decoration:none;letter-spacing:-.5px}
+.logo-bracket{color:var(--orange)}.logo-dot{color:var(--pink)}
+.nav-links{display:flex;gap:18px}
+.nav-links a{font-size:12px;color:var(--text-dim);text-decoration:none;letter-spacing:.5px;transition:color .2s}
+.nav-links a:hover{color:var(--teal)}
+.theme-toggle{margin-left:auto;background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:border-color .2s,background .2s}
+.theme-toggle:hover{border-color:var(--teal);background:rgba(0,212,170,.06)}
+.toggle-track{width:30px;height:16px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;padding:2px;transition:background .3s}
+[data-theme="light"] .toggle-track{background:rgba(0,212,170,.3)}
+.toggle-thumb{width:12px;height:12px;border-radius:50%;background:var(--teal);transition:transform .3s}
+[data-theme="light"] .toggle-thumb{transform:translateX(14px)}
+.toggle-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap}
+
+/* page */
+.algo-page{max-width:1100px;margin:auto;padding:24px 20px 60px;position:relative;z-index:1}
+.back-link{font-family:var(--mono);font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;display:inline-block;margin-bottom:16px;transition:color .2s}
+.back-link:hover{color:var(--teal)}
+
+/* difficulty */
+.card-difficulty{font-family:var(--mono);font-size:10px;letter-spacing:2px;border-radius:6px;padding:3px 9px;text-transform:uppercase}
+.beginner{background:rgba(0,212,170,.12);color:var(--teal);border:1px solid rgba(0,212,170,.3)}
+
+/* complexity chips */
+.complexity{display:flex;flex-wrap:wrap;gap:8px}
+.cplx-chip{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)}
+.cplx-chip span{color:var(--teal);font-weight:700}
+
+/* concept cards */
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:10px;margin-bottom:18px}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;transition:border-color .3s,transform .3s}
+.cc:hover{border-color:rgba(0,212,170,.3);transform:translateY(-2px)}
+.cc-icon{font-size:22px;margin-bottom:6px;display:block}
+.cc-title{font-family:var(--mono);font-size:9px;color:var(--teal);margin-bottom:5px;text-transform:uppercase;letter-spacing:2px}
+.cc-desc{font-size:12px;color:var(--text-dim);line-height:1.55}
+
+/* narration */
+.narration{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:10px;padding:13px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.teacher{font-size:24px;flex-shrink:0}
+.narration-text{font-size:13px;color:var(--text);line-height:1.7;flex:1}
+.speak-bars{display:flex;align-items:center;gap:3px;height:20px;margin-left:8px;flex-shrink:0}
+.speak-bars span{display:block;width:3px;background:var(--teal);border-radius:2px;height:4px}
+.speak-bars.on span{animation:bar .6s ease-in-out infinite alternate}
+.speak-bars span:nth-child(1){animation-delay:0s}.speak-bars span:nth-child(2){animation-delay:.1s}.speak-bars span:nth-child(3){animation-delay:.2s}.speak-bars span:nth-child(4){animation-delay:.3s}.speak-bars span:nth-child(5){animation-delay:.4s}
+@keyframes bar{from{height:4px}to{height:18px}}
+
+/* status */
+.status-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+.si{display:flex;flex-direction:column;gap:2px}
+.sl{font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
+.sv{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text)}
+.sv.orange{color:var(--orange)}
+.divider-auto{flex:1}
+.prog-wrap{width:100px;height:4px;background:var(--border);border-radius:2px}
+.prog-fill{height:100%;background:var(--teal);border-radius:2px;transition:width .3s;width:0%}
+.step-ctr{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px}
+.phase-badge{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:5px}
+.ph-idle{background:rgba(74,106,154,.15);color:var(--text-dim)}
+.ph-active{background:rgba(255,140,66,.15);color:var(--orange)}
+.ph-pointer{background:rgba(74,158,255,.18);color:var(--blue)}
+.ph-insert{background:rgba(167,139,250,.15);color:var(--purple)}
+.ph-delete{background:rgba(255,107,157,.15);color:var(--pink)}
+.ph-done{background:rgba(0,212,170,.1);color:var(--teal)}
+
+/* two col */
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px}
+@media(max-width:860px){.two-col{grid-template-columns:1fr}}
+
+/* panel */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.panel-hd{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+
+/* code */
+.code-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:11px;line-height:2;overflow-x:auto}
+.code-line{display:block;padding:0 6px;border-radius:4px;transition:background .2s;white-space:pre}
+.kw{color:var(--pink)}.fn{color:var(--teal)}.cm{color:var(--text-dim);font-style:italic}.ptr{color:var(--yellow)}
+
+/* buttons */
+.btn{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 14px;color:var(--text);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s;letter-spacing:.5px;white-space:nowrap}
+.btn:hover{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.06)}
+.btn-primary{background:rgba(0,212,170,.1);border-color:rgba(0,212,170,.4);color:var(--teal)}
+.btn-primary:hover{background:rgba(0,212,170,.2)}
+.btn-danger{border-color:rgba(255,107,157,.3);color:var(--pink)}
+.btn-danger:hover{background:rgba(255,107,157,.08);border-color:var(--pink)}
+.btn-purple{border-color:rgba(167,139,250,.3);color:var(--purple)}
+.btn-purple:hover{background:rgba(167,139,250,.08);border-color:var(--purple)}
+
+/* controls */
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.ctrl-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.input-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.input-row label{font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:1px;white-space:nowrap}
+.small-input{width:70px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;transition:border-color .2s;text-align:center}
+.small-input:focus{border-color:var(--teal)}
+
+/* list type toggle */
+.list-toggle{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.list-toggle-btn{flex:1;background:var(--surface2);border:none;padding:8px 18px;font-family:var(--mono);font-size:11px;color:var(--text-dim);cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.list-toggle-btn.active-single{background:rgba(255,140,66,.15);color:var(--orange);border-bottom:2px solid var(--orange)}
+.list-toggle-btn.active-double{background:rgba(74,158,255,.15);color:var(--blue);border-bottom:2px solid var(--blue)}
+
+/* canvas */
+#vizCanvas{width:100%;display:block;border-radius:8px;background:transparent}
+
+/* voice */
+.voice-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:1px;transition:all .2s;white-space:nowrap}
+.voice-btn.off{color:var(--text-dim);border-color:var(--border)}
+.speed-ctrl{display:flex;align-items:center;gap:7px}
+.speed-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px}
+.speed-val{font-family:var(--mono);font-size:10px;color:var(--teal);min-width:20px}
+input[type=range]{accent-color:var(--teal);width:80px;cursor:pointer}
+
+/* legend */
+.legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim)}
+.ld{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+
+/* stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;text-align:center}
+.stat-box-n{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--teal)}
+.stat-box-l{font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+
+.narration-text.intro-mode{color:var(--teal);font-weight:600;animation:glowPulse 2s infinite}
+@keyframes glowPulse{0%{text-shadow:0 0 5px rgba(0,212,170,.2)}50%{text-shadow:0 0 15px rgba(0,212,170,.6)}100%{text-shadow:0 0 5px rgba(0,212,170,.2)}}
 </style>
 </head>
 <body>
@@ -49,31 +177,930 @@
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">🔗</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Linked List</h1>
-    <p class="cs-sub">Singly and doubly linked lists — insert, delete, reverse.</p>
+  <header style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
+      <span style="font-size:40px">🔗</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px">Data Structure</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px">Linked List</h1>
+      </div>
+      <div style="margin-left:auto"><span class="card-difficulty beginner">Beginner</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7">
+      A linear data structure where each node holds a value and a pointer to the next node. In a <strong style="color:var(--orange)">doubly linked list</strong>, each node also holds a pointer back to the previous node. Watch exactly how pointers are rewired during insert and delete.
+    </p>
+    <div class="complexity" style="margin-top:10px">
+      <div class="cplx-chip">Insert Head: <span>O(1)</span></div>
+      <div class="cplx-chip">Insert Tail: <span>O(n)</span></div>
+      <div class="cplx-chip">Insert After: <span>O(n)</span></div>
+      <div class="cplx-chip">Delete: <span>O(n)</span></div>
+      <div class="cplx-chip">Search: <span>O(n)</span></div>
+      <div class="cplx-chip">Space: <span>O(n)</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Pointer traversal</li>
-        <li>Insert and delete at position</li>
-        <li>In-place reversal algorithm</li>
-      </ul>
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">📦</span><div class="cc-title">Node Structure</div><div class="cc-desc">Each node stores a value and one (singly) or two (doubly) pointers to neighbouring nodes.</div></div>
+    <div class="cc"><span class="cc-icon">➡️</span><div class="cc-title">Next Pointer</div><div class="cc-desc">Points to the next node in the chain. The last node's next is null (∅).</div></div>
+    <div class="cc"><span class="cc-icon">⬅️</span><div class="cc-title">Prev Pointer (DLL)</div><div class="cc-desc">Doubly linked lists also track the previous node, enabling O(1) backward traversal.</div></div>
+    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Pointer Rewiring</div><div class="cc-desc">Insert/delete only changes a constant number of pointers — no shifting like arrays.</div></div>
+  </div>
+
+  <!-- Narration -->
+  <div class="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome! Choose Singly or Doubly linked list, build a list, then insert or delete nodes to see exactly how pointers change.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Status -->
+  <div class="status-row">
+    <div class="si"><span class="sl">Operation</span><span class="sv orange" id="sOp">—</span></div>
+    <div class="si"><span class="sl">Pointer Steps</span><span class="sv" id="sPtrSteps">0</span></div>
+    <div class="si"><span class="sl">List Size</span><span class="sv" id="sSize">0</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <div class="two-col">
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+
+        <!-- List type toggle -->
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+          <div class="list-toggle">
+            <button class="list-toggle-btn active-single" id="btnSingle" onclick="setListType('single')">→ Singly</button>
+            <button class="list-toggle-btn" id="btnDouble" onclick="setListType('double')">⇄ Doubly</button>
+          </div>
+          <span id="listTypeLabel" style="font-family:var(--mono);font-size:11px;color:var(--orange);letter-spacing:1px">SINGLY LINKED LIST</span>
+        </div>
+
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060"></div>Default</div>
+          <div class="li"><div class="ld" style="background:rgba(167,139,250,.4);border:1px solid #a78bfa"></div>New Node</div>
+          <div class="li"><div class="ld" style="background:rgba(255,209,102,.3);border:1px solid #ffd166"></div>Active Pointer</div>
+          <div class="li"><div class="ld" style="background:rgba(255,107,157,.3);border:1px solid #ff6b9d"></div>Deleting</div>
+          <div class="li"><div class="ld" style="background:rgba(0,212,170,.25);border:1px solid #00d4aa"></div>Done</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span><span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+
+        <canvas id="vizCanvas" height="300"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Build list (max 5 values):</label>
+          <input type="text" class="small-input" id="buildInput" value="10, 20, 30" style="width:160px">
+          <button class="btn" onclick="applyBuild()">Build</button>
+          <button class="btn" onclick="randomBuild()">🎲</button>
+        </div>
+        <div class="input-row">
+          <label>Insert value:</label>
+          <input type="text" class="small-input" id="insertVal" placeholder="val">
+          <label>after node index (0=head):</label>
+          <input type="text" class="small-input" id="insertAfter" placeholder="idx" style="width:55px">
+          <button class="btn btn-purple" onclick="doInsert()">➕ Insert</button>
+        </div>
+        <div class="input-row">
+          <label>Delete node at index:</label>
+          <input type="text" class="small-input" id="deleteIdx" placeholder="idx" style="width:55px">
+          <button class="btn btn-danger" onclick="doDelete()">🗑 Delete</button>
+        </div>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statOps">0</div><div class="stat-box-l">Operations</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSize">0</div><div class="stat-box-l">List Size</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statPtrs">0</div><div class="stat-box-l">Ptr Changes</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSteps">0</div><div class="stat-box-l">Anim Steps</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <!-- Insert singly -->
+        <div id="psSingleInsert" class="code-block">
+<span id="si1" class="code-line"><span class="kw">function</span> <span class="fn">insertAfter</span>(node, val):</span>
+<span id="si2" class="code-line">  X = <span class="kw">new</span> Node(val)</span>
+<span id="si3" class="code-line">  <span class="cm">// Step 1: X.next → node.next</span></span>
+<span id="si4" class="code-line">  <span class="ptr">X.next</span> = node.<span class="ptr">next</span></span>
+<span id="si5" class="code-line">  <span class="cm">// Step 2: node.next → X</span></span>
+<span id="si6" class="code-line">  node.<span class="ptr">next</span> = X</span>
+        </div>
+        <!-- Delete singly -->
+        <div id="psSingleDelete" class="code-block" style="display:none;margin-top:8px">
+<span id="sd1" class="code-line"><span class="kw">function</span> <span class="fn">delete</span>(prev, target):</span>
+<span id="sd2" class="code-line">  <span class="cm">// Step 1: bypass target</span></span>
+<span id="sd3" class="code-line">  prev.<span class="ptr">next</span> = target.<span class="ptr">next</span></span>
+<span id="sd4" class="code-line">  <span class="cm">// Step 2: unlink target</span></span>
+<span id="sd5" class="code-line">  target.<span class="ptr">next</span> = <span class="kw">null</span></span>
+<span id="sd6" class="code-line">  <span class="cm">// Step 3: remove node</span></span>
+<span id="sd7" class="code-line">  free(target)</span>
+        </div>
+        <!-- Insert doubly -->
+        <div id="psDoubleInsert" class="code-block" style="display:none;margin-top:8px">
+<span id="di1" class="code-line"><span class="kw">function</span> <span class="fn">insertAfter</span>(node, val):</span>
+<span id="di2" class="code-line">  X = <span class="kw">new</span> Node(val)</span>
+<span id="di3" class="code-line">  <span class="ptr">X.prev</span> = node</span>
+<span id="di4" class="code-line">  <span class="ptr">X.next</span> = node.<span class="ptr">next</span></span>
+<span id="di5" class="code-line">  <span class="kw">if</span> node.<span class="ptr">next</span> ≠ null:</span>
+<span id="di6" class="code-line">    node.<span class="ptr">next.prev</span> = X</span>
+<span id="di7" class="code-line">  node.<span class="ptr">next</span> = X</span>
+        </div>
+        <!-- Delete doubly -->
+        <div id="psDoubleDelete" class="code-block" style="display:none;margin-top:8px">
+<span id="dd1" class="code-line"><span class="kw">function</span> <span class="fn">delete</span>(target):</span>
+<span id="dd2" class="code-line">  <span class="kw">if</span> target.<span class="ptr">prev</span> ≠ null:</span>
+<span id="dd3" class="code-line">    target.<span class="ptr">prev.next</span> = target.<span class="ptr">next</span></span>
+<span id="dd4" class="code-line">  <span class="kw">if</span> target.<span class="ptr">next</span> ≠ null:</span>
+<span id="dd5" class="code-line">    target.<span class="ptr">next.prev</span> = target.<span class="ptr">prev</span></span>
+<span id="dd6" class="code-line">  free(target)</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Current List</div>
+        <div id="listDisplay" style="font-family:var(--mono);font-size:12px;color:var(--text);line-height:2.2;word-break:break-all">—</div>
+      </div>
+
     </div>
   </div>
 </div>
+
+<script>
+// ════════════════════════════════════════════════
+// THEME
+// ════════════════════════════════════════════════
+function toggleTheme(){
+  const html=document.documentElement;
+  const light=html.getAttribute('data-theme')!=='light';
+  html.setAttribute('data-theme',light?'light':'dark');
+  document.getElementById('toggleLabel').textContent=light?'Dark mode':'Light mode';
+  localStorage.setItem('theme',light?'light':'dark');
+  redraw();
+}
+(function(){const s=localStorage.getItem('theme');if(s==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('toggleLabel').textContent='Dark mode';}})();
+
+// ════════════════════════════════════════════════
+// SPEECH
+// ════════════════════════════════════════════════
+const synth=window.speechSynthesis;let ttsVoice=null;
+function loadVoices(){const v=synth.getVoices();ttsVoice=v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;}
+loadVoices();if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=loadVoices;
+function speak(text){return new Promise(r=>{if(!voiceEnabled||!synth){r();return;}synth.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=ttsVoice;u.rate=0.88;u.pitch=1.05;u.volume=1;u.onstart=()=>document.getElementById('speakBars').classList.add('on');u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');r();};synth.speak(u);});}
+function stopSpeech(){synth&&synth.cancel();document.getElementById('speakBars').classList.remove('on');}
+let voiceEnabled=false;
+function toggleVoice(){voiceEnabled=!voiceEnabled;const icon=document.getElementById('voiceIcon'),lbl=document.getElementById('voiceLabel'),btn=document.getElementById('voiceToggle');if(voiceEnabled){icon.textContent='🔊';lbl.textContent='Voice On';btn.classList.remove('off');document.getElementById('speedWrap').style.display='none';if(isPlaying){stopPlay();startPlay();}}else{icon.textContent='🔇';lbl.textContent='Voice Off';btn.classList.add('off');stopSpeech();document.getElementById('speedWrap').style.display='';if(isPlaying){stopPlay();startPlay();}}}
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let listType='single'; // 'single'|'double'
+let nodes=[];          // [{id,val}]
+let steps=[];
+let stepIdx=-1;
+let isPlaying=false;
+let playTimer=null;
+let speedMult=2;
+let totalOps=0,totalPtrChanges=0;
+
+const SPEED_DELAYS={1:1800,2:1000,3:550,4:280,5:110};
+function getDelay(){return SPEED_DELAYS[speedMult]||1000;}
+function onSpeedChange(v){speedMult=parseInt(v);document.getElementById('speedVal').textContent=v+'×';}
+
+// ════════════════════════════════════════════════
+// LIST TYPE SWITCH
+// ════════════════════════════════════════════════
+function setListType(t){
+  listType=t;
+  document.getElementById('btnSingle').className='list-toggle-btn'+(t==='single'?' active-single':'');
+  document.getElementById('btnDouble').className='list-toggle-btn'+(t==='double'?' active-double':'');
+  document.getElementById('listTypeLabel').textContent=t==='single'?'SINGLY LINKED LIST':'DOUBLY LINKED LIST';
+  document.getElementById('listTypeLabel').style.color=t==='single'?'var(--orange)':'var(--blue)';
+  steps=[];stepIdx=-1;
+  renderIdle();
+}
+
+// ════════════════════════════════════════════════
+// STEP GENERATORS
+// ════════════════════════════════════════════════
+
+// Each step: { nodes:[{id,val,state}], arrows:[{from,to,type,state,label}], detached:{id,val,x,y}, phase, codeLine, codeBlock, narration, ptrChanges }
+// state: 'default'|'new'|'active'|'deleting'|'done'
+// arrow type: 'next'|'prev'
+// arrow state: 'default'|'active'|'new'|'removing'|'done'
+
+let _idCounter=0;
+function newId(){return ++_idCounter;}
+
+function cloneNodes(ns){return ns.map(n=>({...n}));}
+
+/* ── BUILD ── */
+function buildSteps(vals){
+  const steps=[];
+  const ns=vals.map(v=>({id:newId(),val:v,state:'default'}));
+
+  steps.push({
+    nodes:cloneNodes(ns),arrows:buildArrows(ns,'default'),detached:null,
+    phase:'done',codeLine:0,codeBlock:null,
+    narration:`Built a ${listType==='single'?'singly':'doubly'} linked list with ${ns.length} node${ns.length>1?'s':''}. Head → ${ns.map(n=>n.val).join(' → ')} → ∅`,
+    ptrChanges:0,op:'Build'
+  });
+  return {steps,finalNodes:ns};
+}
+
+function buildArrows(ns,state='default'){
+  const arrows=[];
+  for(let i=0;i<ns.length-1;i++){
+    arrows.push({from:ns[i].id,to:ns[i+1].id,type:'next',state,label:'next'});
+    if(listType==='double') arrows.push({from:ns[i+1].id,to:ns[i].id,type:'prev',state,label:'prev'});
+  }
+  return arrows;
+}
+
+/* ── INSERT AFTER index ── */
+function insertAfterSteps(curNodes, val, afterIdx){
+  const steps=[];
+  const ns=curNodes.map(n=>({...n,state:'default'}));
+  const newNode={id:newId(),val,state:'new'};
+  const afterNode=ns[afterIdx];
+  const nextNode=ns[afterIdx+1]||null;
+  let ptrChanges=0;
+
+  // Step 0: show new node floating above, list unchanged
+  steps.push({
+    nodes:cloneNodes(ns),arrows:buildArrows(ns),
+    detached:{...newNode,floatAbove:afterIdx},
+    phase:'insert',codeLine:2,codeBlock: listType==='single'?'psSingleInsert':'psDoubleInsert',
+    narration:`New node X (value ${val}) created and placed above node ${afterNode.val}. List is still unchanged — no pointers modified yet.`,
+    ptrChanges,op:'Insert'
+  });
+
+  if(listType==='single'){
+    // Step 1: X.next → node.next (afterNode's next)
+    ptrChanges++;
+    const arrows1=buildArrows(ns);
+    arrows1.push({from:newNode.id,to:nextNode?nextNode.id:null,type:'next',state:'new',label:'X.next'});
+    steps.push({
+      nodes:cloneNodes(ns),arrows:arrows1,
+      detached:{...newNode,floatAbove:afterIdx},
+      phase:'pointer',codeLine:4,codeBlock:'psSingleInsert',
+      narration:`Step 1 — Set X.next → ${nextNode?nextNode.val:'∅'}. Node X now knows where the rest of the list continues. Node ${afterNode.val} still points to ${nextNode?nextNode.val:'∅'}.`,
+      ptrChanges,op:'Insert'
+    });
+
+    // Step 2: afterNode.next → X
+    ptrChanges++;
+    const nsInserted=cloneNodes(ns);
+    nsInserted.splice(afterIdx+1,0,{...newNode});
+    const arrows2=buildArrows(nsInserted,'default');
+    // highlight the changed pointer
+    const a2=arrows2.find(a=>a.from===afterNode.id&&a.to===newNode.id);
+    if(a2) a2.state='new';
+    steps.push({
+      nodes:nsInserted,arrows:arrows2,detached:null,
+      phase:'pointer',codeLine:6,codeBlock:'psSingleInsert',
+      narration:`Step 2 — Set node ${afterNode.val}.next → X. Node X is now linked into the list. All pointers correctly set!`,
+      ptrChanges,op:'Insert'
+    });
+
+    // Done
+    const nsDone=nsInserted.map(n=>({...n,state:'default'}));
+    steps.push({
+      nodes:nsDone,arrows:buildArrows(nsDone,'done'),detached:null,
+      phase:'done',codeLine:0,codeBlock:'psSingleInsert',
+      narration:`Insert complete! List is now: ${nsDone.map(n=>n.val).join(' → ')} → ∅`,
+      ptrChanges,op:'Insert'
+    });
+    return {steps,finalNodes:nsDone};
+
+  } else {
+    // doubly
+    // Step 1: X.prev → afterNode
+    ptrChanges++;
+    const arrows1=buildArrows(ns);
+    arrows1.push({from:newNode.id,to:afterNode.id,type:'prev',state:'new',label:'X.prev'});
+    steps.push({
+      nodes:cloneNodes(ns),arrows:arrows1,
+      detached:{...newNode,floatAbove:afterIdx},
+      phase:'pointer',codeLine:3,codeBlock:'psDoubleInsert',
+      narration:`Step 1 — Set X.prev → node ${afterNode.val}. X now knows its left neighbour.`,
+      ptrChanges,op:'Insert'
+    });
+
+    // Step 2: X.next → afterNode.next
+    ptrChanges++;
+    const arrows2=buildArrows(ns);
+    arrows2.push({from:newNode.id,to:afterNode.id,type:'prev',state:'new',label:'X.prev'});
+    arrows2.push({from:newNode.id,to:nextNode?nextNode.id:null,type:'next',state:'new',label:'X.next'});
+    steps.push({
+      nodes:cloneNodes(ns),arrows:arrows2,
+      detached:{...newNode,floatAbove:afterIdx},
+      phase:'pointer',codeLine:4,codeBlock:'psDoubleInsert',
+      narration:`Step 2 — Set X.next → ${nextNode?nextNode.val:'∅'}. X now has both pointers set correctly.`,
+      ptrChanges,op:'Insert'
+    });
+
+    // Step 3: nextNode.prev → X (if nextNode exists)
+    if(nextNode){
+      ptrChanges++;
+      const arrows3=buildArrows(ns);
+      arrows3.push({from:newNode.id,to:afterNode.id,type:'prev',state:'new',label:'X.prev'});
+      arrows3.push({from:newNode.id,to:nextNode.id,type:'next',state:'new',label:'X.next'});
+      // update nextNode.prev
+      const prevArrow=arrows3.find(a=>a.from===nextNode.id&&a.to===afterNode.id&&a.type==='prev');
+      if(prevArrow){prevArrow.to=newNode.id;prevArrow.state='new';prevArrow.label='prev→X';}
+      steps.push({
+        nodes:cloneNodes(ns),arrows:arrows3,
+        detached:{...newNode,floatAbove:afterIdx},
+        phase:'pointer',codeLine:6,codeBlock:'psDoubleInsert',
+        narration:`Step 3 — Set node ${nextNode.val}.prev → X. The right neighbour now points back to X.`,
+        ptrChanges,op:'Insert'
+      });
+    }
+
+    // Step 4: afterNode.next → X
+    ptrChanges++;
+    const nsInserted=cloneNodes(ns);
+    nsInserted.splice(afterIdx+1,0,{...newNode});
+    const arrows4=buildArrows(nsInserted,'default');
+    const a4=arrows4.find(a=>a.from===afterNode.id&&a.to===newNode.id&&a.type==='next');
+    if(a4) a4.state='new';
+    steps.push({
+      nodes:nsInserted,arrows:arrows4,detached:null,
+      phase:'pointer',codeLine:7,codeBlock:'psDoubleInsert',
+      narration:`Step 4 — Set node ${afterNode.val}.next → X. All ${ptrChanges} pointer${ptrChanges>1?'s':''} updated. X is fully inserted!`,
+      ptrChanges,op:'Insert'
+    });
+
+    const nsDone=nsInserted.map(n=>({...n,state:'default'}));
+    steps.push({
+      nodes:nsDone,arrows:buildArrows(nsDone,'done'),detached:null,
+      phase:'done',codeLine:0,codeBlock:'psDoubleInsert',
+      narration:`Insert complete! List is now: ${nsDone.map(n=>n.val).join(' ⇄ ')} — all next and prev pointers correct.`,
+      ptrChanges,op:'Insert'
+    });
+    return {steps,finalNodes:nsDone};
+  }
+}
+
+/* ── DELETE at index ── */
+function deleteAtSteps(curNodes, idx){
+  const steps=[];
+  const ns=curNodes.map(n=>({...n,state:'default'}));
+  const target=ns[idx];
+  const prevNode=idx>0?ns[idx-1]:null;
+  const nextNode=ns[idx+1]||null;
+  let ptrChanges=0;
+
+  // Step 0: highlight target
+  const ns0=cloneNodes(ns);
+  ns0[idx].state='deleting';
+  steps.push({
+    nodes:ns0,arrows:buildArrows(ns0),detached:null,
+    phase:'delete',codeLine:1,codeBlock:listType==='single'?'psSingleDelete':'psDoubleDelete',
+    narration:`Deleting node ${target.val} at index ${idx}. First we must rewire all pointers, then remove the node.`,
+    ptrChanges,op:'Delete'
+  });
+
+  if(listType==='single'){
+    if(prevNode){
+      // Step 1: prev.next → target.next (bypass)
+      ptrChanges++;
+      const ns1=cloneNodes(ns0);
+      const arrows1=buildArrows(ns1,'default');
+      // remove old prev→target arrow, add prev→next
+      const oldArrow=arrows1.find(a=>a.from===prevNode.id&&a.to===target.id&&a.type==='next');
+      if(oldArrow){oldArrow.state='removing';}
+      if(nextNode) arrows1.push({from:prevNode.id,to:nextNode.id,type:'next',state:'new',label:'bypass'});
+      steps.push({
+        nodes:ns1,arrows:arrows1,detached:null,
+        phase:'pointer',codeLine:3,codeBlock:'psSingleDelete',
+        narration:`Step 1 — Set node ${prevNode.val}.next → ${nextNode?nextNode.val:'∅'}. This bypasses node ${target.val}. The link from ${prevNode.val} to ${target.val} is being removed.`,
+        ptrChanges,op:'Delete'
+      });
+
+      // Step 2: target.next → null
+      ptrChanges++;
+      const ns2=cloneNodes(ns0);
+      const arrows2=buildArrows(ns2,'default').filter(a=>!(a.from===prevNode.id&&a.to===target.id));
+      if(nextNode) arrows2.push({from:prevNode.id,to:nextNode.id,type:'next',state:'new',label:'bypass'});
+      // target's next arrow: removing
+      const tgtArrow=arrows2.find(a=>a.from===target.id&&a.to===nextNode?.id&&a.type==='next');
+      if(tgtArrow) tgtArrow.state='removing';
+      steps.push({
+        nodes:ns2,arrows:arrows2,detached:null,
+        phase:'pointer',codeLine:5,codeBlock:'psSingleDelete',
+        narration:`Step 2 — Set node ${target.val}.next → ∅. Node ${target.val} is now fully detached from the list.`,
+        ptrChanges,op:'Delete'
+      });
+    } else {
+      // deleting head — just advance head
+      ptrChanges++;
+      const ns1=cloneNodes(ns0);
+      const arrows1=buildArrows(ns1,'default').filter(a=>!(a.from===target.id));
+      steps.push({
+        nodes:ns1,arrows:arrows1,detached:null,
+        phase:'pointer',codeLine:3,codeBlock:'psSingleDelete',
+        narration:`Node ${target.val} is the head. Setting head → ${nextNode?nextNode.val:'∅'} and removing its next pointer.`,
+        ptrChanges,op:'Delete'
+      });
+    }
+
+    // Final: remove node
+    const nsDone=ns.filter((_,i)=>i!==idx).map(n=>({...n,state:'default'}));
+    steps.push({
+      nodes:nsDone,arrows:buildArrows(nsDone,'done'),detached:null,
+      phase:'done',codeLine:7,codeBlock:'psSingleDelete',
+      narration:`Node ${target.val} removed. List is now: ${nsDone.length?nsDone.map(n=>n.val).join(' → ')+' → ∅':'(empty)'}`,
+      ptrChanges,op:'Delete'
+    });
+    return {steps,finalNodes:nsDone};
+
+  } else {
+    // doubly delete
+    if(prevNode){
+      // Step 1: prev.next → target.next
+      ptrChanges++;
+      const ns1=cloneNodes(ns0);
+      const arrows1=buildArrows(ns1,'default');
+      const oldFwd=arrows1.find(a=>a.from===prevNode.id&&a.to===target.id&&a.type==='next');
+      if(oldFwd) oldFwd.state='removing';
+      if(nextNode) arrows1.push({from:prevNode.id,to:nextNode.id,type:'next',state:'new',label:'bypass'});
+      steps.push({
+        nodes:ns1,arrows:arrows1,detached:null,
+        phase:'pointer',codeLine:3,codeBlock:'psDoubleDelete',
+        narration:`Step 1 — Set node ${prevNode.val}.next → ${nextNode?nextNode.val:'∅'}. Bypassing node ${target.val} in the forward direction.`,
+        ptrChanges,op:'Delete'
+      });
+    }
+
+    if(nextNode){
+      // Step 2: next.prev → target.prev
+      ptrChanges++;
+      const ns2=cloneNodes(ns0);
+      const arrows2=buildArrows(ns2,'default');
+      if(prevNode){
+        const oldFwd2=arrows2.find(a=>a.from===prevNode.id&&a.to===target.id&&a.type==='next');
+        if(oldFwd2) oldFwd2.state='removing';
+        arrows2.push({from:prevNode.id,to:nextNode.id,type:'next',state:'new',label:'bypass'});
+      }
+      const oldBwd=arrows2.find(a=>a.from===nextNode.id&&a.to===target.id&&a.type==='prev');
+      if(oldBwd) oldBwd.state='removing';
+      if(prevNode) arrows2.push({from:nextNode.id,to:prevNode.id,type:'prev',state:'new',label:'bypass'});
+      steps.push({
+        nodes:ns2,arrows:arrows2,detached:null,
+        phase:'pointer',codeLine:5,codeBlock:'psDoubleDelete',
+        narration:`Step 2 — Set node ${nextNode.val}.prev → ${prevNode?prevNode.val:'∅'}. Both directions are now bypassed around node ${target.val}.`,
+        ptrChanges,op:'Delete'
+      });
+    }
+
+    // Remove node
+    const nsDone=ns.filter((_,i)=>i!==idx).map(n=>({...n,state:'default'}));
+    steps.push({
+      nodes:nsDone,arrows:buildArrows(nsDone,'done'),detached:null,
+      phase:'done',codeLine:6,codeBlock:'psDoubleDelete',
+      narration:`Node ${target.val} removed. List is now: ${nsDone.length?nsDone.map(n=>n.val).join(' ⇄ '):'(empty)'}`,
+      ptrChanges,op:'Delete'
+    });
+    return {steps,finalNodes:nsDone};
+  }
+}
+
+// ════════════════════════════════════════════════
+// CANVAS
+// ════════════════════════════════════════════════
+const canvas=document.getElementById('vizCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=canvas.parentElement.clientWidth;}
+
+const NODE_W=76,NODE_H=48,NODE_R=8,GAP=72;
+const SINGLY_ROW_Y=160, DOUBLE_ROW_Y=170, FLOAT_Y=60;
+
+function getNodeX(idx,count){
+  const total=count*(NODE_W+GAP)-GAP;
+  const startX=(canvas.width-total)/2;
+  return startX+idx*(NODE_W+GAP);
+}
+
+function drawNode(x,y,val,state,isDouble){
+  const light=document.documentElement.getAttribute('data-theme')==='light';
+  let fill,stroke,textCol;
+  switch(state){
+    case 'new':     fill=light?'rgba(167,139,250,.25)':'rgba(167,139,250,.2)'; stroke='#a78bfa'; textCol='#a78bfa'; break;
+    case 'active':  fill=light?'rgba(255,209,102,.25)':'rgba(255,209,102,.2)'; stroke='#ffd166'; textCol='#ffd166'; break;
+    case 'deleting':fill=light?'rgba(255,107,157,.25)':'rgba(255,107,157,.2)'; stroke='#ff6b9d'; textCol='#ff6b9d'; break;
+    case 'done':    fill=light?'rgba(0,212,170,.15)':'rgba(0,212,170,.12)';   stroke='#00d4aa'; textCol='#00d4aa'; break;
+    default:        fill=light?'#dde8f8':'#1a2840'; stroke=light?'#99b8dc':'#2a4060'; textCol=light?'#1a2840':'#4a6a9a';
+  }
+
+  // glow
+  if(state!=='default'){
+    ctx.beginPath();roundRect(ctx,x-4,y-4,NODE_W+8,NODE_H+8,NODE_R+4);
+    ctx.fillStyle=stroke+'28';ctx.fill();
+  }
+  // box
+  ctx.beginPath();roundRect(ctx,x,y,NODE_W,NODE_H,NODE_R);
+  ctx.fillStyle=fill;ctx.fill();
+  ctx.strokeStyle=stroke;ctx.lineWidth=state==='default'?1.5:2;ctx.stroke();
+
+  // divider: value | ptr
+  const divX=x+NODE_W*0.62;
+  ctx.beginPath();ctx.moveTo(divX,y+4);ctx.lineTo(divX,y+NODE_H-4);
+  ctx.strokeStyle=stroke+'66';ctx.lineWidth=1;ctx.stroke();
+
+  // value
+  ctx.fillStyle=textCol;
+  ctx.font=`bold 13px JetBrains Mono`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(val,x+NODE_W*0.31,y+NODE_H/2);
+
+  // ptr label
+  ctx.font=`9px JetBrains Mono`;
+  ctx.fillStyle=stroke+'99';
+  ctx.fillText(isDouble?'⇄':'→',divX+(NODE_W-divX+x)/2,y+NODE_H/2);
+}
+
+function drawArrow(x1,y1,x2,y2,state,label,curved,dir){
+  const light=document.documentElement.getAttribute('data-theme')==='light';
+  let col;
+  switch(state){
+    case 'new':     col='#a78bfa'; break;
+    case 'active':  col='#ffd166'; break;
+    case 'removing':col='#ff6b9d'; break;
+    case 'done':    col='#00d4aa'; break;
+    default:        col=light?'#99b8dc':'#2a4060';
+  }
+  ctx.save();
+  ctx.strokeStyle=col;
+  ctx.fillStyle=col;
+  ctx.lineWidth=state==='default'?1.5:2;
+  if(state==='removing') ctx.setLineDash([4,4]);
+  else if(state==='new') ctx.setLineDash([]);
+
+  let mx,my;
+  ctx.beginPath();
+  if(curved){
+    const offset=dir==='prev'?-22:22;
+    mx=(x1+x2)/2; my=y1+offset;
+    ctx.moveTo(x1,y1);
+    ctx.quadraticCurveTo(mx,my,x2,y2);
+  } else {
+    ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
+    mx=(x1+x2)/2;my=(y1+y2)/2;
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // arrowhead
+  const angle=curved?Math.atan2(y2-my,x2-mx):Math.atan2(y2-y1,x2-x1);
+  const aLen=8,aWid=5;
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-aLen*Math.cos(angle-0.4),y2-aLen*Math.sin(angle-0.4));
+  ctx.lineTo(x2-aLen*Math.cos(angle+0.4),y2-aLen*Math.sin(angle+0.4));
+  ctx.closePath();ctx.fill();
+
+  // label
+  if(label&&state!=='default'){
+    ctx.font='bold 9px JetBrains Mono';
+    ctx.fillStyle=col;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(label,mx,my-(dir==='prev'?12:-12));
+  }
+  ctx.restore();
+}
+
+function drawNull(x,y){
+  const light=document.documentElement.getAttribute('data-theme')==='light';
+  ctx.font='bold 11px JetBrains Mono';
+  ctx.fillStyle=light?'#7a9ac0':'#2a4060';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('∅',x,y);
+}
+
+function drawHeadLabel(x,y){
+  const light=document.documentElement.getAttribute('data-theme')==='light';
+  ctx.font='bold 10px JetBrains Mono';
+  ctx.fillStyle='#00d4aa';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('HEAD',x,y-22);
+  // small arrow down
+  ctx.beginPath();ctx.moveTo(x,y-15);ctx.lineTo(x,y-4);
+  ctx.strokeStyle='#00d4aa';ctx.lineWidth=1.5;ctx.stroke();
+  // arrowhead
+  ctx.beginPath();ctx.moveTo(x,y-2);ctx.lineTo(x-4,y-9);ctx.lineTo(x+4,y-9);ctx.closePath();
+  ctx.fillStyle='#00d4aa';ctx.fill();
+}
+
+function drawStep(step){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!step) return;
+  const {nodes:ns,arrows,detached}=step;
+  const n=ns.length+(detached?1:0);
+  const rowY=listType==='double'?DOUBLE_ROW_Y:SINGLY_ROW_Y;
+  const count=ns.length;
+
+  // map id → position (for placed nodes)
+  const pos={};
+  ns.forEach((node,i)=>{
+    pos[node.id]={x:getNodeX(i,count),y:rowY};
+  });
+
+  // detached node position
+  let detPos=null;
+  if(detached){
+    const aboveIdx=detached.floatAbove;
+    const bx=getNodeX(aboveIdx,count);
+    detPos={x:bx+NODE_W/2+Math.floor((NODE_W+GAP)/2)-NODE_W/2,y:FLOAT_Y};
+    pos[detached.id]=detPos;
+  }
+
+  // ── Draw arrows ──
+  arrows.forEach(arrow=>{
+    const fromPos=pos[arrow.from];
+    if(!fromPos) return;
+    const isDbl=listType==='double';
+    const isNext=arrow.type==='next';
+
+    if(arrow.to===null){
+      // null pointer
+      const x1=fromPos.x+NODE_W;
+      const y1=fromPos.y+NODE_H/2;
+      drawArrow(x1,y1,x1+32,y1,arrow.state,arrow.label,false,'next');
+      drawNull(x1+44,y1);
+      return;
+    }
+    const toPos=pos[arrow.to];
+    if(!toPos) return;
+
+    if(isDbl){
+      // next: bottom curve right, prev: top curve left
+      const y1=fromPos.y+NODE_H/2+(isNext?10:-10);
+      const y2=toPos.y+NODE_H/2+(isNext?10:-10);
+      const x1=isNext?fromPos.x+NODE_W:fromPos.x;
+      const x2=isNext?toPos.x:toPos.x+NODE_W;
+      drawArrow(x1,y1,x2,y2,arrow.state,arrow.label,true,isNext?'next':'prev');
+    } else {
+      // singly: straight right from divider
+      const x1=fromPos.x+NODE_W;
+      const y1=fromPos.y+NODE_H/2;
+      const x2=toPos.x;
+      const y2=toPos.y+NODE_H/2;
+
+      // if detached connects: draw diagonal
+      if(detached&&(arrow.from===detached.id||arrow.to===detached.id)){
+        const fx=arrow.from===detached.id?detPos.x+NODE_W:fromPos.x+NODE_W;
+        const fy=arrow.from===detached.id?detPos.y+NODE_H/2:fromPos.y+NODE_H/2;
+        const tx=arrow.to===detached.id?detPos.x:toPos.x;
+        const ty=arrow.to===detached.id?detPos.y+NODE_H/2:toPos.y+NODE_H/2;
+        drawArrow(fx,fy,tx,ty,arrow.state,arrow.label,false,'next');
+        return;
+      }
+      drawArrow(x1,y1,x2,y2,arrow.state,arrow.label,false,'next');
+    }
+  });
+
+  // Null terminator at end of list
+  if(ns.length>0){
+    const lastPos=pos[ns[ns.length-1].id];
+    const nx=lastPos.x+NODE_W+36;
+    const ny=lastPos.y+NODE_H/2;
+    const light=document.documentElement.getAttribute('data-theme')==='light';
+    ctx.beginPath();ctx.moveTo(lastPos.x+NODE_W,ny);ctx.lineTo(nx-6,ny);
+    ctx.strokeStyle=light?'#99b8dc':'#2a4060';ctx.lineWidth=1.5;ctx.stroke();
+    drawNull(nx+4,ny);
+  }
+
+  // ── Draw nodes ──
+  ns.forEach((node,i)=>{
+    const {x,y}=pos[node.id];
+    drawNode(x,y,node.val,node.state,listType==='double');
+    if(i===0) drawHeadLabel(x+NODE_W/2,y);
+  });
+
+  // ── Draw detached node ──
+  if(detached&&detPos){
+    drawNode(detPos.x,detPos.y,detached.val,'new',listType==='double');
+    // label "X (new)"
+    const light=document.documentElement.getAttribute('data-theme')==='light';
+    ctx.font='bold 10px JetBrains Mono';
+    ctx.fillStyle='#a78bfa';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('NEW',detPos.x+NODE_W/2,detPos.y-14);
+  }
+
+  // index labels below nodes
+  const light=document.documentElement.getAttribute('data-theme')==='light';
+  ns.forEach((node,i)=>{
+    const {x,y}=pos[node.id];
+    ctx.font='9px JetBrains Mono';
+    ctx.fillStyle=light?'rgba(0,0,0,.3)':'rgba(74,106,154,.6)';
+    ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillText(`[${i}]`,x+NODE_W/2,y+NODE_H+5);
+  });
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+// ════════════════════════════════════════════════
+// CONTROLLER
+// ════════════════════════════════════════════════
+function updateNarration(step){
+  const el=document.getElementById('narText');
+  el.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent='🧑‍💻';
+  el.textContent=step.narration;
+}
+
+function updateStatusBar(step,idx){
+  document.getElementById('sOp').textContent=step.op||'—';
+  document.getElementById('sPtrSteps').textContent=step.ptrChanges||0;
+  document.getElementById('sSize').textContent=step.nodes.length;
+  document.getElementById('statSize').textContent=step.nodes.length;
+  document.getElementById('statPtrs').textContent=totalPtrChanges+(step.ptrChanges||0);
+  document.getElementById('statSteps').textContent=idx+1;
+  document.getElementById('statOps').textContent=totalOps;
+  document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
+  const pct=steps.length>1?((idx/(steps.length-1))*100).toFixed(1):0;
+  document.getElementById('progFill').style.width=pct+'%';
+
+  // update list display
+  const listStr=step.nodes.map((n,i)=>`[${i}] ${n.val}`).join(listType==='single'?' → ':' ⇄ ');
+  document.getElementById('listDisplay').textContent=listStr||'(empty)';
+
+  const badge=document.getElementById('phaseBadge');
+  const map={active:['ph-active','Running'],pointer:['ph-pointer','Ptr Change'],insert:['ph-insert','Inserting'],delete:['ph-delete','Deleting'],done:['ph-done','Done'],idle:['ph-idle','Idle']};
+  const [cls,lbl]=map[step.phase]||['ph-idle','Idle'];
+  badge.className=`phase-badge ${cls}`;badge.textContent=lbl;
+
+  // pseudocode highlight
+  ['psSingleInsert','psSingleDelete','psDoubleInsert','psDoubleDelete'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
+  if(step.codeBlock){
+    document.getElementById(step.codeBlock).style.display='block';
+    const prefixMap={'psSingleInsert':'si','psSingleDelete':'sd','psDoubleInsert':'di','psDoubleDelete':'dd'};
+    const pfx=prefixMap[step.codeBlock];
+    const maxLines={si:6,sd:7,di:7,dd:6};
+    for(let i=1;i<=(maxLines[pfx]||7);i++){
+      const el=document.getElementById(`${pfx}${i}`);
+      if(el) el.style.background=step.codeLine===i?'rgba(0,212,170,.14)':'';
+    }
+  }
+}
+
+function renderStep(idx,autoAdvance=false){
+  if(idx<0||idx>=steps.length) return;
+  stepIdx=idx;
+  const step=steps[idx];
+  drawStep(step);
+  updateNarration(step);
+  updateStatusBar(step,idx);
+  if(autoAdvance) scheduleNext(step);
+}
+
+function scheduleNext(step){
+  if(!isPlaying) return;
+  if(stepIdx>=steps.length-1){stopPlay();return;}
+  if(voiceEnabled){
+    speak(step.narration).then(()=>{if(!isPlaying) return; playTimer=setTimeout(()=>{if(isPlaying) renderStep(stepIdx+1,true);},350);});
+  } else {
+    playTimer=setTimeout(()=>{if(isPlaying) renderStep(stepIdx+1,true);},getDelay());
+  }
+}
+
+function nextStep(){
+  stopPlay();
+  if(stepIdx+1<steps.length){renderStep(stepIdx+1,false);if(voiceEnabled) speak(steps[stepIdx].narration);}
+}
+function startPlay(){
+  if(stepIdx>=steps.length-1) stepIdx=-1;
+  isPlaying=true;document.getElementById('btnPlay').textContent='⏸ Pause';
+  renderStep(stepIdx+1,true);
+}
+function stopPlay(){
+  isPlaying=false;if(playTimer){clearTimeout(playTimer);playTimer=null;}
+  document.getElementById('btnPlay').textContent='▶ Play';stopSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click',()=>{if(isPlaying) stopPlay(); else startPlay();});
+document.getElementById('btnNext').addEventListener('click',nextStep);
+document.getElementById('btnReset').addEventListener('click',()=>{stopPlay();stepIdx=-1;if(steps.length>0) renderStep(0);});
+
+// ════════════════════════════════════════════════
+// OPERATIONS
+// ════════════════════════════════════════════════
+function applyBuild(){
+  const raw=document.getElementById('buildInput').value;
+  const vals=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)).slice(0,5);
+  if(!vals.length){alert('Enter 1–5 values.');return;}
+  _idCounter=0;
+  const {steps:s,finalNodes}=buildSteps(vals);
+  nodes=finalNodes;steps=s;totalOps++;totalPtrChanges=0;
+  stopPlay();stepIdx=-1;renderStep(0);
+}
+
+function randomBuild(){
+  const count=Math.floor(Math.random()*3)+3; // 3-5
+  const vals=Array.from({length:count},()=>Math.floor(Math.random()*90)+5);
+  document.getElementById('buildInput').value=vals.join(', ');
+  applyBuild();
+}
+
+function doInsert(){
+  if(!nodes.length){alert('Build a list first.');return;}
+  const val=parseInt(document.getElementById('insertVal').value.trim());
+  const afterIdx=parseInt(document.getElementById('insertAfter').value.trim());
+  if(isNaN(val)){alert('Enter a valid value to insert.');return;}
+  if(isNaN(afterIdx)||afterIdx<0||afterIdx>=nodes.length){alert(`Enter a valid index (0 – ${nodes.length-1}).`);return;}
+  if(nodes.length>=5){alert('Max 5 nodes for clarity. Delete a node first.');return;}
+  const {steps:s,finalNodes}=insertAfterSteps(nodes,val,afterIdx);
+  nodes=finalNodes;steps=s;totalOps++;totalPtrChanges+=s[s.length-1].ptrChanges||0;
+  stopPlay();stepIdx=-1;renderStep(0);startPlay();
+}
+
+function doDelete(){
+  if(!nodes.length){alert('List is empty.');return;}
+  const idx=parseInt(document.getElementById('deleteIdx').value.trim());
+  if(isNaN(idx)||idx<0||idx>=nodes.length){alert(`Enter a valid index (0 – ${nodes.length-1}).`);return;}
+  const {steps:s,finalNodes}=deleteAtSteps(nodes,idx);
+  nodes=finalNodes;steps=s;totalOps++;totalPtrChanges+=s[s.length-1].ptrChanges||0;
+  stopPlay();stepIdx=-1;renderStep(0);startPlay();
+}
+
+function renderIdle(){
+  drawStep(steps[0]||null);
+  document.getElementById('listDisplay').textContent=nodes.length?nodes.map((n,i)=>`[${i}] ${n.val}`).join(' → '):'—';
+  document.getElementById('sSize').textContent=nodes.length;
+  document.getElementById('statSize').textContent=nodes.length;
+}
+
+function redraw(){
+  if(stepIdx>=0&&steps[stepIdx]) drawStep(steps[stepIdx]);
+  else if(steps.length>0) drawStep(steps[0]);
+}
+
+window.addEventListener('resize',()=>{resizeCanvas();redraw();});
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+function init(){
+  resizeCanvas();
+  _idCounter=0;
+  const vals=[10,20,30];
+  const {steps:s,finalNodes}=buildSteps(vals);
+  nodes=finalNodes;steps=s;totalOps=1;
+  stepIdx=-1;renderStep(0);
+}
+init();
+</script>
 </body>
 </html>

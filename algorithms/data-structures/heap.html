@@ -5,75 +5,877 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Heap / Priority Queue — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0f1e;
+  --surface: #0f1829;
+  --surface2: #141f30;
+  --border: #1e2d42;
+  --text: #c8d8f0;
+  --text-dim: #4a6a9a;
+  --teal: #00d4aa;
+  --orange: #ff8c42;
+  --pink: #ff6b9d;
+  --blue: #4a9eff;
+  --purple: #a78bfa;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+  --node-default: #1a2840;
+  --node-default-stroke: #2a4060;
+  --node-compare: #ff8c42;
+  --node-swap: #ff6b9d;
+  --node-insert: #a78bfa;
+  --node-extract: #00d4aa;
+  --node-done: #06d6a0;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+[data-theme="light"] {
+  --bg: #f0f4fa; --surface: #fff; --surface2: #f5f8ff;
+  --border: #dde5f0; --text: #1a2840; --text-dim: #7a9ac0;
+  --node-default: #dde8f8; --node-default-stroke: #99b8dc;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
-}
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+
+body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; transition: background .3s, color .3s; }
+
+.bg-grid { position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,212,170,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,.03) 1px,transparent 1px);background-size:40px 40px; }
+.bg-glow { position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:600px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,212,170,.07) 0%,transparent 70%);pointer-events:none;z-index:0; }
+
+/* ── Navbar ── */
+.navbar { position:sticky;top:0;z-index:100;background:rgba(10,15,30,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border); }
+.nav-inner { max-width:1200px;margin:auto;padding:0 24px;height:52px;display:flex;align-items:center;gap:28px; }
+.nav-logo { font-family:var(--mono);font-size:14px;font-weight:800;color:var(--teal);text-decoration:none;letter-spacing:-.5px; }
+.logo-bracket { color:var(--orange); } .logo-dot { color:var(--pink); }
+.nav-links { display:flex;gap:18px; }
+.nav-links a { font-size:12px;color:var(--text-dim);text-decoration:none;letter-spacing:.5px;transition:color .2s; }
+.nav-links a:hover { color:var(--teal); }
+.theme-toggle { margin-left:auto;background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:border-color .2s,background .2s; }
+.theme-toggle:hover { border-color:var(--teal);background:rgba(0,212,170,.06); }
+.toggle-track { width:30px;height:16px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;padding:2px;transition:background .3s; }
+[data-theme="light"] .toggle-track { background:rgba(0,212,170,.3); }
+.toggle-thumb { width:12px;height:12px;border-radius:50%;background:var(--teal);transition:transform .3s;display:flex;align-items:center;justify-content:center; }
+[data-theme="light"] .toggle-thumb { transform:translateX(14px); }
+.toggle-icon { font-size:7px;line-height:1; }
+.toggle-label { font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap; }
+
+/* ── Layout ── */
+.algo-page { max-width:1200px;margin:auto;padding:24px 20px 60px;position:relative;z-index:1; }
+.back-link { font-family:var(--mono);font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;display:inline-block;margin-bottom:16px;transition:color .2s; }
+.back-link:hover { color:var(--teal); }
+.two-col { display:grid;grid-template-columns:1fr 360px;gap:16px;margin-bottom:16px; }
+@media (max-width:900px) { .two-col { grid-template-columns:1fr; } }
+
+/* ── Header helpers ── */
+.card-difficulty { font-family:var(--mono);font-size:10px;letter-spacing:2px;border-radius:6px;padding:3px 9px;text-transform:uppercase; }
+.intermediate { background:rgba(255,140,66,.15);color:var(--orange);border:1px solid rgba(255,140,66,.3); }
+.complexity { display:flex;flex-wrap:wrap;gap:8px; }
+.cplx-chip { background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim); }
+.cplx-chip span { color:var(--teal);font-weight:700; }
+
+/* ── Concepts ── */
+.concepts { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px; }
+.cc { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:border-color .3s,transform .3s; }
+.cc:hover { border-color:rgba(0,212,170,.3);transform:translateY(-2px); }
+.cc-icon { font-size:22px;margin-bottom:7px;display:block; }
+.cc-title { font-family:var(--mono);font-size:9px;color:var(--teal);margin-bottom:5px;text-transform:uppercase;letter-spacing:2px; }
+.cc-desc { font-size:12px;color:var(--text-dim);line-height:1.5; }
+
+/* ── Narration ── */
+.narration { background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:10px;padding:13px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:14px; }
+.teacher { font-size:24px;flex-shrink:0; }
+.narration-text { font-size:13px;color:var(--text);line-height:1.7;flex:1; }
+.speak-bars { display:flex;align-items:center;gap:3px;height:20px;margin-left:8px;flex-shrink:0; }
+.speak-bars span { display:block;width:3px;background:var(--teal);border-radius:2px;height:4px;animation:none; }
+.speak-bars.on span { animation:bar .6s ease-in-out infinite alternate; }
+.speak-bars span:nth-child(1){animation-delay:0s} .speak-bars span:nth-child(2){animation-delay:.1s} .speak-bars span:nth-child(3){animation-delay:.2s} .speak-bars span:nth-child(4){animation-delay:.3s} .speak-bars span:nth-child(5){animation-delay:.4s}
+@keyframes bar { from{height:4px} to{height:18px} }
+
+/* ── Status ── */
+.status-row { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px; }
+.si { display:flex;flex-direction:column;gap:2px; }
+.sl { font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase; }
+.sv { font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text); }
+.sv.orange { color:var(--orange); }
+.divider-auto { flex:1; }
+.prog-wrap { width:100px;height:4px;background:var(--border);border-radius:2px; }
+.prog-fill { height:100%;background:var(--teal);border-radius:2px;transition:width .3s;width:0%; }
+.step-ctr { font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px; }
+.phase-badge { font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:5px; }
+.ph-idle    { background:rgba(74,106,154,.15);color:var(--text-dim); }
+.ph-active  { background:rgba(255,140,66,.15);color:var(--orange); }
+.ph-compare { background:rgba(255,140,66,.15);color:var(--orange); }
+.ph-swap    { background:rgba(255,107,157,.15);color:var(--pink); }
+.ph-insert  { background:rgba(167,139,250,.15);color:var(--purple); }
+.ph-extract { background:rgba(0,212,170,.15);color:var(--teal); }
+.ph-done    { background:rgba(0,212,170,.1);color:var(--teal); }
+
+/* ── Panel ── */
+.panel { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px; }
+.panel-hd { font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px; }
+
+/* ── Code ── */
+.code-block { background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:11px;line-height:2;overflow-x:auto; }
+.code-line { display:block;padding:0 6px;border-radius:4px;transition:background .2s;white-space:pre; }
+.kw { color:var(--pink); } .fn { color:var(--teal); } .cm { color:var(--text-dim);font-style:italic; }
+
+/* ── Buttons ── */
+.btn { background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 14px;color:var(--text);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s;letter-spacing:.5px;white-space:nowrap; }
+.btn:hover { border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.06); }
+.btn-primary { background:rgba(0,212,170,.1);border-color:rgba(0,212,170,.4);color:var(--teal); }
+.btn-primary:hover { background:rgba(0,212,170,.2); }
+.btn-danger { border-color:rgba(255,107,157,.3);color:var(--pink); }
+.btn-danger:hover { background:rgba(255,107,157,.08);border-color:var(--pink); }
+.btn-purple { border-color:rgba(167,139,250,.3);color:var(--purple); }
+.btn-purple:hover { background:rgba(167,139,250,.08);border-color:var(--purple); }
+.btn-orange { border-color:rgba(255,140,66,.3);color:var(--orange); }
+.btn-orange:hover { background:rgba(255,140,66,.08);border-color:var(--orange); }
+
+/* ── Heap mode toggle ── */
+.heap-toggle { display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border); }
+.heap-toggle-btn { flex:1;background:var(--surface2);border:none;padding:8px 16px;font-family:var(--mono);font-size:11px;color:var(--text-dim);cursor:pointer;transition:all .2s;letter-spacing:.5px; }
+.heap-toggle-btn.active-max { background:rgba(255,107,157,.15);color:var(--pink);border-bottom:2px solid var(--pink); }
+.heap-toggle-btn.active-min { background:rgba(0,212,170,.12);color:var(--teal);border-bottom:2px solid var(--teal); }
+
+/* ── Controls ── */
+.controls { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px; }
+.ctrl-row { display:flex;gap:9px;align-items:center;flex-wrap:wrap; }
+.input-row { display:flex;gap:9px;align-items:center;flex-wrap:wrap; }
+.input-row label { font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:1px; }
+.arr-input { flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;transition:border-color .2s; }
+.arr-input:focus { border-color:var(--teal); }
+
+/* ── Legend ── */
+.legend { display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px; }
+.li { display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim); }
+.ld { width:11px;height:11px;border-radius:50%;flex-shrink:0; }
+
+/* ── Stats ── */
+.stats-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+.stat-box { background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;text-align:center; }
+.stat-box-n { font-family:var(--mono);font-size:22px;font-weight:800;color:var(--teal); }
+.stat-box-l { font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px; }
+
+/* ── Voice ── */
+.voice-btn { margin-left:auto;background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:1px;transition:background .2s,border-color .2s,color .2s;white-space:nowrap; }
+.voice-btn:hover { background:rgba(0,212,170,.08);border-color:rgba(0,212,170,.4); }
+.voice-btn.off { color:var(--text-dim);border-color:var(--border); }
+.speed-ctrl { display:flex;align-items:center;gap:7px; }
+.speed-lbl { font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px; }
+.speed-val { font-family:var(--mono);font-size:10px;color:var(--teal);min-width:20px; }
+input[type=range] { accent-color:var(--teal);width:80px;cursor:pointer; }
+
+#vizCanvas { width:100%;border-radius:8px;background:transparent;display:block; }
+
+.narration-text.intro-mode { color:var(--teal);font-weight:600;animation:glowPulse 2s infinite; }
+@keyframes glowPulse { 0%{text-shadow:0 0 5px rgba(0,212,170,.2)} 50%{text-shadow:0 0 15px rgba(0,212,170,.6)} 100%{text-shadow:0 0 5px rgba(0,212,170,.2)} }
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track"><div class="toggle-thumb"><span class="toggle-icon">🌙</span></div></div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
+
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">🏔️</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Heap / Priority Queue</h1>
-    <p class="cs-sub">Max-heap and min-heap with heapify operations.</p>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🏔️</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Data Structure</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Heap / Priority Queue</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7;">
+      A complete binary tree satisfying the <strong style="color:var(--pink)">heap property</strong>. In a <strong style="color:var(--pink)">max-heap</strong> every parent ≥ its children; in a <strong style="color:var(--teal)">min-heap</strong> every parent ≤ its children. Supports O(log n) insert / extract and O(n) build.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Insert: <span>O(log n)</span></div>
+      <div class="cplx-chip">Extract: <span>O(log n)</span></div>
+      <div class="cplx-chip">Peek: <span>O(1)</span></div>
+      <div class="cplx-chip">Build: <span>O(n)</span></div>
+      <div class="cplx-chip">Space: <span>O(n)</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Heap property</li>
-        <li>Heapify up and down</li>
-        <li>Priority queue applications</li>
-      </ul>
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">🌳</span><div class="cc-title">Complete Binary Tree</div><div class="cc-desc">All levels filled except possibly the last, which fills left-to-right. Stored efficiently in an array.</div></div>
+    <div class="cc"><span class="cc-icon">⬆️</span><div class="cc-title">Sift Up (Insert)</div><div class="cc-desc">New element placed at end; bubble up by swapping with parent while heap property is violated.</div></div>
+    <div class="cc"><span class="cc-icon">⬇️</span><div class="cc-title">Sift Down (Heapify)</div><div class="cc-desc">Root replaced with last element; push down by swapping with largest/smallest child until satisfied.</div></div>
+    <div class="cc"><span class="cc-icon">🏗️</span><div class="cc-title">Build Heap O(n)</div><div class="cc-desc">Heapify all internal nodes bottom-up. More efficient than n individual inserts.</div></div>
+  </div>
+
+  <!-- Narration -->
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Heap / Priority Queue! Choose Max-Heap or Min-Heap above, then use the controls below.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-row">
+    <div class="si"><span class="sl">Operation</span><span class="sv orange" id="sOp">Build</span></div>
+    <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
+    <div class="si"><span class="sl">Swaps</span><span class="sv" id="sSwaps">0</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <div class="two-col">
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+
+        <!-- Heap type toggle -->
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+          <div class="heap-toggle">
+            <button class="heap-toggle-btn active-max" id="btnMaxHeap" onclick="setHeapType('max')">⬆ Max-Heap</button>
+            <button class="heap-toggle-btn" id="btnMinHeap" onclick="setHeapType('min')">⬇ Min-Heap</button>
+          </div>
+          <span id="heapTypeLabel" style="font-family:var(--mono);font-size:11px;color:var(--pink);letter-spacing:1px;">MAX-HEAP: root = largest</span>
+        </div>
+
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:var(--node-compare);"></div>Comparing</div>
+          <div class="li"><div class="ld" style="background:var(--node-swap);"></div>Swapping</div>
+          <div class="li"><div class="ld" style="background:var(--node-insert);"></div>Inserting</div>
+          <div class="li"><div class="ld" style="background:var(--node-extract);"></div>Extracted</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span><span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="360"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Array (build heap from):</label>
+          <input type="text" class="arr-input" id="arrInput" value="4, 10, 3, 5, 1, 8, 7, 12, 6, 9">
+          <button class="btn" onclick="applyArray()">Build</button>
+        </div>
+        <div class="input-row">
+          <label>Insert value:</label>
+          <input type="text" class="arr-input" id="insertVal" placeholder="e.g. 15" style="max-width:120px;">
+          <button class="btn btn-purple" onclick="doInsert()">➕ Insert</button>
+        </div>
+        <div class="input-row">
+          <label>Extract root (peek = <span id="peekVal" style="color:var(--teal)">—</span>):</label>
+          <button class="btn btn-orange" onclick="doExtract()">🔺 Extract Root</button>
+        </div>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Comparisons</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statSwaps">0</div><div class="stat-box-l">Swaps</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Heap Size</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statExtracts">0</div><div class="stat-box-l">Extracts</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <!-- Build -->
+        <div id="pseudoBuild" class="code-block">
+<span id="b1" class="code-line"><span class="kw">function</span> <span class="fn">buildHeap</span>(arr):</span>
+<span id="b2" class="code-line">  n = arr.length</span>
+<span id="b3" class="code-line">  <span class="kw">for</span> i = floor(n/2)-1 downto 0:</span>
+<span id="b4" class="code-line">    <span class="fn">siftDown</span>(arr, n, i)</span>
+<span id="b5" class="code-line"><span class="kw">function</span> <span class="fn">siftDown</span>(arr, n, i):</span>
+<span id="b6" class="code-line">  target = i</span>
+<span id="b7" class="code-line">  l=2i+1; r=2i+2</span>
+<span id="b8" class="code-line">  <span class="kw">if</span> l&lt;n and arr[l] ≷ arr[target]: target=l</span>
+<span id="b9" class="code-line">  <span class="kw">if</span> r&lt;n and arr[r] ≷ arr[target]: target=r</span>
+<span id="b10" class="code-line">  <span class="kw">if</span> target ≠ i:</span>
+<span id="b11" class="code-line">    swap(arr[i], arr[target])</span>
+<span id="b12" class="code-line">    <span class="fn">siftDown</span>(arr, n, target)</span>
+        </div>
+        <!-- Insert -->
+        <div id="pseudoInsert" class="code-block" style="display:none;margin-top:8px;">
+<span id="i1" class="code-line"><span class="kw">function</span> <span class="fn">insert</span>(heap, val):</span>
+<span id="i2" class="code-line">  heap.push(val) <span class="cm">// add to end</span></span>
+<span id="i3" class="code-line">  i = heap.length - 1</span>
+<span id="i4" class="code-line">  <span class="kw">while</span> i &gt; 0:</span>
+<span id="i5" class="code-line">    parent = floor((i-1)/2)</span>
+<span id="i6" class="code-line">    <span class="kw">if</span> heap[i] ≷ heap[parent]:</span>
+<span id="i7" class="code-line">      swap(heap[i], heap[parent])</span>
+<span id="i8" class="code-line">      i = parent</span>
+<span id="i9" class="code-line">    <span class="kw">else</span>: <span class="kw">break</span></span>
+        </div>
+        <!-- Extract -->
+        <div id="pseudoExtract" class="code-block" style="display:none;margin-top:8px;">
+<span id="e1" class="code-line"><span class="kw">function</span> <span class="fn">extractRoot</span>(heap):</span>
+<span id="e2" class="code-line">  root = heap[0]</span>
+<span id="e3" class="code-line">  heap[0] = heap.pop() <span class="cm">// last → root</span></span>
+<span id="e4" class="code-line">  <span class="fn">siftDown</span>(heap, heap.length, 0)</span>
+<span id="e5" class="code-line">  <span class="kw">return</span> root</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Current Heap Array</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">🗃 Parent–Child Formula</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:2.2;">
+          <div>parent(i) = <span style="color:var(--teal)">⌊(i−1)/2⌋</span></div>
+          <div>left(i)   = <span style="color:var(--orange)">2i + 1</span></div>
+          <div>right(i)  = <span style="color:var(--pink)">2i + 2</span></div>
+          <div style="margin-top:6px;font-size:10px;">Heap stored as 0-indexed array.</div>
+        </div>
+      </div>
+
     </div>
   </div>
+
 </div>
+
+<script>
+// ════════════════════════════════════════════════
+// THEME
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  if (stepIdx >= 0 && steps[stepIdx]) drawTree(steps[stepIdx]);
+}
+(function(){
+  const s = localStorage.getItem('theme');
+  if (s === 'light') { document.documentElement.setAttribute('data-theme','light'); }
+})();
+
+// ════════════════════════════════════════════════
+// SPEECH
+// ════════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const v = synth.getVoices();
+  ttsVoice = v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice=ttsVoice; u.rate=0.88; u.pitch=1.05; u.volume=1;
+    u.onstart=()=>document.getElementById('speakBars').classList.add('on');
+    u.onend=u.onerror=()=>{ document.getElementById('speakBars').classList.remove('on'); resolve(); };
+    synth.speak(u);
+  });
+}
+function stopSpeech(){ synth&&synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
+// ════════════════════════════════════════════════
+// VOICE TOGGLE
+// ════════════════════════════════════════════════
+let voiceEnabled = false;
+function toggleVoice(){
+  voiceEnabled = !voiceEnabled;
+  const icon=document.getElementById('voiceIcon'), lbl=document.getElementById('voiceLabel'), btn=document.getElementById('voiceToggle');
+  if(voiceEnabled){ icon.textContent='🔊'; lbl.textContent='Voice On'; btn.classList.remove('off'); document.getElementById('speedWrap').style.display='none'; if(isPlaying){stopPlay();startPlay();} }
+  else { icon.textContent='🔇'; lbl.textContent='Voice Off'; btn.classList.add('off'); stopSpeech(); document.getElementById('speedWrap').style.display=''; if(isPlaying){stopPlay();startPlay();} }
+}
+
+// ════════════════════════════════════════════════
+// HEAP STATE
+// ════════════════════════════════════════════════
+let heapType = 'max'; // 'max' | 'min'
+let heap = [];
+let steps = [];
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+let totalComps = 0, totalSwaps = 0, totalExtracts = 0;
+
+function cmp(a, b) { return heapType === 'max' ? a > b : a < b; } // returns true if a should be higher
+
+const SPEED_DELAYS = {1:1400,2:800,3:450,4:220,5:90};
+function getDelay(){ return SPEED_DELAYS[speedMult]||800; }
+function onSpeedChange(v){ speedMult=parseInt(v); document.getElementById('speedVal').textContent=v+'×'; }
+
+function setHeapType(type){
+  heapType = type;
+  document.getElementById('btnMaxHeap').className='heap-toggle-btn'+(type==='max'?' active-max':'');
+  document.getElementById('btnMinHeap').className='heap-toggle-btn'+(type==='min'?' active-min':'');
+  document.getElementById('heapTypeLabel').textContent = type==='max' ? 'MAX-HEAP: root = largest' : 'MIN-HEAP: root = smallest';
+  document.getElementById('heapTypeLabel').style.color = type==='max' ? 'var(--pink)' : 'var(--teal)';
+  applyArray();
+}
+
+// ════════════════════════════════════════════════
+// STEP GENERATORS
+// ════════════════════════════════════════════════
+
+/* ── BUILD ── */
+function buildHeapSteps(arr){
+  const steps=[], a=[...arr], n=a.length;
+  let comps=0, swaps=0;
+  steps.push({ arr:[...a], compare:[], insertIdx:-1, extractIdx:-1, op:'build', phase:'active', codeLine:1, label:'b', comps, swaps, extracts:0,
+    narration:`Building a ${heapType}-heap from ${n} elements. We heapify all internal nodes starting from index ${Math.floor(n/2)-1} down to 0.` });
+
+  for(let i=Math.floor(n/2)-1; i>=0; i--){
+    steps.push({ arr:[...a], compare:[i], insertIdx:-1, extractIdx:-1, op:'build', phase:'active', codeLine:3, label:'b', comps, swaps, extracts:0,
+      narration:`Sift-down at index ${i} (value ${a[i]}). Checking children.` });
+    siftDownSteps(a, n, i, steps, 'b', ()=>comps++, ()=>swaps++, 0);
+  }
+
+  steps.push({ arr:[...a], compare:[], insertIdx:-1, extractIdx:-1, op:'build', phase:'done', codeLine:1, label:'b', comps, swaps, extracts:0,
+    narration:`${heapType==='max'?'Max':'Min'}-heap built! Root is ${a[0]} — the ${heapType==='max'?'largest':'smallest'} element.` });
+
+  heap = a;
+  return { steps, finalHeap:a, comps, swaps };
+}
+
+function siftDownSteps(a, heapSize, root, steps, label, incComps, incSwaps, extracts){
+  let i = root;
+  while(true){
+    let target=i, l=2*i+1, r=2*i+2;
+    const compareSet=[i];
+    if(l<heapSize){ compareSet.push(l); incComps(); steps.push({ arr:[...a], compare:[...compareSet], insertIdx:-1, extractIdx:-1, op:'build', phase:'compare', codeLine:8, label, comps:0, swaps:0, extracts,
+      narration:`Comparing node ${a[i]} at [${i}] with left child ${a[l]} at [${l}].` }); if(cmp(a[l],a[target])) target=l; }
+    if(r<heapSize){ compareSet.push(r); incComps(); steps.push({ arr:[...a], compare:[...compareSet], insertIdx:-1, extractIdx:-1, op:'build', phase:'compare', codeLine:9, label, comps:0, swaps:0, extracts,
+      narration:`Comparing with right child ${a[r]} at [${r}].` }); if(cmp(a[r],a[target])) target=r; }
+    if(target!==i){
+      incSwaps();
+      const prevArr=[...a];
+      [a[i],a[target]]=[a[target],a[i]];
+      steps.push({ arr:[...a], prevArr, swapAnim:{idxA:i,idxB:target}, compare:[i,target], insertIdx:-1, extractIdx:-1, op:'build', phase:'swap', codeLine:11, label, comps:0, swaps:0, extracts,
+        narration:`${a[target]} at [${target}] violates ${heapType}-heap property. Swapping with ${a[i]} at [${i}]. Continuing sift-down at [${target}].` });
+      i=target;
+    } else {
+      steps.push({ arr:[...a], compare:compareSet, insertIdx:-1, extractIdx:-1, op:'build', phase:'active', codeLine:12, label, comps:0, swaps:0, extracts,
+        narration:`Node ${a[i]} at [${i}] satisfies the ${heapType}-heap property. Sift-down complete.` });
+      break;
+    }
+  }
+}
+
+/* ── INSERT ── */
+function insertSteps(curHeap, val){
+  const steps=[], a=[...curHeap];
+  let comps=0, swaps=0;
+  a.push(val);
+  let i=a.length-1;
+
+  steps.push({ arr:[...a], compare:[], insertIdx:i, extractIdx:-1, op:'insert', phase:'insert', codeLine:2, label:'i', comps, swaps, extracts:totalExtracts,
+    narration:`Inserting ${val} at the end (index ${i}). Now sift it up to restore the ${heapType}-heap property.` });
+
+  while(i>0){
+    const parent=Math.floor((i-1)/2);
+    comps++;
+    steps.push({ arr:[...a], compare:[i,parent], insertIdx:i, extractIdx:-1, op:'insert', phase:'compare', codeLine:6, label:'i', comps, swaps, extracts:totalExtracts,
+      narration:`Comparing ${a[i]} at [${i}] with parent ${a[parent]} at [${parent}].` });
+    if(cmp(a[i],a[parent])){
+      swaps++;
+      const prevArr=[...a];
+      [a[i],a[parent]]=[a[parent],a[i]];
+      steps.push({ arr:[...a], prevArr, swapAnim:{idxA:i,idxB:parent}, compare:[i,parent], insertIdx:parent, extractIdx:-1, op:'insert', phase:'swap', codeLine:7, label:'i', comps, swaps, extracts:totalExtracts,
+        narration:`${a[parent]} should be above ${a[i]} in a ${heapType}-heap. Swapping. Moving up to index ${parent}.` });
+      i=parent;
+    } else {
+      steps.push({ arr:[...a], compare:[i,parent], insertIdx:i, extractIdx:-1, op:'insert', phase:'active', codeLine:9, label:'i', comps, swaps, extracts:totalExtracts,
+        narration:`${a[i]} at [${i}] already satisfies heap property vs parent ${a[parent]}. Insert complete!` });
+      break;
+    }
+  }
+  if(i===0){
+    steps.push({ arr:[...a], compare:[], insertIdx:0, extractIdx:-1, op:'insert', phase:'done', codeLine:9, label:'i', comps, swaps, extracts:totalExtracts,
+      narration:`${a[0]} has reached the root. Insert complete!` });
+  }
+
+  heap = a;
+  totalComps += comps; totalSwaps += swaps;
+  return steps;
+}
+
+/* ── EXTRACT ── */
+function extractSteps(curHeap){
+  if(!curHeap.length) return [];
+  const steps=[], a=[...curHeap];
+  let comps=0, swaps=0;
+  const rootVal=a[0];
+
+  steps.push({ arr:[...a], compare:[0], insertIdx:-1, extractIdx:0, op:'extract', phase:'extract', codeLine:2, label:'e', comps, swaps, extracts:totalExtracts,
+    narration:`Extracting root: ${rootVal} (the ${heapType==='max'?'maximum':'minimum'} element). We'll replace it with the last element.` });
+
+  if(a.length===1){
+    a.pop();
+    steps.push({ arr:[...a], compare:[], insertIdx:-1, extractIdx:-1, op:'extract', phase:'done', codeLine:5, label:'e', comps, swaps, extracts:totalExtracts+1,
+      narration:`Heap is now empty. Extracted value was ${rootVal}.` });
+    heap=a; totalExtracts++; return steps;
+  }
+
+  const last=a.pop();
+  a[0]=last;
+  steps.push({ arr:[...a], compare:[0], insertIdx:-1, extractIdx:-1, op:'extract', phase:'active', codeLine:3, label:'e', comps, swaps, extracts:totalExtracts,
+    narration:`Moved last element ${last} to root. Now sift it down to restore the ${heapType}-heap.` });
+
+  siftDownSteps(a, a.length, 0, steps, 'e', ()=>comps++, ()=>swaps++, totalExtracts+1);
+
+  steps.push({ arr:[...a], compare:[], insertIdx:-1, extractIdx:-1, op:'extract', phase:'done', codeLine:5, label:'e', comps, swaps, extracts:totalExtracts+1,
+    narration:`Extract complete! Removed ${rootVal}. New root is ${a[0]}.` });
+
+  heap = a; totalExtracts++; totalComps+=comps; totalSwaps+=swaps;
+  return steps;
+}
+
+// ════════════════════════════════════════════════
+// CANVAS
+// ════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+function resizeCanvas(){ canvas.width = canvas.parentElement.clientWidth; }
+
+function getPositions(n, W){
+  const positions=[];
+  function assign(i,x,y,dx){
+    if(i>=n) return;
+    positions[i]={x,y};
+    const levelH = Math.min(75, (canvas.height - 80) / Math.ceil(Math.log2(n+1)));
+    assign(2*i+1, x-dx, y+levelH, dx/2);
+    assign(2*i+2, x+dx, y+levelH, dx/2);
+  }
+  assign(0, W/2, 48, W/4, positions, n);
+  return positions;
+}
+
+function drawTree(step, offsets={}){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!step||!step.arr.length) return;
+  const arr=step.arr, n=arr.length, W=canvas.width;
+  const pos=getPositions(n,W);
+  const light=document.documentElement.getAttribute('data-theme')==='light';
+  const cmpSet=new Set(step.compare||[]);
+  const radius=Math.min(20, Math.max(13, 260/n));
+
+  // Effective position with animation offset applied
+  const ex=(i)=> (pos[i]?.x||0) + (offsets[i]?.x||0);
+  const ey=(i)=> (pos[i]?.y||0) + (offsets[i]?.y||0);
+
+  // Lines — always use static tree positions, never offset
+  for(let i=0;i<n;i++){
+    const p=pos[i]; if(!p) continue;
+    [2*i+1,2*i+2].forEach(c=>{
+      if(c<n&&pos[c]){
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(pos[c].x, pos[c].y);
+        ctx.strokeStyle=light?'#c0d0e8':'#2a3d58'; ctx.lineWidth=1.5; ctx.stroke();
+      }
+    });
+  }
+
+  // Nodes
+  for(let i=0;i<n;i++){
+    const p=pos[i]; if(!p) continue;
+    const x=ex(i), y=ey(i);
+    let fill=light?'#dde8f8':'#1a2840', stroke=light?'#99b8dc':'#2a4060', textCol=light?'#4a6a9a':'#4a6a9a', glow=null;
+    if(i===step.extractIdx){ fill=light?'rgba(0,212,170,.25)':'rgba(0,212,170,.3)'; stroke='#00d4aa'; textCol='#00d4aa'; glow='rgba(0,212,170,.3)'; }
+    if(i===step.insertIdx) { fill=light?'rgba(167,139,250,.2)':'rgba(167,139,250,.25)'; stroke='#a78bfa'; textCol='#a78bfa'; glow='rgba(167,139,250,.3)'; }
+    if(cmpSet.has(i)){
+      if(step.phase==='swap'){ fill=light?'rgba(255,107,157,.2)':'rgba(255,107,157,.25)'; stroke='#ff6b9d'; textCol='#ff6b9d'; glow='rgba(255,107,157,.35)'; }
+      else { fill=light?'rgba(255,140,66,.2)':'rgba(255,140,66,.25)'; stroke='#ff8c42'; textCol='#ff8c42'; glow='rgba(255,140,66,.35)'; }
+    }
+    if(i===0 && step.phase==='done'){ fill=light?'rgba(0,212,170,.2)':'rgba(0,212,170,.25)'; stroke='#00d4aa'; textCol='#00d4aa'; glow='rgba(0,212,170,.3)'; }
+
+    if(glow){ ctx.beginPath(); ctx.arc(x,y,radius+4,0,2*Math.PI); ctx.fillStyle=glow; ctx.fill(); }
+    ctx.beginPath(); ctx.arc(x,y,radius,0,2*Math.PI); ctx.fillStyle=fill; ctx.fill();
+    ctx.strokeStyle=stroke; ctx.lineWidth=cmpSet.has(i)?2:1.5; ctx.stroke();
+
+    // index label above node
+    ctx.fillStyle=light?'rgba(0,0,0,.25)':'rgba(74,106,154,.5)';
+    ctx.font=`${Math.max(8,radius-6)}px JetBrains Mono`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(i, x, y-radius-8);
+
+    // value
+    ctx.fillStyle=textCol;
+    ctx.font=`bold ${Math.max(9,radius-4)}px JetBrains Mono`;
+    ctx.fillText(arr[i], x, y);
+  }
+
+  // Root crown indicator
+  if(n>0 && pos[0]){
+    ctx.fillStyle=heapType==='max'?'#ff6b9d':'#00d4aa';
+    ctx.font='bold 10px JetBrains Mono';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(heapType==='max'?'▲ MAX':'▼ MIN', pos[0].x, 14);
+  }
+}
+
+// ════════════════════════════════════════════════
+// CONTROLLER
+// ════════════════════════════════════════════════
+function updatePeek(){ document.getElementById('peekVal').textContent = heap.length ? heap[0] : '—'; }
+
+function updateNarration(step){
+  const el=document.getElementById('narText');
+  el.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent='🧑‍💻';
+  el.textContent=step.narration;
+}
+
+function updateStatusBar(step, idx){
+  document.getElementById('sOp').textContent=step.op.charAt(0).toUpperCase()+step.op.slice(1);
+  document.getElementById('sComps').textContent=totalComps+(step.comps||0);
+  document.getElementById('sSwaps').textContent=totalSwaps+(step.swaps||0);
+  document.getElementById('statComps').textContent=totalComps+(step.comps||0);
+  document.getElementById('statSwaps').textContent=totalSwaps+(step.swaps||0);
+  document.getElementById('statN').textContent=step.arr.length;
+  document.getElementById('statExtracts').textContent=step.extracts||totalExtracts;
+  document.getElementById('arrDisplay').textContent=`[${step.arr.join(', ')}]`;
+  document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
+  const pct=steps.length>1?((idx/(steps.length-1))*100).toFixed(1):0;
+  document.getElementById('progFill').style.width=pct+'%';
+
+  const badge=document.getElementById('phaseBadge');
+  const map={active:['ph-active','Running'],compare:['ph-compare','Comparing'],swap:['ph-swap','Swapping'],insert:['ph-insert','Inserting'],extract:['ph-extract','Extracting'],done:['ph-done','Done'],idle:['ph-idle','Idle']};
+  const [cls,lbl]=map[step.phase]||['ph-idle','Idle'];
+  badge.className=`phase-badge ${cls}`; badge.textContent=lbl;
+
+  // Pseudocode
+  ['pseudoBuild','pseudoInsert','pseudoExtract'].forEach(id=>document.getElementById(id).style.display='none');
+  const showId={b:'pseudoBuild',i:'pseudoInsert',e:'pseudoExtract'}[step.label];
+  if(showId) document.getElementById(showId).style.display='block';
+  const maxLines={b:12,i:9,e:5};
+  const pfx=step.label;
+  for(let n=1;n<=(maxLines[pfx]||9);n++){
+    const el=document.getElementById(`${pfx}${n}`);
+    if(el) el.style.background=step.codeLine===n?'rgba(0,212,170,.13)':'';
+  }
+}
+
+// ════════════════════════════════════════════════
+// SWAP ANIMATION
+// ════════════════════════════════════════════════
+function animateSwap(prevStep, nextStep, onDone){
+  if(animRafId){cancelAnimationFrame(animRafId);animRafId=null;}
+  const {idxA, idxB} = nextStep.swapAnim;
+  const n = prevStep.arr.length;
+  const positions = getPositions(n, canvas.width);
+  const posA = positions[idxA], posB = positions[idxB];
+  if(!posA || !posB){ onDone(); return; }
+  const dxA = posB.x - posA.x, dyA = posB.y - posA.y;
+  const DURATION = 480, start = performance.now();
+  // Show pre-swap state with swap highlight while animating
+  const displayStep = { ...prevStep, phase:'swap', compare:[idxA, idxB] };
+  function ease(t){ return t<0.5 ? 2*t*t : -1+(4-2*t)*t; }
+  function tick(now){
+    const t = ease(Math.min((now - start) / DURATION, 1));
+    const offsets = {};
+    offsets[idxA] = { x: t * dxA,  y: t * dyA  };
+    offsets[idxB] = { x: t * -dxA, y: t * -dyA };
+    drawTree(displayStep, offsets);
+    if(t < 1) animRafId = requestAnimationFrame(tick);
+    else { animRafId = null; onDone(); }
+  }
+  animRafId = requestAnimationFrame(tick);
+}
+
+function renderStep(idx, autoAdvance=false){
+  if(idx<0||idx>=steps.length) return;
+  stepIdx=idx;
+  const step=steps[idx];
+  if(animRafId){cancelAnimationFrame(animRafId);animRafId=null;}
+
+  const afterDraw = () => {
+    updateNarration(step);
+    updateStatusBar(step,idx);
+    updatePeek();
+    if(autoAdvance) scheduleNext(step);
+  };
+
+  if(step.swapAnim && step.prevArr && idx > 0){
+    // Build a synthetic "before" step using prevArr so animation starts from correct positions
+    const beforeStep = { ...steps[idx-1], arr: step.prevArr };
+    animateSwap(beforeStep, step, () => { drawTree(step, {}); afterDraw(); });
+  } else {
+    drawTree(step, {});
+    afterDraw();
+  }
+}
+
+function scheduleNext(step){
+  if(!isPlaying) return;
+  if(stepIdx>=steps.length-1){stopPlay();return;}
+  if(voiceEnabled){
+    speak(step.narration).then(()=>{ if(!isPlaying) return; playTimer=setTimeout(()=>{if(isPlaying) renderStep(stepIdx+1,true);},350); });
+  } else {
+    playTimer=setTimeout(()=>{if(isPlaying) renderStep(stepIdx+1,true);},getDelay());
+  }
+}
+
+function nextStep(){
+  stopPlay();
+  if(stepIdx+1<steps.length){ renderStep(stepIdx+1,false); if(voiceEnabled) speak(steps[stepIdx].narration); }
+}
+function startPlay(){
+  if(stepIdx>=steps.length-1) stepIdx=-1;
+  isPlaying=true; document.getElementById('btnPlay').textContent='⏸ Pause';
+  renderStep(stepIdx+1,true);
+}
+function stopPlay(){
+  isPlaying=false; if(playTimer){clearTimeout(playTimer);playTimer=null;}
+  document.getElementById('btnPlay').textContent='▶ Play'; stopSpeech();
+}
+
+function doInsert(){
+  const raw=document.getElementById('insertVal').value.trim();
+  const val=parseInt(raw);
+  if(isNaN(val)){alert('Enter a valid integer to insert.');return;}
+  document.getElementById('insertVal').value='';
+  stopPlay();
+  steps=insertSteps(heap,val);
+  stepIdx=-1; renderStep(0);
+}
+
+function doExtract(){
+  if(!heap.length){alert('Heap is empty!');return;}
+  stopPlay();
+  steps=extractSteps(heap);
+  stepIdx=-1; renderStep(0);
+}
+
+function resetAll(){
+  stopPlay(); stepIdx=-1;
+  const {steps:s,finalHeap}=buildHeapSteps(initialArr);
+  steps=s; heap=finalHeap;
+  totalComps=0; totalSwaps=0; totalExtracts=0;
+  renderStep(0);
+  document.getElementById('narText').textContent='Ready! Press Play to animate the build, then try Insert or Extract Root.';
+}
+
+document.getElementById('btnPlay').addEventListener('click',()=>{if(isPlaying)stopPlay();else startPlay();});
+document.getElementById('btnNext').addEventListener('click',nextStep);
+document.getElementById('btnReset').addEventListener('click',resetAll);
+
+let initialArr=[4,10,3,5,1,8,7,12,6,9];
+
+function applyArray(){
+  const raw=document.getElementById('arrInput').value;
+  const parsed=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  if(parsed.length<1){alert('Enter at least 1 valid number.');return;}
+  initialArr=parsed.slice(0,20);
+  totalComps=0; totalSwaps=0; totalExtracts=0;
+  stopPlay();
+  const {steps:s,finalHeap}=buildHeapSteps(initialArr);
+  steps=s; heap=finalHeap; stepIdx=-1;
+  renderStep(0);
+}
+
+function randomize(){
+  initialArr=Array.from({length:10},()=>Math.floor(Math.random()*90)+5);
+  document.getElementById('arrInput').value=initialArr.join(', ');
+  totalComps=0; totalSwaps=0; totalExtracts=0;
+  stopPlay();
+  const {steps:s,finalHeap}=buildHeapSteps(initialArr);
+  steps=s; heap=finalHeap; stepIdx=-1;
+  renderStep(0);
+}
+
+// ════════════════════════════════════════════════
+// INTRO SPEECH
+// ════════════════════════════════════════════════
+let introAborted=false;
+async function playIntroSpeech(){
+  introAborted=false; stopSpeech();
+  const lines=[
+    `Welcome! Today we are learning about the Heap data structure and Priority Queue.`,
+    `A heap is a complete binary tree stored as an array. In a max-heap, every parent is greater than or equal to its children. In a min-heap, every parent is smaller.`,
+    `You can switch between max-heap and min-heap using the toggle buttons above the visualization.`,
+    `The Build operation constructs the heap in O(n) time by sifting down all internal nodes bottom-up.`,
+    `Insert adds a new value at the end, then sifts it up — O(log n).`,
+    `Extract Root removes the top element, moves the last element to root, then sifts it down — also O(log n).`,
+    `Orange nodes are being compared. Pink nodes are being swapped. Purple marks the newly inserted element. Teal marks the extracted root.`,
+    `Press Play to animate, or use Insert and Extract Root interactively!`
+  ];
+  const narText=document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent='🧑‍🏫';
+  for(const line of lines){
+    if(introAborted) break;
+    narText.textContent=line;
+    await speak(line);
+    if(introAborted) break;
+    await new Promise(r=>setTimeout(r,260));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent='🧑‍💻';
+  if(!introAborted&&steps.length>0) narText.textContent=steps[Math.max(0,stepIdx)].narration;
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+function init(){
+  resizeCanvas();
+  const saved=localStorage.getItem('theme');
+  if(saved==='light') document.getElementById('toggleLabel').textContent='Dark mode';
+  totalComps=0; totalSwaps=0; totalExtracts=0;
+  const {steps:s,finalHeap}=buildHeapSteps(initialArr);
+  steps=s; heap=finalHeap; stepIdx=-1;
+  renderStep(0);
+  document.getElementById('speedWrap').style.display=voiceEnabled?'none':'';
+  if(!introPlayed){
+    introPlayed=true;
+    document.getElementById('narText').textContent='Ready! Press Play to animate the build, then try Insert or Extract Root.';
+    if(voiceEnabled) setTimeout(playIntroSpeech,500);
+  }
+}
+
+window.addEventListener('resize',()=>{ resizeCanvas(); if(stepIdx>=0&&steps[stepIdx]) drawTree(steps[stepIdx],{}); else if(steps.length>0) drawTree(steps[0],{}); });
+
+init();
+</script>
 </body>
 </html>

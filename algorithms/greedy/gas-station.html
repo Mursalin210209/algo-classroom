@@ -1,35 +1,714 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gas Station Problem</title>
-<style>
-body { font-family: Arial; background:#0f172a; color:white; padding:40px; }
-h1 { color:#00d4aa; }
-code { background:#1e293b; padding:10px; display:block; margin-top:15px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gas Station Queue Simulation — AlgoClassroom</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ── Reset ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0a0f1e; --surface: #0f1829; --surface2: #141f30; --border: #1e2d42;
+            --text: #c8d8f0; --text-dim: #4a6a9a; --teal: #00d4aa; --orange: #ff8c42;
+            --pink: #ff6b9d; --blue: #4a9eff; --purple: #a78bfa; --mono: 'JetBrains Mono', monospace;
+            --sans: 'Syne', sans-serif; --node-default: #1a2840; --node-default-stroke: #2a4060;
+            --node-compare: #ff8c42; --node-swap: #ff6b9d; --node-insert: #a78bfa;
+            --node-extract: #00d4aa; --node-done: #06d6a0;
+        }
+        [data-theme="light"] {
+            --bg: #f0f4fa; --surface: #fff; --surface2: #f5f8ff; --border: #dde5f0;
+            --text: #1a2840; --text-dim: #7a9ac0; --node-default: #dde8f8; --node-default-stroke: #99b8dc;
+        }
+        body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; transition: background .3s, color .3s; }
+        .bg-grid { position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,212,170,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,.03) 1px,transparent 1px);background-size:40px 40px; }
+        .bg-glow { position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:600px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,212,170,.07) 0%,transparent 70%);pointer-events:none;z-index:0; }
+        /* ── Navbar ── */
+        .navbar { position:sticky;top:0;z-index:100;background:rgba(10,15,30,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border); }
+        .nav-inner { max-width:1200px;margin:auto;padding:0 24px;height:52px;display:flex;align-items:center;gap:28px; }
+        .nav-logo { font-family:var(--mono);font-size:14px;font-weight:800;color:var(--teal);text-decoration:none;letter-spacing:-.5px; }
+        .logo-bracket { color:var(--orange); }
+        .logo-dot { color:var(--pink); }
+        .nav-links { display:flex;gap:18px; }
+        .nav-links a { font-size:12px;color:var(--text-dim);text-decoration:none;letter-spacing:.5px;transition:color .2s; }
+        .nav-links a:hover { color:var(--teal); }
+        .theme-toggle { margin-left:auto;background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:border-color .2s,background .2s; }
+        .theme-toggle:hover { border-color:var(--teal);background:rgba(0,212,170,.06); }
+        .toggle-track { width:30px;height:16px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;padding:2px;transition:background .3s; }
+        [data-theme="light"] .toggle-track { background:rgba(0,212,170,.3); }
+        .toggle-thumb { width:12px;height:12px;border-radius:50%;background:var(--teal);transition:transform .3s;display:flex;align-items:center;justify-content:center; }
+        [data-theme="light"] .toggle-thumb { transform:translateX(14px); }
+        .toggle-icon { font-size:7px;line-height:1; }
+        .toggle-label { font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap; }
+        /* ── Layout ── */
+        .algo-page { max-width:1200px;margin:auto;padding:24px 20px 60px;position:relative;z-index:1; }
+        .back-link { font-family:var(--mono);font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;display:inline-block;margin-bottom:16px;transition:color .2s; }
+        .back-link:hover { color:var(--teal); }
+        .two-col { display:grid;grid-template-columns:1fr 360px;gap:16px;margin-bottom:16px; }
+        @media (max-width:900px) { .two-col { grid-template-columns:1fr; } }
+        /* ── Header helpers ── */
+        .card-difficulty { font-family:var(--mono);font-size:10px;letter-spacing:2px;border-radius:6px;padding:3px 9px;text-transform:uppercase; }
+        .beginner { background:rgba(0,212,170,.15);color:var(--teal);border:1px solid rgba(0,212,170,.3); }
+        .complexity { display:flex;flex-wrap:wrap;gap:8px; }
+        .cplx-chip { background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim); }
+        .cplx-chip span { color:var(--teal);font-weight:700; }
+        /* ── Concepts ── */
+        .concepts { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px; }
+        .cc { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:border-color .3s,transform .3s; }
+        .cc:hover { border-color:rgba(0,212,170,.3);transform:translateY(-2px); }
+        .cc-icon { font-size:22px;margin-bottom:7px;display:block; }
+        .cc-title { font-family:var(--mono);font-size:9px;color:var(--teal);margin-bottom:5px;text-transform:uppercase;letter-spacing:2px; }
+        .cc-desc { font-size:12px;color:var(--text-dim);line-height:1.5; }
+        /* ── Narration ── */
+        .narration { background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:10px;padding:13px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:14px; }
+        .teacher { font-size:24px;flex-shrink:0; }
+        .narration-text { font-size:13px;color:var(--text);line-height:1.7;flex:1; }
+        .speak-bars { display:flex;align-items:center;gap:3px;height:20px;margin-left:8px;flex-shrink:0; }
+        .speak-bars span { display:block;width:3px;background:var(--teal);border-radius:2px;height:4px;animation:none; }
+        .speak-bars.on span { animation:bar .6s ease-in-out infinite alternate; }
+        .speak-bars span:nth-child(1){animation-delay:0s} .speak-bars span:nth-child(2){animation-delay:.1s} .speak-bars span:nth-child(3){animation-delay:.2s} .speak-bars span:nth-child(4){animation-delay:.3s} .speak-bars span:nth-child(5){animation-delay:.4s}
+        @keyframes bar { from{height:4px} to{height:18px} }
+        /* ── Status ── */
+        .status-row { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px; }
+        .si { display:flex;flex-direction:column;gap:2px; }
+        .sl { font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase; }
+        .sv { font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text); }
+        .sv.orange { color:var(--orange); }
+        .divider-auto { flex:1; }
+        .prog-wrap { width:100px;height:4px;background:var(--border);border-radius:2px; }
+        .prog-fill { height:100%;background:var(--teal);border-radius:2px;transition:width .3s;width:0%; }
+        .step-ctr { font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px; }
+        .phase-badge { font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:5px; }
+        .ph-idle { background:rgba(74,106,154,.15);color:var(--text-dim); }
+        .ph-active { background:rgba(255,140,66,.15);color:var(--orange); }
+        .ph-compare { background:rgba(255,140,66,.15);color:var(--orange); }
+        .ph-swap { background:rgba(255,107,157,.15);color:var(--pink); }
+        .ph-insert { background:rgba(167,139,250,.15);color:var(--purple); }
+        .ph-extract { background:rgba(0,212,170,.15);color:var(--teal); }
+        .ph-done { background:rgba(0,212,170,.1);color:var(--teal); }
+        /* ── Panel ── */
+        .panel { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px; }
+        .panel-hd { font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px; }
+        /* ── Code ── */
+        .code-block { background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:11px;line-height:2;overflow-x:auto; }
+        .code-line { display:block;padding:0 6px;border-radius:4px;transition:background .2s;white-space:pre; }
+        .kw { color:var(--pink); }
+        .fn { color:var(--teal); }
+        .cm { color:var(--text-dim);font-style:italic; }
+        /* ── Buttons ── */
+        .btn { background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 14px;color:var(--text);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s;letter-spacing:.5px;white-space:nowrap; }
+        .btn:hover { border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.06); }
+        .btn-primary { background:rgba(0,212,170,.1);border-color:rgba(0,212,170,.4);color:var(--teal); }
+        .btn-primary:hover { background:rgba(0,212,170,.2); }
+        .btn-danger { border-color:rgba(255,107,157,.3);color:var(--pink); }
+        .btn-danger:hover { background:rgba(255,107,157,.08);border-color:var(--pink); }
+        .btn-purple { border-color:rgba(167,139,250,.3);color:var(--purple); }
+        .btn-purple:hover { background:rgba(167,139,250,.08);border-color:var(--purple); }
+        .btn-orange { border-color:rgba(255,140,66,.3);color:var(--orange); }
+        .btn-orange:hover { background:rgba(255,140,66,.08);border-color:var(--orange); }
+        /* ── Heap mode toggle ── */
+        .heap-toggle { display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border); }
+        .heap-toggle-btn { flex:1;background:var(--surface2);border:none;padding:8px 16px;font-family:var(--mono);font-size:11px;color:var(--text-dim);cursor:pointer;transition:all .2s;letter-spacing:.5px; }
+        .heap-toggle-btn.active-max { background:rgba(255,107,157,.15);color:var(--pink);border-bottom:2px solid var(--pink); }
+        .heap-toggle-btn.active-min { background:rgba(0,212,170,.12);color:var(--teal);border-bottom:2px solid var(--teal); }
+        /* ── Controls ── */
+        .controls { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px; }
+        .ctrl-row { display:flex;gap:9px;align-items:center;flex-wrap:wrap; }
+        .input-row { display:flex;gap:9px;align-items:center;flex-wrap:wrap; }
+        .input-row label { font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:1px; }
+        .arr-input { flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;transition:border-color .2s; }
+        .arr-input:focus { border-color:var(--teal); }
+        /* ── Legend ── */
+        .legend { display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px; }
+        .li { display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim); }
+        .ld { width:11px;height:11px;border-radius:50%;flex-shrink:0; }
+        /* ── Stats ── */
+        .stats-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+        .stat-box { background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;text-align:center; }
+        .stat-box-n { font-family:var(--mono);font-size:22px;font-weight:800;color:var(--teal); }
+        .stat-box-l { font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px; }
+        /* ── Voice ── */
+        .voice-btn { margin-left:auto;background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:1px;transition:background .2s,border-color .2s,color .2s;white-space:nowrap; }
+        .voice-btn:hover { background:rgba(0,212,170,.08);border-color:rgba(0,212,170,.4); }
+        .voice-btn.off { color:var(--text-dim);border-color:var(--border); }
+        .speed-ctrl { display:flex;align-items:center;gap:7px; }
+        .speed-lbl { font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px; }
+        .speed-val { font-family:var(--mono);font-size:10px;color:var(--teal);min-width:20px; }
+        input[type=range] { accent-color:var(--teal);width:80px;cursor:pointer; }
+        #vizCanvas { width:100%;border-radius:8px;background:transparent;display:block; }
+        .narration-text.intro-mode { color:var(--teal);font-weight:600;animation:glowPulse 2s infinite; }
+        @keyframes glowPulse { 0%{text-shadow:0 0 5px rgba(0,212,170,.2)} 50%{text-shadow:0 0 15px rgba(0,212,170,.6)} 100%{text-shadow:0 0 5px rgba(0,212,170,.2)} }
+    </style>
 </head>
 <body>
-<h1>Gas Station Problem</h1>
-<p>This is a demo implementation page for Gas Station Problem using Greedy strategy.</p>
-
-<h2>Demo Pseudocode</h2>
-<code>
-Step 1: Sort input based on greedy condition.<br>
-Step 2: Pick best available choice.<br>
-Step 3: Repeat until solution is complete.
-</code>
-
-<h2>JavaScript Demo (Simple Example)</h2>
-<code>
-function greedyDemo(arr) {
-  arr.sort((a,b) => a-b);
-  return arr;
-}
-
-console.log(greedyDemo([5,3,8,1]));
-</code>
-
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+            <div class="nav-links">
+                <a href="../../index.html#sorting">Sorting</a>
+                <a href="../../index.html#searching">Searching</a>
+                <a href="../../index.html#graph">Graph</a>
+                <a href="../../index.html#dp">Dynamic Programming</a>
+            </div>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+                <div class="toggle-track"><div class="toggle-thumb"><span class="toggle-icon">🌙</span></div></div>
+                <span class="toggle-label" id="toggleLabel">Light mode</span>
+            </button>
+        </div>
+    </nav>
+    <div class="algo-page">
+        <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+        <header style="margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+                <span style="font-size:40px;">⛽</span>
+                <div>
+                    <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Data Structure</div>
+                    <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Gas Station Queue Simulation</h1>
+                </div>
+                <div style="margin-left:auto;"><span class="card-difficulty beginner">Beginner</span></div>
+            </div>
+            <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7;">A simulation of cars waiting at a gas station using a circular queue for continuous traffic flow. Supports O(1) enqueue (car arrival) and dequeue (serve car) operations. Visualize how vehicles enter, wait, get fueled, and leave with multiple pumps.</p>
+            <div class="complexity" style="margin-top:10px;">
+                <div class="cplx-chip">Enqueue: <span>O(1)</span></div>
+                <div class="cplx-chip">Dequeue: <span>O(1)</span></div>
+                <div class="cplx-chip">Peek: <span>O(1)</span></div>
+                <div class="cplx-chip">Space: <span>O(n)</span></div>
+            </div>
+        </header>
+        <div class="concepts">
+            <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Circular Queue</div><div class="cc-desc">Fixed-size array used as a queue with wrap-around to avoid shifting elements.</div></div>
+            <div class="cc"><span class="cc-icon">🚗</span><div class="cc-title">Enqueue (Arrive)</div><div class="cc-desc">Add car to rear if not full; update rear = (rear + 1) % size.</div></div>
+            <div class="cc"><span class="cc-icon">⛽</span><div class="cc-title">Dequeue (Serve)</div><div class="cc-desc">Remove car from front if not empty; update front = (front + 1) % size; assign to pump.</div></div>
+            <div class="cc"><span class="cc-icon">🏁</span><div class="cc-title">Pump Management</div><div class="cc-desc">Multiple pumps; cars fuel for a duration then exit, freeing the pump.</div></div>
+        </div>
+        <!-- Narration -->
+        <div class="narration" id="narration">
+            <span class="teacher" id="teacher">🧑‍🏫</span>
+            <div class="narration-text" id="narText">Welcome to Gas Station Queue Simulation! Use controls to add cars or serve them.</div>
+            <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <!-- Status bar -->
+        <div class="status-row">
+            <div class="si"><span class="sl">Operation</span><span class="sv orange" id="sOp">Build</span></div>
+            <div class="si"><span class="sl">Checks</span><span class="sv" id="sComps">0</span></div>
+            <div class="si"><span class="sl">Cars Served</span><span class="sv" id="sSwaps">0</span></div>
+            <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+            <div class="divider-auto"></div>
+            <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+            <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+        </div>
+        <div class="two-col">
+            <!-- LEFT -->
+            <div>
+                <div class="panel">
+                    <div class="panel-hd">📊 Visualization</div>
+                    <!-- Queue type toggle -->
+                    <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+                        <div class="heap-toggle">
+                            <button class="heap-toggle-btn active-max" id="btnCircular" onclick="setQueueType('circular')">🔄 Circular Queue</button>
+                        </div>
+                        <span id="heapTypeLabel" style="font-family:var(--mono);font-size:11px;color:var(--pink);letter-spacing:1px;">CIRCULAR QUEUE: Efficient wrap-around</span>
+                    </div>
+                    <div class="legend">
+                        <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Empty Slot</div>
+                        <div class="li"><div class="ld" style="background:var(--node-compare);"></div>Checking</div>
+                        <div class="li"><div class="ld" style="background:var(--node-insert);"></div>Arriving Car</div>
+                        <div class="li"><div class="ld" style="background:var(--node-extract);"></div>Serving Car</div>
+                        <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+                            <span id="voiceIcon">🔇</span><span id="voiceLabel">Voice Off</span>
+                        </button>
+                    </div>
+                    <canvas id="vizCanvas" height="360"></canvas>
+                </div>
+                <div class="controls">
+                    <div class="ctrl-row">
+                        <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+                        <button class="btn" id="btnNext">⏭ Next Step</button>
+                        <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+                        <button class="btn" onclick="randomize()">🎲 Random</button>
+                        <div class="speed-ctrl" id="speedWrap">
+                            <span class="speed-lbl">⚡ Speed</span>
+                            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+                            <span class="speed-val" id="speedVal">2×</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label>Initial Cars (build queue from):</label>
+                        <input type="text" class="arr-input" id="arrInput" value="1,2,3,4,5,6,7,8,9,10">
+                        <button class="btn" onclick="applyArray()">Build</button>
+                    </div>
+                    <div class="input-row">
+                        <label>Arrive Car ID:</label>
+                        <input type="text" class="arr-input" id="insertVal" placeholder="e.g. 11" style="max-width:120px;">
+                        <button class="btn btn-purple" onclick="doEnqueue()">🚗 Arrive</button>
+                    </div>
+                    <div class="input-row">
+                        <label>Serve Next (peek = <span id="peekVal" style="color:var(--teal)">—</span>):</label>
+                        <button class="btn btn-orange" onclick="doDequeue()">⛽ Serve</button>
+                    </div>
+                </div>
+            </div>
+            <!-- RIGHT -->
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="panel">
+                    <div class="panel-hd">📈 Statistics</div>
+                    <div class="stats-grid">
+                        <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Checks</div></div>
+                        <div class="stat-box"><div class="stat-box-n" id="statSwaps">0</div><div class="stat-box-l">Cars Served</div></div>
+                        <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Queue Size</div></div>
+                        <div class="stat-box"><div class="stat-box-n" id="statExtracts">0</div><div class="stat-box-l">Pumps Occupied</div></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-hd">💻 Pseudocode</div>
+                    <!-- Build -->
+                    <div id="pseudoBuild" class="code-block">
+                        <span id="b1" class="code-line"><span class="kw">function</span> <span class="fn">buildQueue</span>(arr):</span>
+                        <span id="b2" class="code-line"> front = 0; rear = 0; count = 0</span>
+                        <span id="b3" class="code-line"> <span class="kw">for</span> val <span class="kw">in</span> arr:</span>
+                        <span id="b4" class="code-line"> <span class="fn">enqueue</span>(val)</span>
+                    </div>
+                    <!-- Enqueue -->
+                    <div id="pseudoInsert" class="code-block" style="display:none;margin-top:8px;">
+                        <span id="i1" class="code-line"><span class="kw">function</span> <span class="fn">enqueue</span>(val):</span>
+                        <span id="i2" class="code-line"> <span class="kw">if</span> count == size: <span class="kw">return</span> full</span>
+                        <span id="i3" class="code-line"> queue[rear] = val</span>
+                        <span id="i4" class="code-line"> rear = (rear + 1) % size</span>
+                        <span id="i5" class="code-line"> count += 1</span>
+                    </div>
+                    <!-- Dequeue -->
+                    <div id="pseudoExtract" class="code-block" style="display:none;margin-top:8px;">
+                        <span id="e1" class="code-line"><span class="kw">function</span> <span class="fn">dequeue</span>():</span>
+                        <span id="e2" class="code-line"> <span class="kw">if</span> count == 0: <span class="kw">return</span> empty</span>
+                        <span id="e3" class="code-line"> val = queue[front]</span>
+                        <span id="e4" class="code-line"> front = (front + 1) % size</span>
+                        <span id="e5" class="code-line"> count -= 1</span>
+                        <span id="e6" class="code-line"> <span class="kw">return</span> val</span>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-hd">📋 Current Queue Array</div>
+                    <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+                </div>
+                <div class="panel">
+                    <div class="panel-hd">🗃 Queue Formulas</div>
+                    <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:2.2;">
+                        <div>rear = <span style="color:var(--teal)">(rear + 1) % size</span></div>
+                        <div>front = <span style="color:var(--orange)">(front + 1) % size</span></div>
+                        <div>full: count == size</div>
+                        <div>empty: count == 0</div>
+                        <div style="margin-top:6px;font-size:10px;">Fixed size circular buffer.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // ════════════════════════════════════════════════
+        // THEME
+        // ════════════════════════════════════════════════
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isLight = html.getAttribute('data-theme') !== 'light';
+            html.setAttribute('data-theme', isLight ? 'light' : 'dark');
+            document.getElementById('toggleLabel').textContent = isLight ? 'Dark mode' : 'Light mode';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            if (stepIdx >= 0 && steps[stepIdx]) drawQueue(steps[stepIdx]);
+        }
+        (function(){
+            const s = localStorage.getItem('theme');
+            if (s === 'light') {
+                document.documentElement.setAttribute('data-theme','light');
+            }
+        })();
+        // ════════════════════════════════════════════════
+        // SPEECH
+        // ════════════════════════════════════════════════
+        const synth = window.speechSynthesis;
+        let ttsVoice = null;
+        function loadVoices() {
+            const v = synth.getVoices();
+            ttsVoice = v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;
+        }
+        loadVoices();
+        if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+        function speak(text) {
+            return new Promise(resolve => {
+                if (!voiceEnabled || !synth) { resolve(); return; }
+                synth.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.voice=ttsVoice; u.rate=0.88; u.pitch=1.05; u.volume=1;
+                u.onstart=()=>document.getElementById('speakBars').classList.add('on');
+                u.onend=u.onerror=()=>{ document.getElementById('speakBars').classList.remove('on'); resolve(); };
+                synth.speak(u);
+            });
+        }
+        function stopSpeech(){ synth&&synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+        // ════════════════════════════════════════════════
+        // VOICE TOGGLE
+        // ════════════════════════════════════════════════
+        let voiceEnabled = false;
+        function toggleVoice(){
+            voiceEnabled = !voiceEnabled;
+            const icon=document.getElementById('voiceIcon'), lbl=document.getElementById('voiceLabel'), btn=document.getElementById('voiceToggle');
+            if(voiceEnabled){ icon.textContent='🔊'; lbl.textContent='Voice On'; btn.classList.remove('off'); document.getElementById('speedWrap').style.display='none'; if(isPlaying){stopPlay();startPlay();} } 
+            else { icon.textContent='🔇'; lbl.textContent='Voice Off'; btn.classList.add('off'); stopSpeech(); document.getElementById('speedWrap').style.display=''; if(isPlaying){stopPlay();startPlay();} }
+        }
+        // ════════════════════════════════════════════════
+        // QUEUE STATE
+        // ════════════════════════════════════════════════
+        const QUEUE_SIZE = 12;
+        let queue = new Array(QUEUE_SIZE).fill(null);
+        let front = 0;
+        let rear = 0;
+        let count = 0;
+        let steps = [];
+        let stepIdx = -1;
+        let isPlaying = false;
+        let playTimer = null;
+        let introPlayed = false;
+        let speedMult = 2;
+        let totalChecks = 0, totalServed = 0;
+        const PUMPS = 3;
+        let pumps = Array(PUMPS).fill(null); // null or car value
+        const SPEED_DELAYS = {1:1400,2:800,3:450,4:220,5:90};
+        function getDelay(){ return SPEED_DELAYS[speedMult]||800; }
+        function onSpeedChange(v){ speedMult=parseInt(v); document.getElementById('speedVal').textContent=v+'×'; }
+        function setQueueType(type){ /* Only circular for now */ }
+        // ════════════════════════════════════════════════
+        // STEP GENERATORS
+        // ════════════════════════════════════════════════
+        /* ── BUILD ── */
+        function buildQueueSteps(arr){
+            const steps = [], initialQueue = new Array(QUEUE_SIZE).fill(null), initialFront = 0, initialRear = 0, initialCount = 0;
+            let checks=0, served=0;
+            steps.push({ queue: [...initialQueue], front: initialFront, rear: initialRear, count: initialCount, pumps: [...pumps], compare: [], insertIdx: -1, extractIdx: -1, op: 'build', phase: 'active', codeLine:1, label:'b', checks, served, narration:`Building circular queue from ${arr.length} cars.` });
+            let tempFront = initialFront, tempRear = initialRear, tempCount = initialCount, tempQueue = [...initialQueue];
+            arr.forEach(val => {
+                if (tempCount === QUEUE_SIZE) return;
+                checks++;
+                steps.push({ queue: [...tempQueue], front: tempFront, rear: tempRear, count: tempCount, pumps: [...pumps], compare: [tempRear], insertIdx: tempRear, extractIdx: -1, op: 'build', phase: 'insert', codeLine:3, label:'b', checks, served, narration:`Adding car ${val} to rear [${tempRear}].` });
+                tempQueue[tempRear] = val;
+                tempRear = (tempRear + 1) % QUEUE_SIZE;
+                tempCount++;
+                steps.push({ queue: [...tempQueue], front: tempFront, rear: tempRear, count: tempCount, pumps: [...pumps], compare: [], insertIdx: tempRear, extractIdx: -1, op: 'build', phase: 'done', codeLine:4, label:'b', checks, served, narration:`Car ${val} added. Rear now at ${tempRear}.` });
+            });
+            queue = tempQueue; front = tempFront; rear = tempRear; count = tempCount;
+            return { steps, finalQueue: tempQueue, checks, served };
+        }
+        /* ── ENQUEUE ── */
+        function enqueueSteps(val){
+            const steps = [];
+            let checks=0, served=totalServed;
+            if (count === QUEUE_SIZE) {
+                steps.push({ queue: [...queue], front, rear, count, pumps: [...pumps], compare: [], insertIdx: -1, extractIdx: -1, op: 'enqueue', phase: 'active', codeLine:2, label:'i', checks, served, narration:`Queue full! Cannot add car ${val}.` });
+                return steps;
+            }
+            checks++;
+            steps.push({ queue: [...queue], front, rear, count, pumps: [...pumps], compare: [rear], insertIdx: rear, extractIdx: -1, op: 'enqueue', phase: 'compare', codeLine:2, label:'i', checks, served, narration:`Checking if full. Adding car ${val} at rear [${rear}].` });
+            let tempQueue = [...queue];
+            tempQueue[rear] = val;
+            steps.push({ queue: [...tempQueue], front, rear, count: count+1, pumps: [...pumps], compare: [rear], insertIdx: rear, extractIdx: -1, op: 'enqueue', phase: 'insert', codeLine:3, label:'i', checks, served, narration:`Car ${val} placed at [${rear}].` });
+            const newRear = (rear + 1) % QUEUE_SIZE;
+            steps.push({ queue: [...tempQueue], front, rear: newRear, count: count+1, pumps: [...pumps], compare: [], insertIdx: -1, extractIdx: -1, op: 'enqueue', phase: 'done', codeLine:4, label:'i', checks, served, narration:`Rear moved to ${newRear}. Enqueue complete!` });
+            queue = tempQueue; rear = newRear; count++;
+            totalChecks += checks;
+            return steps;
+        }
+        /* ── DEQUEUE ── */
+        function dequeueSteps(){
+            const steps = [];
+            let checks=0, served=totalServed;
+            if (count === 0) {
+                steps.push({ queue: [...queue], front, rear, count, pumps: [...pumps], compare: [], insertIdx: -1, extractIdx: -1, op: 'dequeue', phase: 'active', codeLine:2, label:'e', checks, served, narration:`Queue empty! No car to serve.` });
+                return steps;
+            }
+            const freePumpIdx = pumps.findIndex(p => p === null);
+            if (freePumpIdx === -1) {
+                steps.push({ queue: [...queue], front, rear, count, pumps: [...pumps], compare: [], insertIdx: -1, extractIdx: -1, op: 'dequeue', phase: 'active', codeLine:2, label:'e', checks, served, narration:`All pumps occupied! Wait for a pump to free.` });
+                return steps;
+            }
+            checks++;
+            steps.push({ queue: [...queue], front, rear, count, pumps: [...pumps], compare: [front], insertIdx: -1, extractIdx: front, op: 'dequeue', phase: 'compare', codeLine:2, label:'e', checks, served, narration:`Checking if empty. Serving car ${queue[front]} from front [${front}].` });
+            const val = queue[front];
+            let tempQueue = [...queue];
+            tempQueue[front] = null;
+            steps.push({ queue: [...tempQueue], front, rear, count: count-1, pumps: [...pumps], compare: [front], insertIdx: -1, extractIdx: front, op: 'dequeue', phase: 'extract', codeLine:3, label:'e', checks, served, narration:`Car ${val} removed from [${front}].` });
+            const newFront = (front + 1) % QUEUE_SIZE;
+            let tempPumps = [...pumps];
+            tempPumps[freePumpIdx] = val;
+            steps.push({ queue: [...tempQueue], front: newFront, rear, count: count-1, pumps: tempPumps, compare: [], insertIdx: -1, extractIdx: -1, op: 'dequeue', phase: 'done', codeLine:4, label:'e', checks, served: served+1, narration:`Front moved to ${newFront}. Car ${val} assigned to pump ${freePumpIdx+1}. Dequeue complete!` });
+            queue = tempQueue; front = newFront; count--; pumps = tempPumps; totalServed++;
+            totalChecks += checks;
+            return steps;
+        }
+        // ════════════════════════════════════════════════
+        // CANVAS
+        // ════════════════════════════════════════════════
+        const canvas = document.getElementById('vizCanvas');
+        const ctx = canvas.getContext('2d');
+        let animRafId = null;
+        function resizeCanvas(){ canvas.width = canvas.parentElement.clientWidth; }
+        function drawQueue(step, offsets={}){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            if(!step || step.count === 0) return;
+            const W = canvas.width, H = canvas.height;
+            const centerX = W / 2, centerY = H / 2 + 20, radius = Math.min(140, W/3);
+            const angleStep = 2 * Math.PI / QUEUE_SIZE;
+            const light = document.documentElement.getAttribute('data-theme') === 'light';
+            // Draw circular slots
+            for(let i=0; i<QUEUE_SIZE; i++){
+                const angle = i * angleStep - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, 2*Math.PI);
+                let fill = step.queue[i] === null ? (light ? '#f0f4fa' : '#0a0f1e') : (light ? '#dde8f8' : '#1a2840');
+                let stroke = light ? '#99b8dc' : '#2a4060';
+                let textCol = light ? '#4a6a9a' : '#c8d8f0';
+                if (i === step.insertIdx) { fill = light ? 'rgba(167,139,250,.2)' : 'rgba(167,139,250,.25)'; stroke = '#a78bfa'; textCol = '#a78bfa'; }
+                if (i === step.extractIdx) { fill = light ? 'rgba(0,212,170,.25)' : 'rgba(0,212,170,.3)'; stroke = '#00d4aa'; textCol = '#00d4aa'; }
+                if (step.compare.includes(i)) { fill = light ? 'rgba(255,140,66,.2)' : 'rgba(255,140,66,.25)'; stroke = '#ff8c42'; textCol = '#ff8c42'; }
+                ctx.fillStyle = fill;
+                ctx.fill();
+                ctx.strokeStyle = stroke;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                // Index
+                ctx.fillStyle = light ? 'rgba(0,0,0,.25)' : 'rgba(74,106,154,.5)';
+                ctx.font = '10px JetBrains Mono';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(i, x, y + 30);
+                // Value (car ID)
+                if (step.queue[i] !== null) {
+                    ctx.fillStyle = textCol;
+                    ctx.font = 'bold 12px JetBrains Mono';
+                    ctx.fillText('🚗' + step.queue[i], x, y);
+                }
+            }
+            // Front and Rear arrows
+            if (step.count > 0) {
+                const frontAngle = step.front * angleStep - Math.PI / 2;
+                const rearAngle = step.rear * angleStep - Math.PI / 2;
+                const arrowRadius = radius + 40;
+                const fx = centerX + arrowRadius * Math.cos(frontAngle);
+                const fy = centerY + arrowRadius * Math.sin(frontAngle);
+                const rx = centerX + arrowRadius * Math.cos(rearAngle);
+                const ry = centerY + arrowRadius * Math.sin(rearAngle);
+                ctx.fillStyle = 'var(--orange)';
+                ctx.font = '12px JetBrains Mono';
+                ctx.fillText('Front', fx, fy);
+                ctx.fillStyle = 'var(--pink)';
+                ctx.fillText('Rear', rx, ry);
+            } else {
+                ctx.fillStyle = 'var(--text-dim)';
+                ctx.font = '14px JetBrains Mono';
+                ctx.fillText('Empty Queue', centerX, centerY);
+            }
+            // Pumps
+            for(let i=0; i<PUMPS; i++){
+                const px = W - 100, py = 50 + i*80;
+                ctx.fillStyle = step.pumps[i] === null ? 'var(--surface2)' : 'var(--node-extract)';
+                ctx.fillRect(px - 40, py - 20, 80, 40);
+                ctx.strokeStyle = 'var(--border)';
+                ctx.strokeRect(px - 40, py - 20, 80, 40);
+                ctx.fillStyle = 'var(--text)';
+                ctx.font = '12px JetBrains Mono';
+                ctx.fillText('Pump ' + (i+1), px, py - 30);
+                if (step.pumps[i] !== null) {
+                    ctx.fillStyle = 'var(--teal)';
+                    ctx.fillText('🚗' + step.pumps[i], px, py);
+                } else {
+                    ctx.fillStyle = 'var(--text-dim)';
+                    ctx.fillText('Free', px, py);
+                }
+            }
+        }
+        // ════════════════════════════════════════════════
+        // CONTROLLER
+        // ════════════════════════════════════════════════
+        function updatePeek(){ document.getElementById('peekVal').textContent = count > 0 ? queue[front] : '—'; }
+        function updateNarration(step){ 
+            const el=document.getElementById('narText'); 
+            el.classList.remove('intro-mode'); 
+            document.getElementById('teacher').textContent='🧑‍💻'; 
+            el.textContent=step.narration; 
+        }
+        function updateStatusBar(step, idx){
+            document.getElementById('sOp').textContent=step.op.charAt(0).toUpperCase()+step.op.slice(1);
+            document.getElementById('sComps').textContent=totalChecks+(step.checks||0);
+            document.getElementById('sSwaps').textContent=totalServed+(step.served||0);
+            document.getElementById('statComps').textContent=totalChecks+(step.checks||0);
+            document.getElementById('statSwaps').textContent=totalServed+(step.served||0);
+            document.getElementById('statN').textContent=step.count;
+            document.getElementById('statExtracts').textContent=step.pumps.filter(p => p !== null).length;
+            document.getElementById('arrDisplay').textContent=`[${step.queue.map(v => v === null ? '_' : v).join(', ')}] front:${step.front} rear:${step.rear}`;
+            document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
+            const pct=steps.length>1?((idx/(steps.length-1))*100).toFixed(1):0;
+            document.getElementById('progFill').style.width=pct+'%';
+            const badge=document.getElementById('phaseBadge');
+            const map={active:['ph-active','Running'],compare:['ph-compare','Checking'],insert:['ph-insert','Arriving'],extract:['ph-extract','Serving'],done:['ph-done','Done'],idle:['ph-idle','Idle']};
+            const [cls,lbl]=map[step.phase]||['ph-idle','Idle'];
+            badge.className=`phase-badge ${cls}`;
+            badge.textContent=lbl;
+            ['pseudoBuild','pseudoInsert','pseudoExtract'].forEach(id=>document.getElementById(id).style.display='none');
+            const showId={b:'pseudoBuild',i:'pseudoInsert',e:'pseudoExtract'}[step.label];
+            if(showId) document.getElementById(showId).style.display='block';
+            const maxLines={b:4,i:5,e:6};
+            const pfx=step.label;
+            for(let n=1;n<=(maxLines[pfx]||9);n++){
+                const el=document.getElementById(`${pfx}${n}`);
+                if(el) el.style.background=step.codeLine===n?'rgba(0,212,170,.13)':''; 
+            }
+        }
+        // ════════════════════════════════════════════════
+        // ANIMATION (simple for now, no swap anim)
+        // ════════════════════════════════════════════════
+        function renderStep(idx, autoAdvance=false){
+            if(idx<0||idx>=steps.length) return;
+            stepIdx=idx;
+            const step=steps[idx];
+            if(animRafId){cancelAnimationFrame(animRafId);animRafId=null;}
+            drawQueue(step, {});
+            updateNarration(step);
+            updateStatusBar(step,idx);
+            updatePeek();
+            if(autoAdvance) scheduleNext(step);
+        }
+        function scheduleNext(step){
+            if(!isPlaying) return;
+            if(stepIdx>=steps.length-1){stopPlay();return;}
+            if(voiceEnabled){
+                speak(step.narration).then(()=>{ 
+                    if(!isPlaying) return; 
+                    playTimer=setTimeout(()=>{if(isPlaying) renderStep(stepIdx+1,true);},350); 
+                });
+            } else {
+                playTimer=setTimeout(()=>{if(isPlaying) renderStep(stepIdx+1,true);},getDelay());
+            }
+        }
+        function nextStep(){
+            stopPlay();
+            if(stepIdx+1<steps.length){
+                renderStep(stepIdx+1,false);
+                if(voiceEnabled) speak(steps[stepIdx].narration);
+            }
+        }
+        function startPlay(){
+            if(stepIdx>=steps.length-1) stepIdx=-1;
+            isPlaying=true;
+            document.getElementById('btnPlay').textContent='⏸ Pause';
+            renderStep(stepIdx+1,true);
+        }
+        function stopPlay(){
+            isPlaying=false;
+            if(playTimer){clearTimeout(playTimer);playTimer=null;}
+            document.getElementById('btnPlay').textContent='▶ Play';
+            stopSpeech();
+        }
+        function doEnqueue(){
+            const raw=document.getElementById('insertVal').value.trim();
+            const val=parseInt(raw);
+            if(isNaN(val)){alert('Enter a valid car ID.');return;}
+            document.getElementById('insertVal').value='';
+            stopPlay();
+            steps=enqueueSteps(val);
+            stepIdx=-1;
+            renderStep(0);
+        }
+        function doDequeue(){
+            stopPlay();
+            steps=dequeueSteps();
+            stepIdx=-1;
+            renderStep(0);
+        }
+        function resetAll(){
+            stopPlay();
+            stepIdx=-1;
+            const {steps:s}=buildQueueSteps(initialArr);
+            steps=s;
+            totalChecks=0; totalServed=0;
+            pumps.fill(null);
+            renderStep(0);
+            document.getElementById('narText').textContent='Ready! Press Play to animate, then try Arrive or Serve.';
+        }
+        document.getElementById('btnPlay').addEventListener('click',()=>{if(isPlaying)stopPlay();else startPlay();});
+        document.getElementById('btnNext').addEventListener('click',nextStep);
+        document.getElementById('btnReset').addEventListener('click',resetAll);
+        let initialArr=[1,2,3,4,5,6,7,8,9,10];
+        function applyArray(){
+            const raw=document.getElementById('arrInput').value;
+            const parsed=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+            if(parsed.length<1){alert('Enter at least 1 valid car ID.');return;}
+            initialArr=parsed.slice(0,QUEUE_SIZE);
+            totalChecks=0; totalServed=0;
+            pumps.fill(null);
+            stopPlay();
+            const {steps:s}=buildQueueSteps(initialArr);
+            steps=s;
+            stepIdx=-1;
+            renderStep(0);
+        }
+        function randomize(){
+            initialArr=Array.from({length:10},()=>Math.floor(Math.random()*90)+1);
+            document.getElementById('arrInput').value=initialArr.join(', ');
+            totalChecks=0; totalServed=0;
+            pumps.fill(null);
+            stopPlay();
+            const {steps:s}=buildQueueSteps(initialArr);
+            steps=s;
+            stepIdx=-1;
+            renderStep(0);
+        }
+        // ════════════════════════════════════════════════
+        // INTRO SPEECH
+        // ════════════════════════════════════════════════
+        let introAborted=false;
+        async function playIntroSpeech(){
+            introAborted=false;
+            stopSpeech();
+            const lines=[
+                `Welcome! Today we are learning about Circular Queues through a Gas Station simulation.`,
+                `A circular queue is a fixed-size buffer that wraps around, used to manage waiting cars efficiently without shifting.`,
+                `Enqueue adds a car to the rear, dequeue serves the front car to a pump if available.`,
+                `Purple highlights arriving cars, teal for serving. Pumps are on the right.`,
+                `Press Play to animate operations, or use Arrive and Serve interactively!`
+            ];
+            const narText=document.getElementById('narText');
+            narText.classList.add('intro-mode');
+            document.getElementById('teacher').textContent='🧑‍🏫';
+            for(const line of lines){
+                if(introAborted) break;
+                narText.textContent=line;
+                await speak(line);
+                if(introAborted) break;
+                await new Promise(r=>setTimeout(r,260));
+            }
+            narText.classList.remove('intro-mode');
+            document.getElementById('teacher').textContent='🧑‍💻';
+            if(!introAborted&&steps.length>0) narText.textContent=steps[Math.max(0,stepIdx)].narration;
+        }
+        // ════════════════════════════════════════════════
+        // INIT
+        // ════════════════════════════════════════════════
+        function init(){
+            resizeCanvas();
+            const saved=localStorage.getItem('theme');
+            if(saved==='light') document.getElementById('toggleLabel').textContent='Dark mode';
+            totalChecks=0; totalServed=0;
+            pumps.fill(null);
+            const {steps:s}=buildQueueSteps(initialArr);
+            steps=s;
+            stepIdx=-1;
+            renderStep(0);
+            document.getElementById('speedWrap').style.display=voiceEnabled?'none':'';
+            if(!introPlayed){ introPlayed=true; document.getElementById('narText').textContent='Ready! Press Play to animate the build, then try Arrive or Serve.'; if(voiceEnabled) setTimeout(playIntroSpeech,500); }
+        }
+        window.addEventListener('resize',()=>{ resizeCanvas(); if(stepIdx>=0&&steps[stepIdx]) drawQueue(steps[stepIdx],{}); else if(steps.length>0) drawQueue(steps[0],{}); });
+        init();
+    </script>
 </body>
 </html>
