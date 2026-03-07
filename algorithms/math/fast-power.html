@@ -5,928 +5,698 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fast Power (Binary Exponentiation) — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
 <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-  --bit-0: #1a2840;
-  --bit-1: #06d6a0;
-  --active-bit: #ff8c42;
-  --multiply: #ff6b9d;
-  --result-update: #4a90e2;
+  --bg: #07080f;
+  --surface: #0c0e1a;
+  --surface2: #101320;
+  --border: #181d30;
+  --text: #d0daf5;
+  --text-dim: #46567a;
+  --cyan: #00e5ff;
+  --violet: #9b59ff;
+  --rose: #ff4e7a;
+  --lime: #a3ff4e;
+  --amber: #ffb830;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
 }
 
-.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
-@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
-
-#vizCanvas {
-  width: 100%; border-radius: 8px;
-  background: transparent; display: block;
+[data-theme="light"] {
+  --bg: #f2f4fc;
+  --surface: #ffffff;
+  --surface2: #eef1fb;
+  --border: #ccd5ee;
+  --text: #111827;
+  --text-dim: #6878a8;
+  --cyan: #0099bb;
+  --violet: #6b33cc;
+  --rose: #cc2255;
+  --lime: #5a9900;
+  --amber: #c07000;
 }
 
-.controls {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 16px 18px;
-  display: flex; flex-direction: column; gap: 12px;
-}
-.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
-.base-exp-input {
-  flex: 1; min-width: 120px;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 7px; padding: 7px 11px;
-  color: var(--text); font-family: var(--mono); font-size: 11px;
-  outline: none; transition: border-color .2s;
-}
-.base-exp-input:focus { border-color: var(--teal); }
+.bg-grid { position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,229,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.018) 1px,transparent 1px);background-size:48px 48px; }
+.bg-glow { position:fixed;top:-30%;left:20%;width:600px;height:600px;background:radial-gradient(ellipse,rgba(155,89,255,.07) 0%,transparent 70%);pointer-events:none;z-index:0; }
+.bg-glow2 { position:fixed;bottom:-20%;right:10%;width:500px;height:500px;background:radial-gradient(ellipse,rgba(0,229,255,.05) 0%,transparent 70%);pointer-events:none;z-index:0; }
 
-.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
-.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
-.ld { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
+/* Navbar */
+.navbar { position:sticky;top:0;z-index:100;background:rgba(7,8,15,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border); }
+.nav-inner { max-width:1200px;margin:0 auto;padding:0 24px;height:52px;display:flex;align-items:center;gap:24px; }
+.nav-logo { font-family:var(--mono);font-size:14px;font-weight:800;color:var(--cyan);text-decoration:none; }
+.logo-bracket { color:var(--text-dim); }
+.logo-dot { color:var(--rose); }
+.nav-links { display:flex;gap:20px; }
+.nav-links a { font-size:12px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;transition:color .2s; }
+.nav-links a:hover { color:var(--cyan); }
+.theme-toggle { margin-left:auto;background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px 4px 6px;cursor:pointer;display:flex;align-items:center;gap:8px; }
+.toggle-track { width:32px;height:18px;background:var(--surface2);border-radius:9px;position:relative;border:1px solid var(--border); }
+.toggle-thumb { position:absolute;top:1px;left:1px;width:14px;height:14px;background:var(--cyan);border-radius:50%;transition:transform .3s; }
+[data-theme="light"] .toggle-thumb { transform:translateX(14px); }
+.toggle-label { font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px; }
 
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stat-box {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 9px; padding: 12px 14px; text-align: center;
-}
-.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
-.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+/* Layout */
+.algo-page { max-width:1200px;margin:0 auto;padding:28px 24px 80px;position:relative;z-index:1; }
+.back-link { font-family:var(--mono);font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;display:inline-block;margin-bottom:20px; }
+.back-link:hover { color:var(--cyan); }
 
-/* Voice toggle */
-.voice-btn {
-  margin-left: auto; background: none;
-  border: 1px solid var(--border); border-radius: 7px;
-  padding: 4px 10px; cursor: pointer;
-  display: flex; align-items: center; gap: 6px;
-  font-family: var(--mono); font-size: 10px; color: var(--teal);
-  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
-}
-.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
-.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
-.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
-.voice-icon { font-size: 14px; }
+.complexity { display:flex;flex-wrap:wrap;gap:8px;margin-top:10px; }
+.cplx-chip { font-family:var(--mono);font-size:10px;padding:4px 10px;border:1px solid var(--border);border-radius:20px;color:var(--text-dim);letter-spacing:.5px; }
+.cplx-chip span { color:var(--cyan);font-weight:700; }
+.card-difficulty { font-family:var(--mono);font-size:9px;font-weight:700;padding:4px 10px;border-radius:12px;letter-spacing:1.5px;text-transform:uppercase; }
+.intermediate { background:rgba(155,89,255,.15);color:var(--violet);border:1px solid rgba(155,89,255,.35); }
 
-.narration-text.intro-mode {
-  color: var(--teal); font-weight: 600;
-  animation: glowPulse 2s infinite;
-}
-@keyframes glowPulse {
-  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
-  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
-  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
-}
+.concepts { display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:10px;margin:18px 0; }
+.cc { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;transition:border-color .3s,transform .3s; }
+.cc::after { content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--violet));opacity:0;transition:opacity .3s; }
+.cc:hover { border-color:rgba(0,229,255,.25);transform:translateY(-2px); }
+.cc:hover::after { opacity:1; }
+.cc-icon { font-size:22px;display:block;margin-bottom:7px; }
+.cc-title { font-size:12px;font-weight:700;margin-bottom:5px;letter-spacing:.5px;color:var(--cyan); }
+.cc-desc { font-size:11px;color:var(--text-dim);line-height:1.6; }
 
-/* Binary representation display */
-.binary-container {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
+.narration { display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:10px;padding:12px 16px;margin-bottom:14px;min-height:52px; }
+.teacher { font-size:22px;flex-shrink:0; }
+.narration-text { font-size:12px;color:var(--text);line-height:1.6;flex:1; }
+.speak-bars { display:flex;gap:2px;align-items:flex-end;height:14px;flex-shrink:0; }
+.speak-bars span { width:3px;background:var(--cyan);border-radius:2px;height:4px;opacity:.3; }
+.speak-bars.on span { animation:bar-bounce .6s ease-in-out infinite;opacity:1; }
+.speak-bars.on span:nth-child(1){animation-delay:0s} .speak-bars.on span:nth-child(2){animation-delay:.1s}
+.speak-bars.on span:nth-child(3){animation-delay:.2s} .speak-bars.on span:nth-child(4){animation-delay:.15s}
+.speak-bars.on span:nth-child(5){animation-delay:.05s}
+@keyframes bar-bounce{0%,100%{height:3px}50%{height:14px}}
 
-.binary-label {
-  font-size: 10px;
-  color: var(--text-dim);
-  font-family: var(--mono);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
-}
+.panel { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px; }
+.panel-hd { font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px; }
 
-.binary-bits {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
+.two-col { display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px; }
+@media(max-width:900px){ .two-col{grid-template-columns:1fr;} }
 
-.bit {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface);
-  border: 2px solid var(--border);
-  border-radius: 6px;
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 18px;
-  transition: all 0.3s ease;
-}
+.controls { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px; }
+.ctrl-row { display:flex;gap:9px;align-items:center;flex-wrap:wrap; }
+.num-input { width:90px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:13px;font-weight:700;outline:none;transition:border-color .2s;text-align:center; }
+.num-input:focus { border-color:var(--cyan);box-shadow:0 0 0 2px rgba(0,229,255,.1); }
+.num-input.base-field { border-color:rgba(0,229,255,.3);color:var(--cyan); }
+.num-input.exp-field  { border-color:rgba(255,184,48,.3);color:var(--amber); }
+.num-input.mod-field  { border-color:rgba(155,89,255,.3);color:var(--violet); }
 
-.bit-0 { color: var(--text-dim); }
-.bit-1 { color: var(--teal); border-color: var(--teal); background: rgba(6,214,160,0.1); }
-.bit-active { border-color: var(--active-bit); transform: scale(1.1); box-shadow: 0 0 15px rgba(255,140,66,0.3); }
+.btn { font-family:var(--mono);font-size:11px;font-weight:700;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;letter-spacing:.5px;transition:all .2s;white-space:nowrap; }
+.btn:hover { border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.06); }
+.btn-primary { background:rgba(0,229,255,.12);border-color:rgba(0,229,255,.4);color:var(--cyan); }
+.btn-primary:hover { background:rgba(0,229,255,.22); }
+.btn-danger { background:rgba(255,78,122,.08);border-color:rgba(255,78,122,.3);color:var(--rose); }
+.btn-danger:hover { background:rgba(255,78,122,.18); }
 
-/* Result display */
-.result-box {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  margin-bottom: 12px;
-}
+.speed-ctrl { display:flex;align-items:center;gap:6px;margin-left:auto; }
+.speed-lbl { font-family:var(--mono);font-size:10px;color:var(--text-dim); }
+.speed-val { font-family:var(--mono);font-size:10px;color:var(--cyan);min-width:22px; }
+input[type=range] { accent-color:var(--cyan);width:80px; }
 
-.result-label {
-  font-size: 10px;
-  color: var(--text-dim);
-  font-family: var(--mono);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 8px;
-}
+.status-row { display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 14px;margin-top:12px; }
+.si { display:flex;flex-direction:column;align-items:center;gap:2px;min-width:50px; }
+.sl { font-size:9px;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase; }
+.sv { font-family:var(--mono);font-size:15px;font-weight:800;color:var(--text); }
+.sv.cyan { color:var(--cyan); }
+.sv.violet { color:var(--violet); }
+.sv.amber { color:var(--amber); }
+.sv.rose { color:var(--rose); }
+.phase-badge { font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;letter-spacing:.5px; }
+.ph-idle   { background:rgba(70,86,122,.15);color:var(--text-dim); }
+.ph-init   { background:rgba(0,229,255,.12);color:var(--cyan); }
+.ph-iter   { background:rgba(255,184,48,.12);color:var(--amber); }
+.ph-result { background:rgba(163,255,78,.12);color:var(--lime); }
+.divider-auto { flex:1; }
+.prog-wrap { width:100px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;border:1px solid var(--border); }
+.prog-fill { height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:3px;width:0%;transition:width .3s; }
+.step-ctr { font-family:var(--mono);font-size:10px;color:var(--text-dim);white-space:nowrap; }
 
-.result-value {
-  font-family: var(--mono);
-  font-size: 32px;
-  font-weight: 800;
-  color: var(--teal);
-  word-break: break-word;
-}
+/* Stats */
+.stats-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+.stat-box { background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;text-align:center; }
+.stat-box-n { font-family:var(--mono);font-size:20px;font-weight:800;color:var(--cyan); }
+.stat-box-l { font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px; }
 
-.result-expression {
-  font-family: var(--mono);
-  font-size: 14px;
-  color: var(--text-dim);
-  margin-top: 8px;
-}
+/* Code block */
+.code-block { font-family:var(--mono);font-size:11px;line-height:2;background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border);white-space:pre;overflow-x:auto; }
+.code-line { display:block;padding:0 6px;border-radius:4px;transition:background .2s; }
+.kw { color:#7ec8e3; } .fn { color:var(--cyan); } .num { color:var(--amber); } .cm { color:var(--text-dim); }
 
-.calculation-step {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--text);
-  margin-top: 8px;
-}
+/* ── Bits visualizer ── */
+.bits-row { display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px; }
+.bit-box { display:flex;flex-direction:column;align-items:center;gap:4px; }
+.bit-val { font-family:var(--mono);font-size:14px;font-weight:800;width:32px;height:32px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;transition:all .3s; }
+.bit-val.bit-1 { background:rgba(255,184,48,.15);border-color:rgba(255,184,48,.5);color:var(--amber); }
+.bit-val.bit-0 { background:var(--surface2);color:var(--text-dim); }
+.bit-val.bit-active { background:rgba(0,229,255,.2);border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 8px rgba(0,229,255,.3); }
+.bit-idx { font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px; }
+.bit-pow { font-family:var(--mono);font-size:8px;color:var(--text-dim); }
 
-.highlight-mult {
-  color: var(--multiply);
-  font-weight: 700;
-}
+/* ── Iteration table ── */
+.iter-table-wrap { overflow-x:auto; }
+.iter-table { border-collapse:separate;border-spacing:0 4px;font-family:var(--mono);font-size:12px;width:100%; }
+.iter-table th { color:var(--text-dim);padding:4px 10px;text-align:center;font-size:9px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border); }
+.iter-table td { padding:8px 10px;text-align:center;background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);transition:background .25s,color .25s; }
+.iter-table td:first-child { border-left:1px solid var(--border);border-radius:7px 0 0 7px; }
+.iter-table td:last-child { border-right:1px solid var(--border);border-radius:0 7px 7px 0; }
+.iter-table tr.active-row td { background:rgba(255,184,48,.1);color:var(--amber);font-weight:700; }
+.iter-table tr.done-row td { background:rgba(163,255,78,.07);color:var(--lime); }
+.iter-table tr.skip-row td { background:var(--surface2);color:var(--text-dim); }
+.iter-table td.hi { color:var(--cyan);font-weight:800; }
+.iter-table td.hi-mul { color:var(--lime);font-weight:800; }
+.mul-indicator { display:inline-block;font-size:9px;padding:2px 5px;border-radius:4px;font-weight:700;margin-left:4px; }
+.mul-yes { background:rgba(163,255,78,.15);color:var(--lime);border:1px solid rgba(163,255,78,.3); }
+.mul-no  { background:rgba(70,86,122,.15);color:var(--text-dim);border:1px solid var(--border); }
 
-.highlight-square {
-  color: var(--result-update);
-  font-weight: 700;
-}
+/* ── Power chain ── */
+.power-chain { display:flex;flex-direction:column;gap:6px; }
+.pc-line { padding:7px 12px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:12px;color:var(--text-dim);transition:all .3s;line-height:1.7; }
+.pc-line.active { border-color:var(--amber);background:rgba(255,184,48,.08);color:var(--text); }
+.pc-line.done-line { border-color:rgba(163,255,78,.3);background:rgba(163,255,78,.07);color:var(--lime); }
+.pc-line .hi-b { color:var(--cyan);font-weight:800; }
+.pc-line .hi-e { color:var(--amber);font-weight:800; }
+.pc-line .hi-r { color:var(--lime);font-weight:800; }
+.pc-line .hi-m { color:var(--violet);font-weight:800; }
+
+/* ── Result banner ── */
+.result-banner { padding:16px 20px;border-radius:12px;border:1px solid;text-align:center;font-family:var(--mono);margin-top:12px;transition:all .3s; }
+.result-banner.success { border-color:rgba(163,255,78,.4);background:rgba(163,255,78,.07); }
+.result-big { font-size:28px;font-weight:800;margin-bottom:4px; }
+.result-eq { font-size:12px;color:var(--text-dim); }
+
+/* Mode tabs */
+.tabs { display:flex;gap:0;border:1px solid var(--border);border-radius:9px;overflow:hidden;width:fit-content;margin-bottom:16px; }
+.tab-btn { font-family:var(--mono);font-size:10px;font-weight:700;padding:7px 16px;border:none;cursor:pointer;letter-spacing:1px;transition:all .2s;background:var(--surface2);color:var(--text-dim); }
+.tab-btn.active { background:rgba(0,229,255,.15);color:var(--cyan); }
+.tab-btn:not(:last-child) { border-right:1px solid var(--border); }
+
+.tag { display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:4px;letter-spacing:1px;font-weight:700; }
+.tag-plain { background:rgba(0,229,255,.12);color:var(--cyan);border:1px solid rgba(0,229,255,.25); }
+.tag-mod   { background:rgba(155,89,255,.12);color:var(--violet);border:1px solid rgba(155,89,255,.25); }
+
+.voice-btn { background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1px;transition:all .2s;white-space:nowrap; }
+.voice-btn.off { color:var(--text-dim);border-color:var(--border); }
+
+@keyframes flashIn { from{opacity:0;transform:scale(.85)} to{opacity:1;transform:scale(1)} }
+.flash { animation:flashIn .4s cubic-bezier(.34,1.56,.64,1); }
 </style>
 </head>
 <body>
 
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
+<div class="bg-glow2"></div>
 
-<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
     <div class="nav-links">
       <a href="../../index.html#sorting">Sorting</a>
-      <a href="../../index.html#searching">Searching</a>
       <a href="../../index.html#graph">Graph</a>
       <a href="../../index.html#dp">Dynamic Programming</a>
     </div>
-    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
-      <div class="toggle-track">
-        <div class="toggle-thumb">
-          <span class="toggle-icon">🌙</span>
-        </div>
-      </div>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
       <span class="toggle-label" id="toggleLabel">Light mode</span>
     </button>
   </div>
 </nav>
 
 <div class="algo-page">
-
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
   <header style="margin-bottom:20px;">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
       <span style="font-size:40px;">⚡</span>
       <div>
-        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Mathematical Algorithm</div>
-        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Fast Power (Binary Exponentiation)</h1>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Number Theory</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Fast Power</h1>
       </div>
       <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
     </div>
-    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
-      Compute aⁿ efficiently by using the binary representation of the exponent. Instead of multiplying n times (O(n)), 
-      we process bits from right to left, squaring the base at each step and multiplying when we see a 1 bit.
+    <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7;">
+      Compute <strong style="color:var(--cyan);">base<sup>exp</sup></strong> (optionally <strong style="color:var(--violet);">mod m</strong>) in <em>O(log exp)</em> steps by repeatedly squaring. Also called <span class="tag tag-plain">Binary Exponentiation</span> or <span class="tag tag-mod">Exponentiation by Squaring</span>.
     </p>
     <div class="complexity" style="margin-top:10px;">
-      <div class="cplx-chip">Time: <span>O(log n)</span></div>
+      <div class="cplx-chip">Time: <span>O(log exp)</span></div>
       <div class="cplx-chip">Space: <span>O(1)</span></div>
-      <div class="cplx-chip">Method: <span>Exponentiation by Squaring</span></div>
+      <div class="cplx-chip">Naive: <span>O(exp)</span> multiplications</div>
+      <div class="cplx-chip">Key idea: <span>exp → binary bits</span></div>
     </div>
   </header>
 
-  <!-- Concept cards -->
   <div class="concepts">
-    <div class="cc"><span class="cc-icon">🔢</span><div class="cc-title">Binary Representation</div><div class="cc-desc">The exponent n is written in binary. Each 1 bit tells us to multiply the current power into our result.</div></div>
-    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Repeated Squaring</div><div class="cc-desc">At each step, we square the base: x → x² → x⁴ → x⁸ ... building powers of 2.</div></div>
-    <div class="cc"><span class="cc-icon">⚡</span><div class="cc-title">Logarithmic Time</div><div class="cc-desc">Instead of n multiplications, we only need O(log n) multiplications — much faster for large exponents.</div></div>
-    <div class="cc"><span class="cc-icon">🧮</span><div class="cc-title">Modular Exponentiation</div><div class="cc-desc">Often used in cryptography with modulo arithmetic to keep numbers manageable.</div></div>
+    <div class="cc"><span class="cc-icon">🔢</span><div class="cc-title">Core Idea</div><div class="cc-desc">Write exp in binary. Each bit tells us whether to multiply the current base power into the result.</div></div>
+    <div class="cc"><span class="cc-icon">✂️</span><div class="cc-title">Halving Trick</div><div class="cc-desc">b^n = (b²)^(n/2). Each iteration squares the base and halves the exponent — logarithmic iterations.</div></div>
+    <div class="cc"><span class="cc-icon">🔵</span><div class="cc-title">Odd Exponent</div><div class="cc-desc">When exp is odd, multiply result by the current base before halving. Handles every set bit in binary.</div></div>
+    <div class="cc"><span class="cc-icon">🔐</span><div class="cc-title">Modular Variant</div><div class="cc-desc">Apply mod m at each step to keep numbers small — critical for cryptography and competitive programming.</div></div>
   </div>
 
-  <!-- Narration -->
   <div class="narration" id="narration">
-    <span class="teacher" id="teacher">🧑‍🏫</span>
-    <div class="narration-text" id="narText">Welcome to Fast Power (Binary Exponentiation)! Let me explain how this algorithm works before we begin...</div>
+    <span class="teacher">🧑‍💻</span>
+    <div class="narration-text" id="narText">Enter <strong>base</strong>, <strong>exp</strong>, and optionally <strong>mod</strong>, then press ▶ Play to watch binary exponentiation step by step.</div>
     <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
   </div>
 
-  <!-- Main layout -->
-  <div class="two-col">
+  <!-- Input bar -->
+  <div class="panel" style="margin-bottom:14px;">
+    <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <label style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;">base =</label>
+        <input type="number" class="num-input base-field" id="baseInput" value="2" min="1">
+        <label style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;">exp =</label>
+        <input type="number" class="num-input exp-field" id="expInput" value="10" min="0">
+        <label style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;">mod =</label>
+        <input type="number" class="num-input mod-field" id="modInput" value="" placeholder="none" min="2" style="width:90px;">
+        <button class="btn btn-primary" onclick="applyInput()">Apply</button>
+        <button class="btn" onclick="randomize()">🎲 Random</button>
+      </div>
+      <!-- Mode tabs -->
+      <div class="tabs" id="modeTabs">
+        <button class="tab-btn active" id="tabPlain" onclick="switchMode('plain')">Plain Power</button>
+        <button class="tab-btn" id="tabMod" onclick="switchMode('mod')">Modular Power</button>
+      </div>
+      <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+        <span id="voiceIcon">🔇</span><span id="voiceLabel">Voice Off</span>
+      </button>
+    </div>
+  </div>
 
-    <!-- LEFT: Canvas & Controls -->
+  <div class="status-row" style="margin-bottom:14px;">
+    <div class="si"><span class="sl">base</span><span class="sv cyan" id="sBase">—</span></div>
+    <div class="si"><span class="sl">exp</span><span class="sv amber" id="sExp">—</span></div>
+    <div class="si"><span class="sl">mod</span><span class="sv violet" id="sMod">—</span></div>
+    <div class="si"><span class="sl">Step</span><span class="sv" id="sStep">—</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <div class="two-col">
+    <!-- LEFT: main visualizer -->
     <div>
+
+      <!-- Bits panel -->
       <div class="panel">
-        <div class="panel-hd">📊 Visualization</div>
-        <div class="legend">
-          <div class="li"><div class="ld" style="background:var(--bit-0);"></div>Bit 0 (Skip)</div>
-          <div class="li"><div class="ld" style="background:var(--bit-1);"></div>Bit 1 (Multiply)</div>
-          <div class="li"><div class="ld" style="background:var(--active-bit);"></div>Current Bit</div>
-          <div class="li"><div class="ld" style="background:var(--multiply);"></div>Multiplying</div>
-          <div class="li"><div class="ld" style="background:var(--result-update);"></div>Squaring</div>
-          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
-            <span class="voice-icon" id="voiceIcon">🔇</span>
-            <span id="voiceLabel">Voice Off</span>
-          </button>
-        </div>
-        <canvas id="vizCanvas" height="240"></canvas>
-        
-        <!-- Binary representation display -->
-        <div class="binary-container" id="binaryDisplay">
-          <div class="binary-label">Exponent in Binary</div>
-          <div class="binary-bits" id="binaryBits"></div>
-        </div>
-        
-        <!-- Result display -->
-        <div class="result-box">
-          <div class="result-label">Current Result</div>
-          <div class="result-value" id="resultValue">1</div>
-          <div class="result-expression" id="resultExpression">1</div>
-          <div class="calculation-step" id="calculationStep">Ready to start...</div>
+        <div class="panel-hd">🔢 Exponent in Binary</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:10px;" id="binaryLabel">The exponent written in binary. We process bits from LSB (right) to MSB (left).</div>
+        <div class="bits-row" id="bitsRow"></div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);" id="bitsCaption"></div>
+      </div>
+
+      <!-- Iteration table -->
+      <div class="panel">
+        <div class="panel-hd">⚙️ Iteration Table</div>
+        <div class="iter-table-wrap">
+          <table class="iter-table">
+            <thead><tr>
+              <th>Iter</th><th>Exp (bin)</th><th>Bit</th><th>Multiply?</th><th>Result Before</th><th>Result After</th><th>Base After</th>
+            </tr></thead>
+            <tbody id="iterTableBody"></tbody>
+          </table>
         </div>
       </div>
 
-      <div class="controls">
+      <!-- Result -->
+      <div id="resultBanner" class="result-banner success" style="display:none;">
+        <div class="result-big" id="resultBig"></div>
+        <div class="result-eq" id="resultEq"></div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls" style="margin-top:14px;">
         <div class="ctrl-row">
           <button class="btn btn-primary" id="btnPlay">▶ Play</button>
           <button class="btn" id="btnNext">⏭ Next Step</button>
           <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
-          <button class="btn" onclick="randomize()">🎲 Random Example</button>
-          <div class="speed-ctrl" id="speedWrap">
+          <div class="speed-ctrl">
             <span class="speed-lbl">⚡ Speed</span>
             <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
             <span class="speed-val" id="speedVal">2×</span>
           </div>
         </div>
-        <div class="input-row">
-          <label>Base:</label>
-          <input type="number" class="base-exp-input" id="baseInput" value="3" min="1" max="20">
-          <label>Exponent:</label>
-          <input type="number" class="base-exp-input" id="expInput" value="13" min="1" max="50">
-          <button class="btn" onclick="applyBaseExp()">Apply</button>
-        </div>
       </div>
 
-      <div class="status-row">
-        <div class="si"><span class="sl">Bit Position</span><span class="sv orange" id="sBitPos">-</span></div>
-        <div class="si"><span class="sl">Current Bit</span><span class="sv" id="sCurrentBit">-</span></div>
-        <div class="si"><span class="sl">Multiplications</span><span class="sv" id="sMultCount">0</span></div>
-        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+      <div class="status-row" style="margin-top:14px;">
+        <div class="si"><span class="sl">Cur Exp</span><span class="sv amber" id="sCurExp">—</span></div>
+        <div class="si"><span class="sl">Cur Base</span><span class="sv cyan" id="sCurBase">—</span></div>
+        <div class="si"><span class="sl">Result</span><span class="sv" id="sCurResult">—</span></div>
+        <div class="si"><span class="sl">Bit</span><span class="sv rose" id="sCurBit">—</span></div>
         <div class="divider-auto"></div>
-        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
-        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+        <div class="prog-wrap"><div class="prog-fill" id="progFill2"></div></div>
+        <span class="step-ctr" id="stepCtr2">Step 0 / 0</span>
       </div>
     </div>
 
-    <!-- RIGHT: Info panels -->
+    <!-- RIGHT: code + stats -->
     <div style="display:flex;flex-direction:column;gap:14px;">
 
       <div class="panel">
-        <div class="panel-hd">📈 Statistics</div>
+        <div class="panel-hd">📊 Summary</div>
         <div class="stats-grid">
-          <div class="stat-box"><div class="stat-box-n" id="statMultiplications">0</div><div class="stat-box-l">Multiplications</div></div>
-          <div class="stat-box"><div class="stat-box-n" id="statBits">0</div><div class="stat-box-l">Bits Processed</div></div>
-          <div class="stat-box"><div class="stat-box-n" id="statResult">-</div><div class="stat-box-l">Final Result</div></div>
-          <div class="stat-box"><div class="stat-box-n" id="statComplexity">O(log n)</div><div class="stat-box-l">Complexity</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statResult">?</div><div class="stat-box-l">Result</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statBits">?</div><div class="stat-box-l">Bit Length</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statMuls">0</div><div class="stat-box-l">Multiplications</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statNaive">?</div><div class="stat-box-l">Naive Muls</div></div>
         </div>
       </div>
 
       <div class="panel">
-        <div class="panel-hd">💻 Pseudocode</div>
-        <div class="code-block">
-<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">fastPower</span>(base, exp):</span>
-<span id="cl2" class="code-line">  result = 1</span>
-<span id="cl3" class="code-line">  current = base</span>
-<span id="cl4" class="code-line">  n = exp</span>
-<span id="cl5" class="code-line">  <span class="kw">while</span> n > 0:</span>
-<span id="cl6" class="code-line">    <span class="kw">if</span> n & 1 == 1:  <span class="comment">// Check least significant bit</span></span>
-<span id="cl7" class="code-line">      result = result * current</span>
-<span id="cl8" class="code-line">    current = current * current  <span class="comment">// Square the base</span></span>
-<span id="cl9" class="code-line">    n = n >> 1  <span class="comment">// Shift right (process next bit)</span></span>
-<span id="cl10" class="code-line">  <span class="kw">return</span> result</span>
+        <div class="panel-hd">💻 Pseudocode <span id="codeTag" class="tag tag-plain">FAST POW</span></div>
+        <div class="code-block" id="codeBlock">
+<span id="cl1"  class="code-line"><span class="kw">function</span> <span class="fn">fastPow</span>(base, exp, mod=<span class="num">0</span>):</span>
+<span id="cl2"  class="code-line">  result = <span class="num">1</span></span>
+<span id="cl3"  class="code-line">  <span class="kw">if</span> mod: base = base % mod</span>
+<span id="cl4"  class="code-line">  <span class="kw">while</span> exp > <span class="num">0</span>:</span>
+<span id="cl5"  class="code-line">    <span class="kw">if</span> exp % <span class="num">2</span> == <span class="num">1</span>:  <span class="cm">// odd bit</span></span>
+<span id="cl6"  class="code-line">      result *= base</span>
+<span id="cl7"  class="code-line">      <span class="kw">if</span> mod: result %= mod</span>
+<span id="cl8"  class="code-line">    base *= base       <span class="cm">// square</span></span>
+<span id="cl9"  class="code-line">    <span class="kw">if</span> mod: base %= mod</span>
+<span id="cl10" class="code-line">    exp >>= <span class="num">1</span>         <span class="cm">// halve</span></span>
+<span id="cl11" class="code-line">  <span class="kw">return</span> result</span>
         </div>
       </div>
 
       <div class="panel">
-        <div class="panel-hd">📋 Current Values</div>
-        <div style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;">
-          <div>Base: <span id="displayBase">3</span></div>
-          <div>Exponent: <span id="displayExp">13</span> (binary: <span id="displayBinary">1101</span>)</div>
-          <div>Result: <span id="displayResult">1</span></div>
-          <div>Current multiplier: <span id="displayCurrent">3</span></div>
+        <div class="panel-hd">🧮 Verify</div>
+        <div id="verifyBox" style="font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:2;">
+          Enter values and run the algorithm to verify the result.
         </div>
       </div>
 
     </div>
   </div>
-
-</div><!-- .algo-page -->
+</div>
 
 <script>
-// ════════════════════════════════════════════════
-// THEME TOGGLE
-// ════════════════════════════════════════════════
-function toggleTheme() {
-  const html = document.documentElement;
-  const isNowLight = html.getAttribute('data-theme') !== 'light';
-  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
-  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
-  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+// ── Theme ──
+function toggleTheme(){
+  const light=document.documentElement.getAttribute('data-theme')!=='light';
+  document.documentElement.setAttribute('data-theme',light?'light':'dark');
+  document.getElementById('toggleLabel').textContent=light?'Dark mode':'Light mode';
+  localStorage.setItem('theme',light?'light':'dark');
+}
+(function(){const s=localStorage.getItem('theme');if(s==='light')document.documentElement.setAttribute('data-theme','light');})();
+
+// ── TTS ──
+const synth=window.speechSynthesis;
+let ttsVoice=null,voiceEnabled=false;
+function loadVoices(){const v=synth.getVoices();ttsVoice=v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.lang==='en-US')||v[0]||null;}
+loadVoices();if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=loadVoices;
+function speak(text){return new Promise(res=>{if(!voiceEnabled||!synth){res();return;}synth.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=ttsVoice;u.rate=0.88;u.pitch=1.05;u.onstart=()=>document.getElementById('speakBars').classList.add('on');u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');res();};synth.speak(u);});}
+function stopSpeech(){synth&&synth.cancel();document.getElementById('speakBars').classList.remove('on');}
+function toggleVoice(){voiceEnabled=!voiceEnabled;const icon=document.getElementById('voiceIcon'),lbl=document.getElementById('voiceLabel'),btn=document.getElementById('voiceToggle');if(voiceEnabled){icon.textContent='🔊';lbl.textContent='Voice On';btn.classList.remove('off');}else{icon.textContent='🔇';lbl.textContent='Voice Off';btn.classList.add('off');stopSpeech();}}
+
+// ── State ──
+let baseVal=2, expVal=10, modVal=0, mode='plain';
+let steps=[], stepIdx=-1, isPlaying=false, playTimer=null, speedMult=2;
+const SPEED_DELAYS={1:1800,2:1000,3:600,4:300,5:100};
+function getDelay(){return SPEED_DELAYS[speedMult]||1000;}
+function onSpeedChange(v){speedMult=parseInt(v);document.getElementById('speedVal').textContent=v+'×';}
+
+function switchMode(m){
+  mode=m;
+  document.getElementById('tabPlain').classList.toggle('active',m==='plain');
+  document.getElementById('tabMod').classList.toggle('active',m==='mod');
+  const codeTag=document.getElementById('codeTag');
+  codeTag.className='tag '+(m==='plain'?'tag-plain':'tag-mod');
+  codeTag.textContent=m==='plain'?'FAST POW':'MOD POW';
+  // show/hide mod input
+  document.getElementById('modInput').style.display=m==='mod'?'':'';
+  if(m==='mod'&&!modVal){modVal=1000000007;document.getElementById('modInput').value=modVal;}
+  init();
 }
 
-(function () {
-  const saved = localStorage.getItem('theme');
-  if (saved === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
-  }
-})();
-
-// ════════════════════════════════════════════════
-// WEB SPEECH API
-// ════════════════════════════════════════════════
-const synth = window.speechSynthesis;
-let ttsVoice = null;
-
-function loadVoices() {
-  const voices = synth.getVoices();
-  ttsVoice =
-    voices.find(v => v.name.includes('Google UK English Female')) ||
-    voices.find(v => v.name.includes('Google US English'))       ||
-    voices.find(v => v.lang === 'en-US' && v.localService)       ||
-    voices.find(v => v.lang.startsWith('en'))                    ||
-    voices[0] || null;
-}
-loadVoices();
-if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
-
-function speak(text) {
-  return new Promise(resolve => {
-    if (!voiceEnabled || !synth) { resolve(); return; }
-    synth.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.voice  = ttsVoice;
-    utt.rate   = 0.88;
-    utt.pitch  = 1.05;
-    utt.volume = 1;
-    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
-    utt.onend = utt.onerror = () => {
-      document.getElementById('speakBars').classList.remove('on');
-      resolve();
-    };
-    synth.speak(utt);
-  });
-}
-
-function stopSpeech() {
-  synth && synth.cancel();
-  document.getElementById('speakBars').classList.remove('on');
-}
-
-// ════════════════════════════════════════════════
-// VOICE TOGGLE — default OFF
-// ════════════════════════════════════════════════
-let voiceEnabled = false;
-
-function toggleVoice() {
-  voiceEnabled = !voiceEnabled;
-  const btn   = document.getElementById('voiceToggle');
-  const icon  = document.getElementById('voiceIcon');
-  const lbl   = document.getElementById('voiceLabel');
-  if (voiceEnabled) {
-    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
-    btn.classList.remove('off');
-    document.getElementById('speedWrap').style.display = 'none';
-    if (isPlaying) { stopPlay(); startPlay(); }
-  } else {
-    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
-    btn.classList.add('off');
-    stopSpeech();
-    document.getElementById('speedWrap').style.display = '';
-    if (isPlaying) { stopPlay(); startPlay(); }
-  }
-}
-
-// ════════════════════════════════════════════════
-// FAST POWER — STEP GENERATOR
-// ════════════════════════════════════════════════
-function buildFastPowerSteps(base, exponent) {
+// ── Step builder ──
+function buildSteps(base, exp, mod) {
   const steps = [];
-  let result = 1;
-  let current = base;
-  let n = exponent;
-  let bitPos = 0;
-  let multCount = 0;
-  
-  // Get binary representation
-  const binaryStr = n.toString(2);
-  const bits = binaryStr.split('').map(Number);
-  
+  const useMod = mod > 0;
+  const bits = exp===0 ? ['0'] : exp.toString(2).split('').reverse(); // LSB first
+  const numBits = bits.length;
+  const expNaive = exp; // for display
+
+  // Step 0: explain
   steps.push({
-    result: result,
-    current: current,
-    n: n,
-    bitPos: -1,
-    currentBit: null,
-    binary: bits,
-    multCount: multCount,
-    narration: `Starting Fast Power: computing ${base}^${exponent}. The exponent in binary is ${binaryStr}. We'll process bits from right to left.`,
-    phase: 'idle',
-    codeLine: 1,
-    operation: 'start'
+    phase:'init', iter:-1, curExp:exp, curBase:useMod?base%mod:base, curResult:1,
+    activeBit:-1, rows:[], result:null, codeLine:2,
+    narration:`Compute ${base}^${exp}${useMod?` mod ${mod}`:''}. Write exponent ${exp} in binary: ${bits.slice().reverse().join('')}. We'll process bits from LSB to MSB.`
   });
-  
-  // Process bits from LSB to MSB
-  let tempN = n;
-  let tempResult = 1;
-  let tempCurrent = base;
-  let processedBits = [];
-  
-  while (tempN > 0) {
-    const currentBit = tempN & 1;
-    const isMultStep = currentBit === 1;
-    
-    // Step showing the bit check
-    steps.push({
-      result: tempResult,
-      current: tempCurrent,
-      n: tempN,
-      bitPos: bitPos,
-      currentBit: currentBit,
-      binary: bits,
-      multCount: multCount,
-      narration: isMultStep 
-        ? `Bit ${bitPos} is 1. Multiply result (${tempResult}) by current multiplier (${tempCurrent}) → ${tempResult * tempCurrent}`
-        : `Bit ${bitPos} is 0. Skip multiplication, just square the multiplier.`,
-      phase: isMultStep ? 'multiply' : 'skip',
-      codeLine: 6,
-      operation: 'check',
-      willMultiply: isMultStep
-    });
-    
-    if (isMultStep) {
-      tempResult = tempResult * tempCurrent;
-      multCount++;
-      
-      steps.push({
-        result: tempResult,
-        current: tempCurrent,
-        n: tempN,
-        bitPos: bitPos,
-        currentBit: currentBit,
-        binary: bits,
-        multCount: multCount,
-        narration: `Multiplied! New result: ${tempResult}`,
-        phase: 'multiplying',
-        codeLine: 7,
-        operation: 'multiply'
-      });
-    }
-    
-    // Square the current multiplier
-    const nextCurrent = tempCurrent * tempCurrent;
-    
-    steps.push({
-      result: tempResult,
-      current: tempCurrent,
-      nextCurrent: nextCurrent,
-      n: tempN,
-      bitPos: bitPos,
-      currentBit: currentBit,
-      binary: bits,
-      multCount: multCount,
-      narration: `Square the multiplier: ${tempCurrent}² = ${nextCurrent}`,
-      phase: 'squaring',
-      codeLine: 8,
-      operation: 'square'
-    });
-    
-    tempCurrent = nextCurrent;
-    tempN = tempN >> 1;
-    bitPos++;
-    
-    // Show after shift
-    steps.push({
-      result: tempResult,
-      current: tempCurrent,
-      n: tempN,
-      bitPos: bitPos,
-      currentBit: tempN & 1,
-      binary: bits,
-      multCount: multCount,
-      narration: tempN > 0 
-        ? `Shift right. Next bit to process is position ${bitPos}.` 
-        : `All bits processed! Final result: ${tempResult}`,
-      phase: tempN > 0 ? 'shift' : 'done',
-      codeLine: 9,
-      operation: 'shift'
-    });
-  }
-  
-  // Final step
+
+  // Step 1: initialize
+  let result=1, curBase=useMod?base%mod:base, curExp=exp;
   steps.push({
-    result: tempResult,
-    current: tempCurrent,
-    n: 0,
-    bitPos: bits.length,
-    currentBit: null,
-    binary: bits,
-    multCount: multCount,
-    narration: `Fast Power complete! ${base}^${exponent} = ${tempResult}. We used ${multCount} multiplications, compared to ${exponent} with naive method.`,
-    phase: 'done',
-    codeLine: 10,
-    operation: 'done'
+    phase:'init', iter:-1, curExp, curBase, curResult:result,
+    activeBit:-1, rows:[], result:null, codeLine:3,
+    narration:`Initialize result = 1, base = ${curBase}. Now iterate while exp > 0.`
   });
-  
-  return steps;
-}
 
-// ════════════════════════════════════════════════
-// INTRO SPEECH
-// ════════════════════════════════════════════════
-let introAborted = false;
+  const rows = [];
+  let iter=0, mulCount=0;
 
-function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+  while(curExp > 0) {
+    const bit = curExp & 1; // LSB
+    const expBin = curExp.toString(2);
+    const prevResult = result;
+    const prevBase = curBase;
 
-async function playIntroSpeech() {
-  introAborted = false;
-  stopSpeech();
-  const introLines = [
-    "Hello! I am your algorithm teacher. Today we are learning Fast Power, also known as Binary Exponentiation.",
-    "This algorithm computes powers like a raised to the n in logarithmic time by using the binary representation of the exponent.",
-    "For example, to compute 3 to the 13th power, we first write 13 in binary: 1 1 0 1.",
-    "We process bits from right to left. For each bit, we square our current multiplier.",
-    "If the current bit is 1, we also multiply that value into our result.",
-    "This way, we only need O(log n) multiplications instead of n multiplications.",
-    "Now, turn on Voice Mode and press Play. I will guide you through every single step."
-  ];
-  const narText = document.getElementById('narText');
-  narText.classList.add('intro-mode');
-  document.getElementById('teacher').textContent = '🧑‍🏫';
-  for (let i = 0; i < introLines.length; i++) {
-    if (introAborted) break;
-    narText.textContent = introLines[i];
-    await speak(introLines[i]);
-    if (introAborted) break;
-    await new Promise(r => setTimeout(r, 280));
-  }
-  narText.classList.remove('intro-mode');
-  document.getElementById('teacher').textContent = '🧑‍💻';
-  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
-}
-
-// ════════════════════════════════════════════════
-// CANVAS & VISUALIZATION
-// ════════════════════════════════════════════════
-const canvas = document.getElementById('vizCanvas');
-const ctx = canvas.getContext('2d');
-
-function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
-
-function updateBinaryDisplay(bits, activeBitPos) {
-  const container = document.getElementById('binaryBits');
-  container.innerHTML = '';
-  
-  bits.forEach((bit, index) => {
-    const bitEl = document.createElement('div');
-    bitEl.className = `bit bit-${bit}`;
-    if (index === bits.length - 1 - activeBitPos) { // Reverse because we process LSB first
-      bitEl.classList.add('bit-active');
+    // Decide multiply
+    const doMul = bit===1;
+    if(doMul){
+      result = useMod ? (result * curBase) % mod : result * curBase;
+      mulCount++;
     }
-    bitEl.textContent = bit;
-    container.appendChild(bitEl);
+    const afterResult = result;
+    curBase = useMod ? (curBase * curBase) % mod : curBase * curBase;
+    curExp = curExp >> 1;
+
+    const row = {
+      iter: iter+1,
+      expBin,
+      bit,
+      doMul,
+      prevResult,
+      afterResult,
+      curBase, // after squaring
+      curExp   // after halving
+    };
+    rows.push({...row});
+
+    // Step: show this iteration
+    steps.push({
+      phase:'iter', iter: iter+1, curExp, curBase, curResult: result,
+      activeBit: iter, rows: rows.map(r=>({...r})), result: null,
+      codeLine: doMul ? 6 : 8,
+      narration: `Iteration ${iter+1}: exp=${row.expBin} (bit=${bit}). ${doMul?`Bit is 1 → multiply result: ${prevResult} × ${prevBase}${useMod?` mod ${mod}`:''}  = ${afterResult}.`:`Bit is 0 → skip multiply.`} Square base: ${prevBase}² ${useMod?`mod ${mod} `:''}= ${curBase}. Halve exp → ${curExp}.`
+    });
+    iter++;
+  }
+
+  // Final result step
+  steps.push({
+    phase:'result', iter:iter, curExp:0, curBase, curResult:result,
+    activeBit:-1, rows: rows.map(r=>({...r})), result:{value:result, mulCount, numBits, expNaive},
+    codeLine:11,
+    narration:`Done! ${base}^${expNaive}${useMod?` mod ${mod}`:''} = ${result}. Used ${mulCount} multiplications (vs ${expNaive} for naive). That's ${Math.max(1,(expNaive/Math.max(1,mulCount))).toFixed(1)}× faster.`
   });
+
+  return {steps, bits: bits.slice().reverse(), numBits, mulCount, expNaive};
 }
 
-function updateResultDisplay(result, current, base, exp, operation) {
-  document.getElementById('resultValue').textContent = result;
-  document.getElementById('resultExpression').textContent = `${base}^${exp} = ?`;
-  document.getElementById('displayResult').textContent = result;
-  document.getElementById('displayCurrent').textContent = current;
-  
-  let calcText = '';
-  switch(operation) {
-    case 'multiply':
-      calcText = `<span class="highlight-mult">Multiplying: result × current</span>`;
-      break;
-    case 'square':
-      calcText = `<span class="highlight-square">Squaring: current²</span>`;
-      break;
-    case 'shift':
-      calcText = `Moving to next bit...`;
-      break;
-    case 'done':
-      calcText = `<span style="color:var(--teal)">✓ Complete! ${base}^${exp} = ${result}</span>`;
-      break;
-    default:
-      calcText = `Ready to process bits`;
-  }
-  document.getElementById('calculationStep').innerHTML = calcText;
+// ── Render bits display ──
+function renderBits(bitsArr, activeBitIdx) {
+  const row = document.getElementById('bitsRow');
+  row.innerHTML = '';
+  // bits are MSB-first in bitsArr for display; but we process LSB-first
+  const n = bitsArr.length;
+  bitsArr.forEach((b, i) => {
+    const lsbIdx = n - 1 - i; // index from LSB
+    const isActive = lsbIdx === activeBitIdx;
+    const isPast = lsbIdx < activeBitIdx;
+    const box = document.createElement('div');
+    box.className = 'bit-box';
+    box.innerHTML = `
+      <div class="bit-val ${isActive?'bit-active':b==='1'?'bit-1':'bit-0'}">${b}</div>
+      <div class="bit-idx">bit ${lsbIdx}</div>
+      <div class="bit-pow" style="color:var(--text-dim);">2<sup>${lsbIdx}</sup></div>
+    `;
+    row.appendChild(box);
+  });
+
+  document.getElementById('bitsCaption').textContent =
+    `Binary: ${bitsArr.join('')}  (LSB = bit 0, MSB = bit ${n-1})`;
 }
 
-function drawVisualization(step) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!step) return;
-  
-  const W = canvas.width;
-  const H = canvas.height;
-  
-  // Draw algorithm visualization
-  ctx.font = '14px JetBrains Mono';
-  ctx.fillStyle = 'var(--text)';
-  ctx.textAlign = 'center';
-  
-  // Draw current operation
-  let operationText = '';
-  let operationColor = 'var(--text-dim)';
-  
-  switch(step.phase) {
-    case 'multiply':
-      operationText = '✕ MULTIPLYING';
-      operationColor = 'var(--multiply)';
-      break;
-    case 'squaring':
-      operationText = '² SQUARING';
-      operationColor = 'var(--result-update)';
-      break;
-    case 'skip':
-      operationText = '⏭ SKIP (bit 0)';
-      operationColor = 'var(--text-dim)';
-      break;
-    case 'shift':
-      operationText = '→ SHIFT RIGHT';
-      operationColor = 'var(--active-bit)';
-      break;
-    case 'done':
-      operationText = '✓ COMPLETE';
-      operationColor = 'var(--teal)';
-      break;
-    default:
-      operationText = '⚡ READY';
-  }
-  
-  ctx.fillStyle = operationColor;
-  ctx.font = 'bold 20px JetBrains Mono';
-  ctx.fillText(operationText, W/2, 40);
-  
-  // Draw result and current multiplier
-  ctx.font = '16px JetBrains Mono';
-  ctx.fillStyle = 'var(--text)';
-  ctx.fillText(`Result: ${step.result}`, W/2, 90);
-  ctx.fillText(`Current: ${step.current}`, W/2, 120);
-  
-  if (step.nextCurrent) {
-    ctx.fillStyle = 'var(--result-update)';
-    ctx.fillText(`→ Next: ${step.nextCurrent}`, W/2, 150);
-  }
-  
-  // Draw bit being processed
-  if (step.currentBit !== null) {
-    ctx.fillStyle = step.currentBit === 1 ? 'var(--bit-1)' : 'var(--bit-0)';
-    ctx.font = 'bold 28px JetBrains Mono';
-    ctx.fillText(`Bit: ${step.currentBit}`, W/2, 190);
-  }
-}
+// ── Render step ──
+function applyStep(step) {
+  document.getElementById('narText').textContent = step.narration;
 
-// ════════════════════════════════════════════════
-// CONTROLLER
-// ════════════════════════════════════════════════
-let steps = [];
-let base = 3;
-let exponent = 13;
-let stepIdx = -1;
-let isPlaying = false;
-let playTimer = null;
-let introPlayed = false;
-let speedMult = 2;
-
-const SPEED_DELAYS = { 1: 2000, 2: 1200, 3: 700, 4: 350, 5: 150 };
-function getDelay() { return SPEED_DELAYS[speedMult] || 1200; }
-function onSpeedChange(val) {
-  speedMult = parseInt(val);
-  document.getElementById('speedVal').textContent = val + '×';
-}
-
-function updateNarration(step) {
-  const narText = document.getElementById('narText');
-  narText.classList.remove('intro-mode');
-  document.getElementById('teacher').textContent = '🧑‍💻';
-  narText.textContent = step.narration;
-}
-
-function updateStatusBar(step, idx) {
-  document.getElementById('sBitPos').textContent = step.bitPos !== -1 ? step.bitPos : '-';
-  document.getElementById('sCurrentBit').textContent = step.currentBit !== null ? step.currentBit : '-';
-  document.getElementById('sMultCount').textContent = step.multCount || 0;
-  document.getElementById('statMultiplications').textContent = step.multCount || 0;
-  document.getElementById('statBits').textContent = step.binary ? step.binary.length : 0;
-  document.getElementById('statResult').textContent = step.result || 1;
-  document.getElementById('displayBase').textContent = base;
-  document.getElementById('displayExp').textContent = exponent;
-  document.getElementById('displayBinary').textContent = exponent.toString(2);
-  
-  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
-  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
-  document.getElementById('progFill').style.width = pct + '%';
-
+  // Phase badge
   const badge = document.getElementById('phaseBadge');
-  const phaseMap = { 
-    idle: ['ph-idle','Idle'],
-    multiply: ['ph-compare','Checking Bit'],
-    multiplying: ['ph-swap','Multiplying'],
-    squaring: ['ph-active','Squaring'],
-    skip: ['ph-idle','Skipping'],
-    shift: ['ph-active','Shifting'],
-    done: ['ph-done','Complete']
+  const phMap = {
+    init:  ['ph-init','Initializing'],
+    iter:  ['ph-iter','Iterating'],
+    result:['ph-result','Result ✓'],
+    idle:  ['ph-idle','Idle']
   };
-  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
+  const [cls, lbl] = phMap[step.phase] || ['ph-idle','Idle'];
   badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
 
-  for (let i = 1; i <= 10; i++) {
-    const el = document.getElementById(`cl${i}`);
-    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
+  // Code highlight
+  for(let i=1;i<=11;i++){const el=document.getElementById(`cl${i}`);if(el)el.style.background=step.codeLine===i?'rgba(255,184,48,.12)':'';}
+
+  // Bits
+  renderBits(currentBits, step.activeBit);
+
+  // Iteration table
+  const tbody = document.getElementById('iterTableBody');
+  tbody.innerHTML = '';
+  step.rows.forEach((row, i) => {
+    const isActive = i === step.rows.length - 1 && step.phase === 'iter';
+    const tr = document.createElement('tr');
+    tr.className = isActive ? 'active-row' : (step.phase === 'result' ? 'done-row' : '');
+    const mulSpan = row.doMul
+      ? `<span class="mul-indicator mul-yes">✓ YES</span>`
+      : `<span class="mul-indicator mul-no">— NO</span>`;
+    tr.innerHTML = `
+      <td>${row.iter}</td>
+      <td class="${isActive?'hi':''}">${row.expBin}</td>
+      <td class="${row.bit===1?'hi-mul':''}">${row.bit}</td>
+      <td>${mulSpan}</td>
+      <td>${row.prevResult}</td>
+      <td class="${row.doMul?'hi-mul':''}">${row.afterResult}</td>
+      <td>${row.curBase}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Bottom status
+  document.getElementById('sCurExp').textContent = step.curExp ?? '—';
+  document.getElementById('sCurBase').textContent = step.curBase ?? '—';
+  document.getElementById('sCurResult').textContent = step.curResult ?? '—';
+  const lastRow = step.rows[step.rows.length-1];
+  document.getElementById('sCurBit').textContent = lastRow ? lastRow.bit : '—';
+
+  // Result
+  if(step.result) {
+    const rb = document.getElementById('resultBanner');
+    rb.style.display = '';
+    rb.classList.remove('flash');
+    void rb.offsetWidth;
+    rb.classList.add('flash');
+    rb.className = 'result-banner success flash';
+    const v = step.result.value;
+    document.getElementById('resultBig').innerHTML = `<span style="color:var(--lime);">${baseVal}<sup>${expVal}</sup>${modVal?` mod ${modVal}`:''} = ${v}</span>`;
+    document.getElementById('resultEq').textContent = `${step.result.mulCount} multiplications (naive: ${step.result.expNaive}) — ${step.result.numBits} bits`;
+    document.getElementById('statResult').textContent = v;
+    document.getElementById('statMuls').textContent = step.result.mulCount;
+    document.getElementById('statNaive').textContent = step.result.expNaive;
+    document.getElementById('verifyBox').innerHTML = `
+      <div style="margin-bottom:6px;"><span style="color:var(--cyan);">${baseVal}</span><sup>${expVal}</sup>${modVal?` mod <span style="color:var(--violet);">${modVal}</span>`:''}</div>
+      <div style="color:var(--lime);font-weight:800;">= ${v} ✓</div>
+      <div style="margin-top:6px;color:var(--text-dim);font-size:10px;">Fast: ${step.result.mulCount} muls &nbsp;|&nbsp; Naive: ${step.result.expNaive} muls</div>`;
   }
-  
-  // Update binary display
-  if (step.binary) {
-    updateBinaryDisplay(step.binary, step.bitPos);
-  }
-  
-  // Update result display
-  updateResultDisplay(step.result, step.current, base, exponent, step.operation);
+
+  // Progress
+  const pct = steps.length>1 ? ((stepIdx/(steps.length-1))*100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+  document.getElementById('progFill2').style.width = pct+'%';
+  document.getElementById('stepCtr').textContent = `Step ${stepIdx+1} / ${steps.length}`;
+  document.getElementById('stepCtr2').textContent = `Step ${stepIdx+1} / ${steps.length}`;
+  document.getElementById('sStep').textContent = stepIdx+1;
 }
 
-function renderStep(idx, autoAdvance = false) {
-  if (idx < 0 || idx >= steps.length) return;
-  stepIdx = idx;
-  const step = steps[idx];
-  
-  drawVisualization(step);
-  updateNarration(step);
-  updateStatusBar(step, idx);
-  
-  if (autoAdvance) scheduleNext(step);
+// ── Playback ──
+function renderStep(idx, autoAdvance=false){
+  if(idx<0||idx>=steps.length)return;
+  stepIdx=idx;
+  applyStep(steps[idx]);
+  if(autoAdvance)scheduleNext(steps[idx]);
+}
+function scheduleNext(step){
+  if(!isPlaying)return;
+  if(stepIdx>=steps.length-1){stopPlay();return;}
+  if(voiceEnabled){speak(step.narration).then(()=>{if(!isPlaying)return;playTimer=setTimeout(()=>{if(isPlaying)renderStep(stepIdx+1,true);},400);});}
+  else{playTimer=setTimeout(()=>{if(isPlaying)renderStep(stepIdx+1,true);},getDelay());}
+}
+function startPlay(){if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').textContent='⏸ Pause';renderStep(stepIdx+1,true);}
+function stopPlay(){isPlaying=false;if(playTimer){clearTimeout(playTimer);playTimer=null;}document.getElementById('btnPlay').textContent='▶ Play';stopSpeech();}
+function nextStep(){stopPlay();if(stepIdx+1<steps.length){renderStep(stepIdx+1,false);if(voiceEnabled)speak(steps[stepIdx].narration);}}
+
+let currentBits = ['0'];
+
+function resetAll(){
+  stopPlay(); stepIdx=-1;
+  document.getElementById('iterTableBody').innerHTML='';
+  document.getElementById('resultBanner').style.display='none';
+  document.getElementById('narText').textContent='Press ▶ Play to start, or ⏭ Next Step for manual control.';
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('progFill2').style.width='0%';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('stepCtr2').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('sStep').textContent='—';
+  document.getElementById('sCurExp').textContent='—';
+  document.getElementById('sCurBase').textContent='—';
+  document.getElementById('sCurResult').textContent='—';
+  document.getElementById('sCurBit').textContent='—';
+  document.getElementById('statResult').textContent='?';
+  document.getElementById('statMuls').textContent='0';
+  document.getElementById('statNaive').textContent='?';
+  document.getElementById('verifyBox').textContent='Enter values and run the algorithm to verify the result.';
+  for(let i=1;i<=11;i++){const el=document.getElementById(`cl${i}`);if(el)el.style.background='';}
+  renderBits(currentBits, -1);
 }
 
-function scheduleNext(step) {
-  if (!isPlaying) return;
-  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
-  
-  if (voiceEnabled) {
-    speak(step.narration).then(() => {
-      if (!isPlaying) return;
-      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
-    });
+function applyInput(){
+  const b=parseInt(document.getElementById('baseInput').value);
+  const e=parseInt(document.getElementById('expInput').value);
+  const mRaw=document.getElementById('modInput').value.trim();
+  const m=mRaw===''||mRaw==='0'?0:parseInt(mRaw);
+  if(isNaN(b)||isNaN(e)||b<1||e<0){alert('Enter valid values: base ≥ 1, exp ≥ 0');return;}
+  if(m!==0&&(isNaN(m)||m<2)){alert('Mod must be ≥ 2 (or empty for no mod)');return;}
+  baseVal=b; expVal=e; modVal=m;
+  // Auto-switch mode
+  if(m>0&&mode==='plain') switchMode('mod');
+  else if(m===0&&mode==='mod') switchMode('plain');
+  init();
+}
+
+function randomize(){
+  baseVal = Math.floor(Math.random()*8)+2;
+  expVal  = Math.floor(Math.random()*20)+5;
+  if(mode==='mod'){
+    modVal=1000000007;
+    document.getElementById('modInput').value=modVal;
   } else {
-    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+    modVal=0;
+    document.getElementById('modInput').value='';
   }
-}
-
-function nextStep() {
-  clearIntroTimeouts();
-  stopPlay();
-  if (stepIdx + 1 < steps.length) {
-    renderStep(stepIdx + 1, false);
-    if (voiceEnabled) speak(steps[stepIdx].narration);
-  }
-}
-
-function startPlay() {
-  if (stepIdx >= steps.length - 1) stepIdx = -1;
-  clearIntroTimeouts();
-  isPlaying = true;
-  document.getElementById('btnPlay').textContent = '⏸ Pause';
-  renderStep(stepIdx + 1, true);
-}
-
-function stopPlay() {
-  isPlaying = false;
-  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
-  document.getElementById('btnPlay').textContent = '▶ Play';
-  stopSpeech();
-}
-
-function resetAll() {
-  stopPlay();
-  introAborted = true;
-  stepIdx = -1;
-  
-  // Rebuild steps
-  steps = buildFastPowerSteps(base, exponent);
-  
-  drawVisualization(steps[0]);
-  updateStatusBar(steps[0], 0);
-  updateNarration(steps[0]);
-  
-  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
-  document.getElementById('progFill').style.width = '0%';
-  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
-  document.getElementById('phaseBadge').textContent = 'Idle';
-  
-  for (let i = 1; i <= 10; i++) { 
-    const el = document.getElementById(`cl${i}`); 
-    if (el) el.style.background = ''; 
-  }
-  
-  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
-  
-  if (voiceEnabled) playIntroSpeech();
-}
-
-document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
-document.getElementById('btnNext').addEventListener('click', nextStep);
-document.getElementById('btnReset').addEventListener('click', resetAll);
-
-function applyBaseExp() {
-  const newBase = parseInt(document.getElementById('baseInput').value);
-  const newExp = parseInt(document.getElementById('expInput').value);
-  
-  if (isNaN(newBase) || newBase < 1 || newBase > 20) {
-    alert('Base must be between 1 and 20');
-    return;
-  }
-  if (isNaN(newExp) || newExp < 1 || newExp > 50) {
-    alert('Exponent must be between 1 and 50');
-    return;
-  }
-  
-  base = newBase;
-  exponent = newExp;
+  document.getElementById('baseInput').value=baseVal;
+  document.getElementById('expInput').value=expVal;
   init();
 }
 
-function randomize() {
-  base = Math.floor(Math.random() * 9) + 2; // 2-10
-  exponent = Math.floor(Math.random() * 20) + 3; // 3-22
-  document.getElementById('baseInput').value = base;
-  document.getElementById('expInput').value = exponent;
-  init();
+function init(){
+  document.getElementById('sBase').textContent=baseVal;
+  document.getElementById('sExp').textContent=expVal;
+  document.getElementById('sMod').textContent=modVal||'—';
+  document.getElementById('statBits').textContent=expVal===0?1:expVal.toString(2).length;
+
+  const built = buildSteps(baseVal, expVal, modVal);
+  steps = built.steps;
+  currentBits = built.bits;
+  resetAll();
 }
 
-function init() {
-  resizeCanvas();
-
-  // Sync theme toggle label on load
-  const saved = localStorage.getItem('theme');
-  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
-
-  steps = buildFastPowerSteps(base, exponent);
-  stopPlay();
-  stepIdx = -1;
-  
-  drawVisualization(steps[0]);
-  updateStatusBar(steps[0], 0);
-  updateNarration(steps[0]);
-  
-  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
-  document.getElementById('progFill').style.width = '0%';
-  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
-
-  if (!introPlayed) {
-    introPlayed = true;
-    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
-    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
-  }
-}
-
-window.addEventListener('resize', () => {
-  resizeCanvas();
-  if (stepIdx >= 0 && steps[stepIdx]) {
-    drawVisualization(steps[stepIdx]);
-  } else if (steps.length > 0) {
-    drawVisualization(steps[0]);
-  }
-});
+document.getElementById('btnPlay').addEventListener('click',()=>{if(isPlaying)stopPlay();else startPlay();});
+document.getElementById('btnNext').addEventListener('click',nextStep);
+document.getElementById('btnReset').addEventListener('click',resetAll);
 
 init();
 </script>

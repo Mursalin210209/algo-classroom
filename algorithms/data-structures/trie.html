@@ -5,75 +5,957 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trie — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+/* ── CSS VARIABLES ── */
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2330;
+  --border: #2a3a52;
+  --text: #cdd9e5;
+  --text-dim: #5a7899;
+  --teal: #00d4aa;
+  --orange: #ff8c42;
+  --pink: #ff6b9d;
+  --red: #ff4d4d;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+
+  --node-default: #1a2840;
+  --node-default-stroke: #2a4060;
+  --node-compare: #ff8c42;
+  --node-insert: #ff6b9d;
+  --node-found: #06d6a0;
+  --node-not-found: #ff4d4d;
+  --node-end: #a78bfa;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+[data-theme="light"] {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface2: #e8eef5;
+  --border: #c5d3e0;
+  --text: #1a2840;
+  --text-dim: #5a7899;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; transition: background .3s, color .3s; }
+
+/* BG */
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 32px 32px; opacity: 0.08;
 }
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+.bg-glow {
+  position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 700px; height: 400px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0,212,170,0.07) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* NAV */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+[data-theme="light"] .navbar { background: rgba(240,244,248,0.88); }
+.nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 52px; display: flex; align-items: center; gap: 24px; }
+.nav-logo { font-family: var(--mono); font-size: 15px; font-weight: 800; color: var(--teal); text-decoration: none; letter-spacing: -0.5px; }
+.logo-bracket { color: var(--text-dim); }
+.logo-dot { color: var(--orange); }
+.nav-links { display: flex; gap: 20px; margin-left: 16px; }
+.nav-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; letter-spacing: 1px; text-transform: uppercase; transition: color .2s; }
+.nav-links a:hover { color: var(--teal); }
+.theme-toggle { margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px 5px 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: border-color .2s; }
+.theme-toggle:hover { border-color: var(--teal); }
+.toggle-track { width: 28px; height: 16px; background: var(--border); border-radius: 8px; position: relative; }
+.toggle-thumb { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; background: var(--teal); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; }
+.toggle-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+
+/* PAGE */
+.algo-page { max-width: 1200px; margin: 0 auto; padding: 24px; position: relative; z-index: 1; }
+.back-link { display: inline-block; font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-decoration: none; margin-bottom: 18px; letter-spacing: 1px; transition: color .2s; }
+.back-link:hover { color: var(--teal); }
+
+/* COMPLEXITY CHIPS */
+.complexity { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cplx-chip { font-family: var(--mono); font-size: 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; color: var(--text-dim); }
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+
+/* DIFFICULTY */
+.card-difficulty { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+.intermediate { background: rgba(255,140,66,0.12); color: var(--orange); border: 1px solid rgba(255,140,66,0.3); }
+
+/* CONCEPT CARDS */
+.concepts { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.cc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.cc-icon { font-size: 22px; display: block; margin-bottom: 8px; }
+.cc-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.cc-desc { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+
+/* NARRATION */
+.narration { display: flex; align-items: flex-start; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+.teacher { font-size: 26px; flex-shrink: 0; }
+.narration-text { font-size: 13px; color: var(--text); line-height: 1.65; flex: 1; }
+.speak-bars { display: flex; gap: 2px; align-items: flex-end; height: 18px; margin-left: 10px; flex-shrink: 0; }
+.speak-bars span { display: block; width: 3px; background: var(--teal); border-radius: 2px; height: 4px; transition: height .1s; }
+.speak-bars.on span:nth-child(1) { animation: bar1 .5s infinite; }
+.speak-bars.on span:nth-child(2) { animation: bar2 .5s infinite .1s; }
+.speak-bars.on span:nth-child(3) { animation: bar3 .5s infinite .2s; }
+.speak-bars.on span:nth-child(4) { animation: bar2 .5s infinite .15s; }
+.speak-bars.on span:nth-child(5) { animation: bar1 .5s infinite .05s; }
+@keyframes bar1 { 0%,100%{height:4px} 50%{height:14px} }
+@keyframes bar2 { 0%,100%{height:4px} 50%{height:18px} }
+@keyframes bar3 { 0%,100%{height:4px} 50%{height:10px} }
+
+/* STATUS ROW */
+.status-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; margin-bottom: 14px; }
+.si { display: flex; flex-direction: column; gap: 2px; }
+.sl { font-size: 9px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; font-family: var(--mono); }
+.sv { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--text); }
+.sv.orange { color: var(--orange); }
+.divider-auto { margin-left: auto; }
+.prog-wrap { width: 100px; height: 5px; background: var(--border); border-radius: 3px; }
+.prog-fill { height: 5px; background: var(--teal); border-radius: 3px; transition: width .3s; width: 0%; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+
+/* PHASE BADGE */
+.phase-badge { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; font-weight: 700; }
+.ph-idle    { background: rgba(90,120,153,0.15); color: var(--text-dim); }
+.ph-active  { background: rgba(0,212,170,0.12);  color: var(--teal); }
+.ph-compare { background: rgba(255,140,66,0.12); color: var(--orange); }
+.ph-insert  { background: rgba(255,107,157,0.12);color: var(--pink); }
+.ph-found   { background: rgba(6,214,160,0.15);  color: var(--node-found); }
+.ph-not-found { background: rgba(255,77,77,0.12);color: var(--red); }
+.ph-done    { background: rgba(0,212,170,0.12);  color: var(--teal); }
+
+/* PANELS */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+.panel-hd { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); font-family: var(--mono); margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+
+/* CODE BLOCK */
+.code-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-family: var(--mono); font-size: 11px; line-height: 2; }
+.code-line { display: block; padding: 0 6px; border-radius: 4px; transition: background .2s; white-space: pre; }
+.kw { color: #c792ea; }
+.fn { color: #82aaff; }
+
+/* BUTTONS */
+.btn { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; padding: 7px 14px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; transition: all .2s; white-space: nowrap; }
+.btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(0,212,170,0.07); }
+.btn-primary { background: rgba(0,212,170,0.12); border-color: rgba(0,212,170,0.4); color: var(--teal); }
+.btn-primary:hover { background: rgba(0,212,170,0.22); }
+.btn-danger { background: rgba(255,77,77,0.09); border-color: rgba(255,77,77,0.3); color: var(--red); }
+.btn-danger:hover { background: rgba(255,77,77,0.18); }
+
+/* SPEED */
+.speed-ctrl { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+.speed-val { font-family: var(--mono); font-size: 11px; color: var(--teal); min-width: 24px; }
+input[type="range"] { width: 80px; accent-color: var(--teal); }
+
+/* LAYOUT */
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+#vizCanvas { width: 100%; border-radius: 8px; background: transparent; display: block; }
+
+.controls {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  margin-top: 16px;
+}
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+.arr-input, .search-input {
+  flex: 1; min-width: 180px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color .2s;
+}
+.arr-input:focus, .search-input:focus { border-color: var(--teal); }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+.li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+.ld { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; text-align: center; }
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
+
+/* word chips */
+.word-chip {
+  display: inline-block; font-family: var(--mono); font-size: 11px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 5px; padding: 2px 8px; margin: 2px;
+  color: var(--text-dim);
+}
 </style>
 </head>
 <body>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
+
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">🌐</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Trie</h1>
-    <p class="cs-sub">Prefix tree for efficient string search and autocomplete.</p>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">🔤</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Data Structure</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Trie (Prefix Tree)</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
+      A tree-like data structure for storing strings where each node represents a single character. Nodes share common prefixes, making prefix search and autocomplete extremely efficient.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Search: <span>O(m)</span></div>
+      <div class="cplx-chip">Insert: <span>O(m)</span></div>
+      <div class="cplx-chip">Prefix: <span>O(m)</span></div>
+      <div class="cplx-chip">Space: <span>O(n·m)</span></div>
+      <div class="cplx-chip">m = word length</div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Insert and search in trie</li>
-        <li>Prefix matching</li>
-        <li>Autocomplete implementation</li>
-      </ul>
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">📖</span><div class="cc-title">Prefix Sharing</div><div class="cc-desc">Words with common prefixes share the same path from root, saving space and enabling fast lookups.</div></div>
+    <div class="cc"><span class="cc-icon">➕</span><div class="cc-title">Insertion</div><div class="cc-desc">Walk character by character; create nodes for missing characters; mark end-of-word at the last node.</div></div>
+    <div class="cc"><span class="cc-icon">🔍</span><div class="cc-title">Search</div><div class="cc-desc">Follow the path character by character; return true only if the final node is marked as end-of-word.</div></div>
+    <div class="cc"><span class="cc-icon">💡</span><div class="cc-title">Autocomplete</div><div class="cc-desc">Find the prefix node, then DFS all descendants — every end-of-word path is a valid completion.</div></div>
+  </div>
+
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to Trie! Let me explain how this data structure works before we begin...</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="status-row">
+    <div class="si"><span class="sl">Operation</span><span class="sv orange" id="sOp">Insertion</span></div>
+    <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
+    <div class="si"><span class="sl">Nodes</span><span class="sv" id="sNodes">0</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <div class="two-col">
+
+    <!-- LEFT: Canvas -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:var(--node-compare);"></div>Traversing</div>
+          <div class="li"><div class="ld" style="background:var(--node-insert);"></div>New Node</div>
+          <div class="li"><div class="ld" style="background:var(--node-found);"></div>Found / End</div>
+          <div class="li"><div class="ld" style="background:#a78bfa;border:1px solid #a78bfa;"></div>End-of-Word</div>
+          <div class="li"><div class="ld" style="background:var(--node-not-found);"></div>Not Found</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+            <span class="voice-icon" id="voiceIcon">🔇</span>
+            <span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="380"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random Words</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Words (comma-separated):</label>
+          <input type="text" class="arr-input" id="arrInput" value="cat, car, card, care, bat, bad, ban, apple, app, apt">
+          <button class="btn" onclick="applyWords()">Build Trie</button>
+        </div>
+        <div class="input-row">
+          <label>Search Word:</label>
+          <input type="text" class="search-input" id="searchInput" placeholder="e.g. car">
+          <button class="btn" onclick="startSearch()">Search</button>
+          <button class="btn" onclick="startPrefix()">Prefix</button>
+        </div>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT: Info -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Comparisons</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statOps">0</div><div class="stat-box-l">Operations</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statNodes">0</div><div class="stat-box-l">Total Nodes</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statWords">0</div><div class="stat-box-l">Words Stored</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block" id="pseudoInsert">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">insert</span>(root, word):</span>
+<span id="cl2" class="code-line">  node = root</span>
+<span id="cl3" class="code-line">  <span class="kw">for</span> char in word:</span>
+<span id="cl4" class="code-line">    <span class="kw">if</span> char not in node.children:</span>
+<span id="cl5" class="code-line">      node.children[char] = new Node()</span>
+<span id="cl6" class="code-line">    node = node.children[char]</span>
+<span id="cl7" class="code-line">  node.isEnd = true</span>
+        </div>
+        <div class="code-block" id="pseudoSearch" style="display:none;">
+<span id="sl1" class="code-line"><span class="kw">function</span> <span class="fn">search</span>(root, word):</span>
+<span id="sl2" class="code-line">  node = root</span>
+<span id="sl3" class="code-line">  <span class="kw">for</span> char in word:</span>
+<span id="sl4" class="code-line">    <span class="kw">if</span> char not in node.children:</span>
+<span id="sl5" class="code-line">      <span class="kw">return</span> false</span>
+<span id="sl6" class="code-line">    node = node.children[char]</span>
+<span id="sl7" class="code-line">  <span class="kw">return</span> node.isEnd</span>
+        </div>
+        <div class="code-block" id="pseudoPrefix" style="display:none;">
+<span id="pl1" class="code-line"><span class="kw">function</span> <span class="fn">startsWith</span>(root, prefix):</span>
+<span id="pl2" class="code-line">  node = root</span>
+<span id="pl3" class="code-line">  <span class="kw">for</span> char in prefix:</span>
+<span id="pl4" class="code-line">    <span class="kw">if</span> char not in node.children:</span>
+<span id="pl5" class="code-line">      <span class="kw">return</span> false</span>
+<span id="pl6" class="code-line">    node = node.children[char]</span>
+<span id="pl7" class="code-line">  <span class="kw">return</span> true</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Inserted Words</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
+
     </div>
   </div>
+
 </div>
+
+<script>
+// ════ THEME ════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+// ════ SPEECH ════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice = voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English')) ||
+    voices.find(v => v.lang === 'en-US' && v.localService) ||
+    voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice = ttsVoice; utt.rate = 0.88; utt.pitch = 1.05; utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => { document.getElementById('speakBars').classList.remove('on'); resolve(); };
+    synth.speak(utt);
+  });
+}
+function stopSpeech() { synth && synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('voiceToggle');
+  const icon = document.getElementById('voiceIcon');
+  const lbl = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On'; btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off'; btn.classList.add('off');
+    stopSpeech(); document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+
+// ════ TRIE NODE ════
+class TrieNode {
+  constructor() {
+    this.children = {};   // char -> TrieNode
+    this.isEnd = false;
+    this.x = 0; this.y = 0; // layout
+    this.label = '';         // character label
+  }
+}
+
+// Deep clone trie
+function cloneTrie(node) {
+  if (!node) return null;
+  const n = new TrieNode();
+  n.isEnd = node.isEnd;
+  n.label = node.label;
+  for (const [ch, child] of Object.entries(node.children)) {
+    n.children[ch] = cloneTrie(child);
+  }
+  return n;
+}
+
+function countNodes(node) {
+  if (!node) return 0;
+  return 1 + Object.values(node.children).reduce((s, c) => s + countNodes(c), 0);
+}
+
+// ════ BUILD INSERTION STEPS ════
+function buildTrieInsertionSteps(wordList) {
+  const steps = [];
+  let root = new TrieNode();
+  root.label = 'ROOT';
+  let totalComps = 0, totalOps = 0;
+
+  steps.push({
+    trie: cloneTrie(root),
+    activePath: '', newNodes: [], foundPath: [], notFoundPath: [],
+    narration: `Building a Trie with ${wordList.length} words. Each node represents one character.`,
+    phase: 'active', op: 'insert', opNum: 0, comps: 0, nodes: 1, codeLine: 1,
+  });
+
+  wordList.forEach((word, wi) => {
+    let node = root;
+    const path = [];
+    totalOps++;
+
+    steps.push({
+      trie: cloneTrie(root), activePath: '', newNodes: [], foundPath: [], notFoundPath: [],
+      narration: `Inserting word "${word}". Starting from the root.`,
+      phase: 'active', op: 'insert', opNum: wi + 1, comps: totalComps, nodes: countNodes(root), codeLine: 2,
+    });
+
+    for (let i = 0; i < word.length; i++) {
+      const ch = word[i];
+      totalComps++;
+      path.push(ch);
+
+      if (!node.children[ch]) {
+        const newNode = new TrieNode();
+        newNode.label = ch;
+        node.children[ch] = newNode;
+        steps.push({
+          trie: cloneTrie(root), activePath: path.slice(0, -1).join(''), newNodes: [path.join('')],
+          foundPath: [], notFoundPath: [],
+          narration: `Character '${ch}' not found — creating new node for '${ch}'.`,
+          phase: 'insert', op: 'insert', opNum: wi + 1, comps: totalComps, nodes: countNodes(root), codeLine: 5,
+        });
+      } else {
+        steps.push({
+          trie: cloneTrie(root), activePath: path.join(''), newNodes: [],
+          foundPath: [], notFoundPath: [],
+          narration: `Character '${ch}' already exists — reusing node.`,
+          phase: 'compare', op: 'insert', opNum: wi + 1, comps: totalComps, nodes: countNodes(root), codeLine: 6,
+        });
+      }
+      node = node.children[ch];
+    }
+
+    node.isEnd = true;
+    steps.push({
+      trie: cloneTrie(root), activePath: '', newNodes: [], foundPath: [word], notFoundPath: [],
+      narration: `Marking '${word}' end-of-word. All ${word.length} characters placed.`,
+      phase: 'found', op: 'insert', opNum: wi + 1, comps: totalComps, nodes: countNodes(root), codeLine: 7,
+    });
+  });
+
+  steps.push({
+    trie: cloneTrie(root), activePath: '', newNodes: [], foundPath: wordList.map(w=>w), notFoundPath: [],
+    narration: `Trie complete! ${wordList.length} words stored in ${countNodes(root)} nodes. Shared prefixes save space.`,
+    phase: 'done', op: 'insert', opNum: wordList.length, comps: totalComps, nodes: countNodes(root), codeLine: 7,
+  });
+
+  return { steps, finalRoot: cloneTrie(root) };
+}
+
+// ════ SEARCH STEPS ════
+function buildSearchSteps(root, word, mode) {
+  // mode: 'search' | 'prefix'
+  const steps = [];
+  let node = root;
+  let totalComps = 0;
+  let found = false;
+
+  const opLabel = mode === 'prefix' ? 'prefix' : 'search';
+
+  steps.push({
+    trie: cloneTrie(root), activePath: '', newNodes: [], foundPath: [], notFoundPath: [],
+    narration: mode === 'prefix'
+      ? `Checking if prefix "${word}" exists in the Trie.`
+      : `Searching for word "${word}" in the Trie.`,
+    phase: 'active', op: opLabel, opNum: 1, comps: 0, nodes: countNodes(root), codeLine: 1,
+  });
+
+  let path = '';
+  for (let i = 0; i < word.length; i++) {
+    const ch = word[i];
+    totalComps++;
+    path += ch;
+
+    steps.push({
+      trie: cloneTrie(root), activePath: path, newNodes: [], foundPath: [], notFoundPath: [],
+      narration: `Checking character '${ch}' at depth ${i + 1}.`,
+      phase: 'compare', op: opLabel, opNum: 1, comps: totalComps, nodes: countNodes(root), codeLine: 4,
+    });
+
+    if (!node.children[ch]) {
+      steps.push({
+        trie: cloneTrie(root), activePath: '', newNodes: [], foundPath: [], notFoundPath: [path],
+        narration: `Character '${ch}' not found. "${word}" does not exist in the Trie.`,
+        phase: 'not-found', op: opLabel, opNum: 1, comps: totalComps, nodes: countNodes(root), codeLine: 5,
+      });
+      return steps;
+    }
+    node = node.children[ch];
+  }
+
+  if (mode === 'prefix') {
+    steps.push({
+      trie: cloneTrie(root), activePath: '', newNodes: [], foundPath: [word], notFoundPath: [],
+      narration: `Prefix "${word}" found! All words starting with "${word}" are reachable from this node.`,
+      phase: 'found', op: opLabel, opNum: 1, comps: totalComps, nodes: countNodes(root), codeLine: 7,
+    });
+  } else {
+    if (node.isEnd) {
+      steps.push({
+        trie: cloneTrie(root), activePath: '', newNodes: [], foundPath: [word], notFoundPath: [],
+        narration: `Word "${word}" found! The final node is marked as end-of-word ✓`,
+        phase: 'found', op: opLabel, opNum: 1, comps: totalComps, nodes: countNodes(root), codeLine: 7,
+      });
+    } else {
+      steps.push({
+        trie: cloneTrie(root), activePath: '', newNodes: [], foundPath: [], notFoundPath: [word],
+        narration: `Path for "${word}" exists, but the node is NOT marked end-of-word. Word not found.`,
+        phase: 'not-found', op: opLabel, opNum: 1, comps: totalComps, nodes: countNodes(root), codeLine: 7,
+      });
+    }
+  }
+
+  return steps;
+}
+
+// ════ CANVAS DRAWING ════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+
+// Layout the trie with BFS-style level positioning
+function layoutTrie(root, W, H) {
+  if (!root) return;
+  const LEVEL_H = 56;
+  const NODE_R = 16;
+
+  // BFS to assign x,y
+  root.x = W / 2;
+  root.y = 36;
+
+  function layout(node, x, y, span) {
+    node.x = x; node.y = y;
+    const kids = Object.entries(node.children);
+    if (kids.length === 0) return;
+    const step = span / kids.length;
+    let cx = x - span / 2 + step / 2;
+    for (const [, child] of kids) {
+      layout(child, cx, y + LEVEL_H, step);
+      cx += step;
+    }
+  }
+  layout(root, W / 2, 40, W * 0.9);
+}
+
+function drawTrie(root, extras = {}) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!root) return;
+  const W = canvas.width, H = canvas.height;
+  const nodeR = Math.max(13, Math.min(18, W / 60));
+  layoutTrie(root, W, H);
+
+  const activePath = typeof extras.activePath === 'string' ? extras.activePath : '';
+  const newNodes = new Set(extras.newNodes || []);
+  const foundPaths = extras.foundPath || [];
+  const notFoundPaths = extras.notFoundPath || [];
+
+  // Build sets of highlighted node keys (path from root)
+  function drawEdgesAndNodes(node, pathSoFar) {
+    for (const [ch, child] of Object.entries(node.children)) {
+      const childPath = pathSoFar + ch;
+
+      // Edge
+      ctx.beginPath();
+      ctx.moveTo(node.x, node.y + nodeR);
+      ctx.lineTo(child.x, child.y - nodeR);
+      const isActiveEdge = activePath.startsWith(childPath) || (activePath === childPath);
+      ctx.strokeStyle = isActiveEdge ? 'rgba(255,140,66,0.6)' : '#2a3d58';
+      ctx.lineWidth = isActiveEdge ? 2.5 : 1.5;
+      ctx.stroke();
+
+      // Edge label
+      const midX = (node.x + child.x) / 2;
+      const midY = (node.y + child.y) / 2;
+      ctx.fillStyle = isActiveEdge ? '#ff8c42' : '#4a6a9a';
+      ctx.font = `${isActiveEdge ? 'bold' : 'normal'} 10px JetBrains Mono`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(ch, midX, midY);
+
+      drawEdgesAndNodes(child, childPath);
+    }
+
+    // Node
+    let fill = '#1a2840', stroke = '#2a4060', glow = null;
+    const isActive = pathSoFar !== '' && (activePath === pathSoFar || activePath.startsWith(pathSoFar));
+    const isNew = newNodes.has(pathSoFar);
+    const isFound = foundPaths.some(w => w === pathSoFar || (pathSoFar !== '' && w.startsWith(pathSoFar)));
+    const isNotFound = notFoundPaths.some(w => w === pathSoFar || (pathSoFar !== '' && w.startsWith(pathSoFar)));
+
+    if (pathSoFar === '') { fill = '#0d2235'; stroke = '#2a4060'; } // root
+    if (isNew) { fill = 'rgba(255,107,157,0.25)'; stroke = '#ff6b9d'; glow = 'rgba(255,107,157,0.35)'; }
+    if (isActive) { fill = 'rgba(255,140,66,0.22)'; stroke = '#ff8c42'; glow = 'rgba(255,140,66,0.3)'; }
+    if (isFound) { fill = 'rgba(6,214,160,0.25)'; stroke = '#06d6a0'; glow = 'rgba(6,214,160,0.35)'; }
+    if (isNotFound) { fill = 'rgba(255,77,77,0.2)'; stroke = '#ff4d4d'; glow = 'rgba(255,77,77,0.25)'; }
+    if (node.isEnd && !isNotFound) { stroke = '#a78bfa'; if (!isFound && !isActive) { fill = 'rgba(167,139,250,0.12)'; } }
+
+    if (glow) {
+      ctx.beginPath(); ctx.arc(node.x, node.y, nodeR + 4, 0, 2 * Math.PI);
+      ctx.fillStyle = glow; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(node.x, node.y, nodeR, 0, 2 * Math.PI);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = 1.8; ctx.stroke();
+
+    // End-of-word ring
+    if (node.isEnd) {
+      ctx.beginPath(); ctx.arc(node.x, node.y, nodeR - 4, 0, 2 * Math.PI);
+      ctx.strokeStyle = isFound ? '#06d6a0' : '#a78bfa';
+      ctx.lineWidth = 1.2; ctx.stroke();
+    }
+
+    // Node label
+    const label = pathSoFar === '' ? '⬤' : node.label || pathSoFar[pathSoFar.length - 1];
+    ctx.fillStyle = isFound ? '#06d6a0' : isActive ? '#ff8c42' : isNew ? '#ff6b9d' : '#cdd9e5';
+    ctx.font = `bold ${Math.max(9, nodeR - 4)}px JetBrains Mono`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, node.x, node.y);
+  }
+
+  drawEdgesAndNodes(root, '');
+}
+
+// ════ CONTROLLER ════
+let steps = [];
+let words = ['cat', 'car', 'card', 'care', 'bat', 'bad', 'ban', 'apple', 'app', 'apt'];
+let currentRoot = null;
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+let currentMode = 'insert';
+
+const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
+function onSpeedChange(val) { speedMult = parseInt(val); document.getElementById('speedVal').textContent = val + '×'; }
+
+let introAborted = false;
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+
+async function playIntroSpeech() {
+  introAborted = false; stopSpeech();
+  const lines = [
+    "Hello! Today we are learning about the Trie — also called a Prefix Tree. It is a remarkable data structure for storing strings.",
+    "In a Trie, each node represents a single character. Words that share a common prefix also share the same path from the root.",
+    "For example, the words 'cat' and 'car' both start with 'c' and 'a', so they share those two nodes.",
+    "Insertion walks character by character, creating new nodes only when a character is not yet present.",
+    "Search follows the same path; we return true only if the final node is marked as end-of-word.",
+    "Tries are ideal for autocomplete, spell-checking, and IP routing because prefix lookups run in O(m) time where m is the word length.",
+    "Now turn on Voice Mode and press Play. I will guide you step by step!"
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < lines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = lines[i];
+    await speak(lines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+
+function updateNarration(step) {
+  const narText = document.getElementById('narText');
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  narText.textContent = step.narration;
+}
+
+function updateStatusBar(step, idx) {
+  document.getElementById('sOp').textContent = step.op.charAt(0).toUpperCase() + step.op.slice(1);
+  document.getElementById('sComps').textContent = step.comps || 0;
+  document.getElementById('sNodes').textContent = step.nodes || 0;
+  document.getElementById('statComps').textContent = step.comps || 0;
+  document.getElementById('statOps').textContent = step.opNum || 0;
+  document.getElementById('statNodes').textContent = step.nodes || 0;
+  document.getElementById('statWords').textContent = words.length;
+
+  // Word display
+  document.getElementById('arrDisplay').innerHTML = words.map(w =>
+    `<span class="word-chip">${w}</span>`
+  ).join('');
+
+  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+
+  const badge = document.getElementById('phaseBadge');
+  const phaseMap = {
+    active: ['ph-active', 'Running'], compare: ['ph-compare', 'Traversing'],
+    insert: ['ph-insert', 'New Node'], found: ['ph-found', 'Found'],
+    'not-found': ['ph-not-found', 'Not Found'], done: ['ph-done', 'Done'], idle: ['ph-idle', 'Idle']
+  };
+  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle', 'Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  // Pseudocode highlight
+  const iBlock = document.getElementById('pseudoInsert');
+  const sBlock = document.getElementById('pseudoSearch');
+  const pBlock = document.getElementById('pseudoPrefix');
+  iBlock.style.display = 'none'; sBlock.style.display = 'none'; pBlock.style.display = 'none';
+  if (step.op === 'insert') {
+    iBlock.style.display = 'block';
+    for (let i = 1; i <= 7; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : ''; }
+  } else if (step.op === 'search') {
+    sBlock.style.display = 'block';
+    for (let i = 1; i <= 7; i++) { const el = document.getElementById(`sl${i}`); if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : ''; }
+  } else if (step.op === 'prefix') {
+    pBlock.style.display = 'block';
+    for (let i = 1; i <= 7; i++) { const el = document.getElementById(`pl${i}`); if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : ''; }
+  }
+}
+
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  drawTrie(step.trie, { activePath: step.activePath, newNodes: step.newNodes, foundPath: step.foundPath, notFoundPath: step.notFoundPath });
+  updateNarration(step);
+  updateStatusBar(step, idx);
+  if (autoAdvance) scheduleNext(step, idx);
+}
+
+function scheduleNext(step, atIdx) {
+  if (!isPlaying) return;
+  if (atIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying || stepIdx !== atIdx) return;
+      playTimer = setTimeout(() => { if (isPlaying && stepIdx === atIdx) renderStep(atIdx + 1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying && stepIdx === atIdx) renderStep(atIdx + 1, true); }, getDelay());
+  }
+}
+
+function nextStep() {
+  clearIntroTimeouts(); stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts(); isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function resetAll() {
+  stopPlay(); introAborted = true;
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  if (steps.length > 0) drawTrie(steps[0].trie);
+  document.getElementById('arrDisplay').innerHTML = words.map(w => `<span class="word-chip">${w}</span>`).join('');
+  ['sComps', 'sNodes', 'statComps', 'statOps', 'statNodes'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('sOp').textContent = 'Insertion';
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  if (voiceEnabled) playIntroSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+function applyWords() {
+  const raw = document.getElementById('arrInput').value;
+  const parsed = raw.split(',').map(s => s.trim().toLowerCase()).filter(s => /^[a-z]+$/.test(s));
+  if (parsed.length < 1) { alert('Enter at least 1 valid word (letters only).'); return; }
+  stopPlay();
+  words = parsed.slice(0, 15);
+  currentMode = 'insert';
+  init();
+}
+
+function randomize() {
+  const pool = ['tree', 'trie', 'try', 'trim', 'trip', 'track', 'trace', 'train', 'trap', 'trail',
+                'code', 'coder', 'coding', 'cab', 'can', 'cap', 'cat', 'car', 'card',
+                'bat', 'bad', 'ban', 'base', 'bash', 'ball', 'apple', 'app', 'apt'];
+  const shuffled = pool.sort(() => Math.random() - 0.5);
+  stopPlay();
+  words = shuffled.slice(0, 10);
+  document.getElementById('arrInput').value = words.join(', ');
+  currentMode = 'insert';
+  init();
+}
+
+function startSearch() {
+  const raw = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!/^[a-z]+$/.test(raw)) { alert('Enter a valid word (letters only).'); return; }
+  if (!currentRoot) { alert('Build the trie first.'); return; }
+  steps = buildSearchSteps(currentRoot, raw, 'search');
+  stopPlay(); stepIdx = -1;
+  renderStep(0);
+}
+
+function startPrefix() {
+  const raw = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!/^[a-z]+$/.test(raw)) { alert('Enter a valid prefix (letters only).'); return; }
+  if (!currentRoot) { alert('Build the trie first.'); return; }
+  steps = buildSearchSteps(currentRoot, raw, 'prefix');
+  stopPlay(); stepIdx = -1;
+  renderStep(0);
+}
+
+function init() {
+  resizeCanvas();
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+
+  document.getElementById('statWords').textContent = words.length;
+  const { steps: s, finalRoot } = buildTrieInsertionSteps(words);
+  steps = s;
+  currentRoot = finalRoot;
+  stopPlay(); stepIdx = -1; currentMode = 'insert';
+  if (steps.length > 0) drawTrie(steps[0].trie);
+  document.getElementById('arrDisplay').innerHTML = words.map(w => `<span class="word-chip">${w}</span>`).join('');
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
+  document.getElementById('narText').classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+
+  if (!introPlayed) {
+    introPlayed = true;
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) {
+    const step = steps[stepIdx];
+    drawTrie(step.trie, { activePath: step.activePath, newNodes: step.newNodes, foundPath: step.foundPath, notFoundPath: step.notFoundPath });
+  } else if (steps.length > 0) drawTrie(steps[0].trie);
+});
+
+init();
+</script>
 </body>
 </html>

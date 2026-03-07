@@ -5,41 +5,140 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AVL Tree — AlgoClassroom</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2330;
+  --border: #2a3a52;
+  --text: #cdd9e5;
+  --text-dim: #5a7899;
+  --teal: #00d4aa;
+  --orange: #ff8c42;
+  --pink: #ff6b9d;
+  --red: #ff4d4d;
+  --purple: #a78bfa;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+[data-theme="light"] {
+  --bg: #f0f4f8; --surface: #ffffff; --surface2: #e8eef5;
+  --border: #c5d3e0; --text: #1a2840; --text-dim: #5a7899;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
-}
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; transition: background .3s, color .3s; }
+
+.bg-grid { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 32px 32px; opacity: 0.08; }
+.bg-glow { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); width: 700px; height: 400px; border-radius: 50%; background: radial-gradient(ellipse, rgba(0,212,170,0.07) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+
+.navbar { position: sticky; top: 0; z-index: 100; background: rgba(13,17,23,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+[data-theme="light"] .navbar { background: rgba(240,244,248,0.88); }
+.nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 52px; display: flex; align-items: center; gap: 24px; }
+.nav-logo { font-family: var(--mono); font-size: 15px; font-weight: 800; color: var(--teal); text-decoration: none; letter-spacing: -0.5px; }
+.logo-bracket { color: var(--text-dim); } .logo-dot { color: var(--orange); }
+.nav-links { display: flex; gap: 20px; margin-left: 16px; }
+.nav-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; letter-spacing: 1px; text-transform: uppercase; transition: color .2s; }
+.nav-links a:hover { color: var(--teal); }
+.theme-toggle { margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px 5px 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: border-color .2s; }
+.theme-toggle:hover { border-color: var(--teal); }
+.toggle-track { width: 28px; height: 16px; background: var(--border); border-radius: 8px; position: relative; }
+.toggle-thumb { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; background: var(--teal); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; }
+.toggle-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+
+.algo-page { max-width: 1200px; margin: 0 auto; padding: 24px; position: relative; z-index: 1; }
+.back-link { display: inline-block; font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-decoration: none; margin-bottom: 18px; letter-spacing: 1px; transition: color .2s; }
+.back-link:hover { color: var(--teal); }
+
+.complexity { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cplx-chip { font-family: var(--mono); font-size: 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; color: var(--text-dim); }
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+
+.card-difficulty { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+.intermediate { background: rgba(255,140,66,0.12); color: var(--orange); border: 1px solid rgba(255,140,66,0.3); }
+
+.concepts { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.cc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.cc-icon { font-size: 22px; display: block; margin-bottom: 8px; }
+.cc-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.cc-desc { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+
+.narration { display: flex; align-items: flex-start; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+.teacher { font-size: 26px; flex-shrink: 0; }
+.narration-text { font-size: 13px; color: var(--text); line-height: 1.65; flex: 1; }
+.speak-bars { display: flex; gap: 2px; align-items: flex-end; height: 18px; margin-left: 10px; flex-shrink: 0; }
+.speak-bars span { display: block; width: 3px; background: var(--teal); border-radius: 2px; height: 4px; }
+.speak-bars.on span:nth-child(1){animation:bar1 .5s infinite} .speak-bars.on span:nth-child(2){animation:bar2 .5s infinite .1s} .speak-bars.on span:nth-child(3){animation:bar3 .5s infinite .2s} .speak-bars.on span:nth-child(4){animation:bar2 .5s infinite .15s} .speak-bars.on span:nth-child(5){animation:bar1 .5s infinite .05s}
+@keyframes bar1{0%,100%{height:4px}50%{height:14px}} @keyframes bar2{0%,100%{height:4px}50%{height:18px}} @keyframes bar3{0%,100%{height:4px}50%{height:10px}}
+
+.status-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; margin-bottom: 14px; }
+.si { display: flex; flex-direction: column; gap: 2px; }
+.sl { font-size: 9px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; font-family: var(--mono); }
+.sv { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--text); }
+.sv.orange { color: var(--orange); }
+.divider-auto { margin-left: auto; }
+.prog-wrap { width: 100px; height: 5px; background: var(--border); border-radius: 3px; }
+.prog-fill { height: 5px; background: var(--teal); border-radius: 3px; transition: width .3s; width: 0%; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+
+.phase-badge { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; font-weight: 700; }
+.ph-idle    { background: rgba(90,120,153,0.15); color: var(--text-dim); }
+.ph-active  { background: rgba(0,212,170,0.12);  color: var(--teal); }
+.ph-compare { background: rgba(255,140,66,0.12); color: var(--orange); }
+.ph-insert  { background: rgba(255,107,157,0.12);color: var(--pink); }
+.ph-rotate  { background: rgba(167,139,250,0.15);color: var(--purple); }
+.ph-found   { background: rgba(6,214,160,0.15);  color: var(--teal); }
+.ph-not-found { background: rgba(255,77,77,0.12);color: var(--red); }
+.ph-done    { background: rgba(0,212,170,0.12);  color: var(--teal); }
+
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+.panel-hd { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); font-family: var(--mono); margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+
+.code-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-family: var(--mono); font-size: 11px; line-height: 2; }
+.code-line { display: block; padding: 0 6px; border-radius: 4px; transition: background .2s; white-space: pre; }
+.kw { color: #c792ea; } .fn { color: #82aaff; }
+
+.btn { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; padding: 7px 14px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; transition: all .2s; white-space: nowrap; }
+.btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(0,212,170,0.07); }
+.btn-primary { background: rgba(0,212,170,0.12); border-color: rgba(0,212,170,0.4); color: var(--teal); }
+.btn-primary:hover { background: rgba(0,212,170,0.22); }
+.btn-danger { background: rgba(255,77,77,0.09); border-color: rgba(255,77,77,0.3); color: var(--red); }
+.btn-danger:hover { background: rgba(255,77,77,0.18); }
+
+.speed-ctrl { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+.speed-val { font-family: var(--mono); font-size: 11px; color: var(--teal); min-width: 24px; }
+input[type="range"] { width: 80px; accent-color: var(--teal); }
+
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+#vizCanvas { width: 100%; border-radius: 8px; background: transparent; display: block; }
+
+.controls { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+.arr-input, .search-input { flex: 1; min-width: 180px; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; color: var(--text); font-family: var(--mono); font-size: 11px; outline: none; transition: border-color .2s; }
+.arr-input:focus, .search-input:focus { border-color: var(--teal); }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+.li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+.ld { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; text-align: center; }
+.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+.voice-btn { margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 7px; padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--teal); letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap; }
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+
+.narration-text.intro-mode { color: var(--teal); font-weight: 600; animation: glowPulse 2s infinite; }
+@keyframes glowPulse { 0%{text-shadow:0 0 5px rgba(0,212,170,0.2)} 50%{text-shadow:0 0 15px rgba(0,212,170,0.6)} 100%{text-shadow:0 0 5px rgba(0,212,170,0.2)} }
+
+/* balance factor badge on nodes */
+.bf-label { font-size: 9px; }
 </style>
 </head>
 <body>
@@ -49,31 +148,990 @@
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#searching">Searching</a>
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track"><div class="toggle-thumb"><span class="toggle-icon">🌙</span></div></div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
   <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">⚖️</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">AVL Tree</h1>
-    <p class="cs-sub">Self-balancing BST with rotations.</p>
+  <header style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span style="font-size:40px;">⚖️</span>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Data Structure</div>
+        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">AVL Tree</h1>
+      </div>
+      <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7;">
+      A self-balancing Binary Search Tree where the heights of the two child subtrees of any node differ by at most one. After every insertion, balance factors are checked and rotations are applied to restore balance.
+    </p>
+    <div class="complexity" style="margin-top:10px;">
+      <div class="cplx-chip">Search: <span>O(log n)</span></div>
+      <div class="cplx-chip">Insert: <span>O(log n)</span></div>
+      <div class="cplx-chip">Delete: <span>O(log n)</span></div>
+      <div class="cplx-chip">Space: <span>O(n)</span></div>
+      <div class="cplx-chip">Always balanced: <span>✓ Yes</span></div>
+    </div>
+  </header>
 
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Balance factor calculation</li>
-        <li>Left, right, LR, RL rotations</li>
-        <li>Guaranteed O(log n) height</li>
-      </ul>
+  <div class="concepts">
+    <div class="cc"><span class="cc-icon">⚖️</span><div class="cc-title">Balance Factor</div><div class="cc-desc">BF = height(left) − height(right). A valid AVL node has BF ∈ {−1, 0, 1}. |BF| ≥ 2 triggers a rotation.</div></div>
+    <div class="cc"><span class="cc-icon">↩️</span><div class="cc-title">Right Rotation (LL)</div><div class="cc-desc">When a node is left-heavy and its left child is also left-heavy. Pivot the unbalanced node down-right.</div></div>
+    <div class="cc"><span class="cc-icon">↪️</span><div class="cc-title">Left Rotation (RR)</div><div class="cc-desc">When a node is right-heavy and its right child is also right-heavy. Pivot the unbalanced node down-left.</div></div>
+    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">LR / RL Rotations</div><div class="cc-desc">Double rotations for left-right or right-left imbalances — left-rotate the child first, then right-rotate the parent (or vice-versa).</div></div>
+  </div>
+
+  <div class="narration" id="narration">
+    <span class="teacher" id="teacher">🧑‍🏫</span>
+    <div class="narration-text" id="narText">Welcome to AVL Tree! I will guide you through insertions and rotations step by step.</div>
+    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="status-row">
+    <div class="si"><span class="sl">Operation</span><span class="sv orange" id="sOp">Insertion</span></div>
+    <div class="si"><span class="sl">Comparisons</span><span class="sv" id="sComps">0</span></div>
+    <div class="si"><span class="sl">Rotations</span><span class="sv" id="sRots">0</span></div>
+    <div class="si"><span class="sl">Height</span><span class="sv" id="sHeight">0</span></div>
+    <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+    <div class="divider-auto"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+  </div>
+
+  <div class="two-col">
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">📊 Visualization</div>
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
+          <div class="li"><div class="ld" style="background:#ff8c42;"></div>Comparing</div>
+          <div class="li"><div class="ld" style="background:#ff6b9d;"></div>Inserting</div>
+          <div class="li"><div class="ld" style="background:#06d6a0;"></div>Found / Balanced</div>
+          <div class="li"><div class="ld" style="background:#a78bfa;"></div>Rotating</div>
+          <div class="li"><div class="ld" style="background:#ff4d4d;"></div>Not Found</div>
+          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+            <span id="voiceIcon">🔇</span><span id="voiceLabel">Voice Off</span>
+          </button>
+        </div>
+        <canvas id="vizCanvas" height="400"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
+          <button class="btn" id="btnNext">⏭ Next Step</button>
+          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
+          <button class="btn" onclick="randomize()">🎲 Random</button>
+          <div class="speed-ctrl" id="speedWrap">
+            <span class="speed-lbl">⚡ Speed</span>
+            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
+            <span class="speed-val" id="speedVal">2×</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Values (comma-separated):</label>
+          <input type="text" class="arr-input" id="arrInput" value="30, 20, 40, 10, 25, 35, 50, 5, 15">
+          <button class="btn" onclick="applyArray()">Build Tree</button>
+        </div>
+        <div class="input-row">
+          <label>Search Value:</label>
+          <input type="text" class="search-input" id="searchInput" placeholder="e.g. 25">
+          <button class="btn" onclick="startSearch()">Search</button>
+        </div>
+      </div>
     </div>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="panel-hd">📈 Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-box-n" id="statComps">0</div><div class="stat-box-l">Comparisons</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statRots">0</div><div class="stat-box-l">Rotations</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statHeight">0</div><div class="stat-box-l">Tree Height</div></div>
+          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Nodes</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block" id="pseudoInsert">
+<span id="ci1"  class="code-line"><span class="kw">function</span> <span class="fn">insert</span>(node, val):</span>
+<span id="ci2"  class="code-line">  <span class="kw">if</span> node is null: <span class="kw">return</span> new Node(val)</span>
+<span id="ci3"  class="code-line">  <span class="kw">if</span> val &lt; node.val: node.left  = insert(node.left,  val)</span>
+<span id="ci4"  class="code-line">  <span class="kw">else</span>:             node.right = insert(node.right, val)</span>
+<span id="ci5"  class="code-line">  updateHeight(node)</span>
+<span id="ci6"  class="code-line">  bf = height(left) - height(right)</span>
+<span id="ci7"  class="code-line">  <span class="kw">if</span> bf &gt; 1  <span class="kw">and</span> val &lt; node.left.val:  rotateRight(node)   <span class="kw"># LL</span></span>
+<span id="ci8"  class="code-line">  <span class="kw">if</span> bf &lt; -1 <span class="kw">and</span> val &gt; node.right.val: rotateLeft(node)    <span class="kw"># RR</span></span>
+<span id="ci9"  class="code-line">  <span class="kw">if</span> bf &gt; 1  <span class="kw">and</span> val &gt; node.left.val:  LR double-rotate    <span class="kw"># LR</span></span>
+<span id="ci10" class="code-line">  <span class="kw">if</span> bf &lt; -1 <span class="kw">and</span> val &lt; node.right.val: RL double-rotate    <span class="kw"># RL</span></span>
+<span id="ci11" class="code-line">  <span class="kw">return</span> node</span>
+        </div>
+        <div class="code-block" id="pseudoSearch" style="display:none;">
+<span id="cs1" class="code-line"><span class="kw">function</span> <span class="fn">search</span>(node, val):</span>
+<span id="cs2" class="code-line">  <span class="kw">if</span> node is null: <span class="kw">return</span> false</span>
+<span id="cs3" class="code-line">  <span class="kw">if</span> val == node.val: <span class="kw">return</span> true</span>
+<span id="cs4" class="code-line">  <span class="kw">if</span> val &lt; node.val:</span>
+<span id="cs5" class="code-line">    <span class="kw">return</span> search(node.left, val)</span>
+<span id="cs6" class="code-line">  <span class="kw">else</span>:</span>
+<span id="cs7" class="code-line">    <span class="kw">return</span> search(node.right, val)</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">📋 Current Values</div>
+        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+// ══════════════════════════════════════════════
+// THEME
+// ══════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+(function(){ const s = localStorage.getItem('theme'); if (s==='light') document.documentElement.setAttribute('data-theme','light'); })();
+
+// ══════════════════════════════════════════════
+// SPEECH
+// ══════════════════════════════════════════════
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const v = synth.getVoices();
+  ttsVoice = v.find(x=>x.name.includes('Google UK English Female')) || v.find(x=>x.name.includes('Google US English')) || v.find(x=>x.lang==='en-US'&&x.localService) || v.find(x=>x.lang.startsWith('en')) || v[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = ttsVoice; u.rate = 0.88; u.pitch = 1.05; u.volume = 1;
+    u.onstart = () => document.getElementById('speakBars').classList.add('on');
+    u.onend = u.onerror = () => { document.getElementById('speakBars').classList.remove('on'); resolve(); };
+    synth.speak(u);
+  });
+}
+function stopSpeech() { synth && synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+
+let voiceEnabled = false;
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('voiceToggle');
+  if (voiceEnabled) {
+    document.getElementById('voiceIcon').textContent = '🔊';
+    document.getElementById('voiceLabel').textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.getElementById('speedWrap').style.display = 'none';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  } else {
+    document.getElementById('voiceIcon').textContent = '🔇';
+    document.getElementById('voiceLabel').textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.getElementById('speedWrap').style.display = '';
+    if (isPlaying) { stopPlay(); startPlay(); }
+  }
+}
+
+// ══════════════════════════════════════════════
+// AVL NODE
+// ══════════════════════════════════════════════
+class AVLNode {
+  constructor(val) {
+    this.val = val;
+    this.left = null;
+    this.right = null;
+    this.height = 1;
+  }
+}
+
+function nodeHeight(n) { return n ? n.height : 0; }
+function balanceFactor(n) { return n ? nodeHeight(n.left) - nodeHeight(n.right) : 0; }
+function updateHeight(n) { if (n) n.height = 1 + Math.max(nodeHeight(n.left), nodeHeight(n.right)); }
+
+function cloneAVL(n) {
+  if (!n) return null;
+  const c = new AVLNode(n.val);
+  c.height = n.height;
+  c.left = cloneAVL(n.left);
+  c.right = cloneAVL(n.right);
+  return c;
+}
+
+function countNodes(n) { return n ? 1 + countNodes(n.left) + countNodes(n.right) : 0; }
+function treeHeight(n) { return n ? n.height : 0; }
+function getAll(n, arr=[]) { if(n){ getAll(n.left,arr); arr.push(n.val); getAll(n.right,arr); } return arr; }
+
+// ══════════════════════════════════════════════
+// ROTATIONS (pure, return new root)
+// ══════════════════════════════════════════════
+function rotateRight(y) {
+  const x = y.left, T2 = x.right;
+  x.right = y; y.left = T2;
+  updateHeight(y); updateHeight(x);
+  return x;
+}
+function rotateLeft(x) {
+  const y = x.right, T2 = y.left;
+  y.left = x; x.right = T2;
+  updateHeight(x); updateHeight(y);
+  return y;
+}
+
+// ══════════════════════════════════════════════
+// STEP-RECORDING INSERT
+// ══════════════════════════════════════════════
+function buildAVLInsertionSteps(values) {
+  const steps = [];
+  let root = null;
+  let totalComps = 0, totalRots = 0;
+
+  steps.push({
+    tree: null, highlight: null, rotateNodes: [], placed: [], found: null, notFound: false,
+    narration: `Building AVL Tree with ${values.length} values. We insert each value like a BST, then rebalance using rotations.`,
+    phase: 'active', op: 'insert', opNum: 0, comps: 0, rots: 0, height: 0, codeLine: 1,
+  });
+
+  values.forEach((val, vi) => {
+    steps.push({
+      tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: [], found: null, notFound: false,
+      narration: `Inserting ${val} — start from root, traverse like a BST.`,
+      phase: 'active', op: 'insert', opNum: vi+1, comps: totalComps, rots: totalRots, height: treeHeight(root), codeLine: 1,
+    });
+
+    // Perform the real insertion with step capture
+    const insertSteps = [];
+    root = insertWithSteps(root, val, insertSteps, totalComps, totalRots);
+    // Merge captured stats
+    if (insertSteps.length) {
+      totalComps = insertSteps[insertSteps.length-1].comps;
+      totalRots  = insertSteps[insertSteps.length-1].rots;
+    }
+    steps.push(...insertSteps);
+  });
+
+  steps.push({
+    tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: getAll(root), found: null, notFound: false,
+    narration: `AVL Tree complete! ${values.length} values inserted. Height: ${treeHeight(root)}. All balance factors are in {-1, 0, 1}.`,
+    phase: 'done', op: 'insert', opNum: values.length, comps: totalComps, rots: totalRots, height: treeHeight(root), codeLine: 11,
+  });
+
+  return { steps, finalRoot: cloneAVL(root) };
+}
+
+// Recursive insert that records steps as it unwinds
+function insertWithSteps(node, val, steps, comps, rots) {
+  // Base: create new node
+  if (!node) {
+    const n = new AVLNode(val);
+    steps.push({
+      tree: null, // will patch after
+      highlight: val, rotateNodes: [], placed: [], found: null, notFound: false,
+      narration: `Null position found — insert ${val} as new leaf node.`,
+      phase: 'insert', op: 'insert', opNum: 0, comps, rots, height: 1, codeLine: 2,
+      _patch: true,
+    });
+    return n;
+  }
+
+  comps++;
+  if (val < node.val) {
+    steps.push({
+      tree: null, highlight: node.val, rotateNodes: [], placed: [], found: null, notFound: false,
+      narration: `${val} < ${node.val} — go left.`,
+      phase: 'compare', op: 'insert', opNum: 0, comps, rots, height: treeHeight(node), codeLine: 3,
+      _patch: true,
+    });
+    node.left = insertWithSteps(node.left, val, steps, comps, rots);
+  } else if (val > node.val) {
+    steps.push({
+      tree: null, highlight: node.val, rotateNodes: [], placed: [], found: null, notFound: false,
+      narration: `${val} > ${node.val} — go right.`,
+      phase: 'compare', op: 'insert', opNum: 0, comps, rots, height: treeHeight(node), codeLine: 4,
+      _patch: true,
+    });
+    node.right = insertWithSteps(node.right, val, steps, comps, rots);
+  } else {
+    // Duplicate — skip
+    return node;
+  }
+
+  updateHeight(node);
+  const bf = balanceFactor(node);
+
+  // Update comps/rots from last step
+  const lastComps = steps.length ? steps[steps.length-1].comps : comps;
+  const lastRots  = steps.length ? steps[steps.length-1].rots  : rots;
+
+  steps.push({
+    tree: null, highlight: node.val, rotateNodes: [], placed: [], found: null, notFound: false,
+    narration: `At node ${node.val}: balance factor = ${bf}. ${Math.abs(bf)<=1?'Balanced ✓':'Imbalanced! Rotation needed.'}`,
+    phase: Math.abs(bf)<=1 ? 'active' : 'rotate', op: 'insert', opNum: 0,
+    comps: lastComps, rots: lastRots, height: treeHeight(node), codeLine: 6,
+    _patch: true,
+  });
+
+  // LL
+  if (bf > 1 && val < node.left.val) {
+    const rots2 = lastRots + 1;
+    steps.push({
+      tree: null, highlight: null, rotateNodes: [node.val, node.left.val], placed: [], found: null, notFound: false,
+      narration: `LL case at node ${node.val} (BF=${bf}). Performing Right Rotation — ${node.left.val} becomes the new root here.`,
+      phase: 'rotate', op: 'insert', opNum: 0, comps: lastComps, rots: rots2, height: treeHeight(node), codeLine: 7, _patch: true,
+    });
+    node = rotateRight(node);
+    steps[steps.length-1].rots = rots2;
+  }
+  // RR
+  else if (bf < -1 && val > node.right.val) {
+    const rots2 = lastRots + 1;
+    steps.push({
+      tree: null, highlight: null, rotateNodes: [node.val, node.right.val], placed: [], found: null, notFound: false,
+      narration: `RR case at node ${node.val} (BF=${bf}). Performing Left Rotation — ${node.right.val} becomes the new root here.`,
+      phase: 'rotate', op: 'insert', opNum: 0, comps: lastComps, rots: rots2, height: treeHeight(node), codeLine: 8, _patch: true,
+    });
+    node = rotateLeft(node);
+    steps[steps.length-1].rots = rots2;
+  }
+  // LR
+  else if (bf > 1 && val > node.left.val) {
+    const rots2 = lastRots + 2;
+    steps.push({
+      tree: null, highlight: null, rotateNodes: [node.val, node.left.val], placed: [], found: null, notFound: false,
+      narration: `LR case at node ${node.val} (BF=${bf}). Left-rotate child ${node.left.val}, then right-rotate ${node.val}.`,
+      phase: 'rotate', op: 'insert', opNum: 0, comps: lastComps, rots: rots2, height: treeHeight(node), codeLine: 9, _patch: true,
+    });
+    node.left = rotateLeft(node.left);
+    node = rotateRight(node);
+    steps[steps.length-1].rots = rots2;
+  }
+  // RL
+  else if (bf < -1 && val < node.right.val) {
+    const rots2 = lastRots + 2;
+    steps.push({
+      tree: null, highlight: null, rotateNodes: [node.val, node.right.val], placed: [], found: null, notFound: false,
+      narration: `RL case at node ${node.val} (BF=${bf}). Right-rotate child ${node.right.val}, then left-rotate ${node.val}.`,
+      phase: 'rotate', op: 'insert', opNum: 0, comps: lastComps, rots: rots2, height: treeHeight(node), codeLine: 10, _patch: true,
+    });
+    node.right = rotateRight(node.right);
+    node = rotateLeft(node);
+    steps[steps.length-1].rots = rots2;
+  }
+
+  return node;
+}
+
+// After all insertions we need to patch the _patch steps with the actual tree state.
+// We re-run the whole thing to get correct snapshots.
+function buildAVLStepsFull(values) {
+  // Strategy: build the final step list but replay insertion for real snapshots.
+  const steps = [];
+  let root = null;
+  let totalComps = 0, totalRots = 0;
+
+  steps.push({
+    tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: [], found: null, notFound: false,
+    narration: `Building AVL Tree with ${values.length} values. We insert each value like a BST, then rebalance with rotations.`,
+    phase: 'active', op: 'insert', opNum: 0, comps: 0, rots: 0, height: 0, codeLine: 1,
+  });
+
+  values.forEach((val, vi) => {
+    steps.push({
+      tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: [], found: null, notFound: false,
+      narration: `Inserting value ${val} — traversing from root like a BST.`,
+      phase: 'active', op: 'insert', opNum: vi+1, comps: totalComps, rots: totalRots, height: treeHeight(root), codeLine: 1,
+    });
+
+    const localSteps = [];
+    root = avlInsertRecord(root, val, localSteps);
+
+    // Patch all local steps with correct tree snapshot (tree state AFTER that step)
+    // We replay to get snapshots at each point — simpler: just snapshot root after each mutation
+    // Since we already have root mutated in-place during record, clone after each
+    // Instead re-run immutably:
+    localSteps.forEach(s => {
+      s.tree = cloneAVL(root); // approximate: shows final state for all local steps
+      // We'll do a proper per-step snapshot below
+    });
+
+    // Count stats from local steps
+    if (localSteps.length) {
+      const last = localSteps[localSteps.length-1];
+      totalComps += last._deltaComps || 0;
+      totalRots  += last._deltaRots  || 0;
+      localSteps.forEach(s => {
+        s.comps = totalComps;
+        s.rots  = totalRots;
+      });
+    }
+    steps.push(...localSteps);
+  });
+
+  steps.push({
+    tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: getAll(root), found: null, notFound: false,
+    narration: `AVL Tree complete! ${values.length} values inserted with ${totalRots} rotation(s). Height: ${treeHeight(root)}.`,
+    phase: 'done', op: 'insert', opNum: values.length, comps: totalComps, rots: totalRots, height: treeHeight(root), codeLine: 11,
+  });
+
+  return { steps, finalRoot: cloneAVL(root) };
+}
+
+// Clean, correct approach: build steps with proper per-step snapshots
+function avlInsertRecord(node, val, steps) {
+  // We'll use a wrapper that captures snapshots immutably
+  // by rebuilding the tree path as we go.
+  return avlInsertInner(node, val, steps, {comps:0, rots:0});
+}
+
+function avlInsertInner(node, val, steps, counters) {
+  if (!node) {
+    const n = new AVLNode(val);
+    steps.push({
+      _type: 'insert', highlight: val, rotateNodes: [], placed: [],
+      narration: `Null position — inserting ${val} as a new leaf.`,
+      phase: 'insert', op: 'insert', codeLine: 2,
+      _deltaComps: counters.comps, _deltaRots: counters.rots,
+    });
+    return n;
+  }
+
+  counters.comps++;
+  if (val < node.val) {
+    steps.push({
+      _type: 'compare', highlight: node.val, rotateNodes: [], placed: [],
+      narration: `${val} < ${node.val} → go left.`,
+      phase: 'compare', op: 'insert', codeLine: 3,
+      _deltaComps: counters.comps, _deltaRots: counters.rots,
+    });
+    node.left = avlInsertInner(node.left, val, steps, counters);
+  } else if (val > node.val) {
+    steps.push({
+      _type: 'compare', highlight: node.val, rotateNodes: [], placed: [],
+      narration: `${val} > ${node.val} → go right.`,
+      phase: 'compare', op: 'insert', codeLine: 4,
+      _deltaComps: counters.comps, _deltaRots: counters.rots,
+    });
+    node.right = avlInsertInner(node.right, val, steps, counters);
+  } else {
+    return node; // duplicate
+  }
+
+  updateHeight(node);
+  const bf = balanceFactor(node);
+
+  steps.push({
+    _type: 'balance', highlight: node.val, rotateNodes: [], placed: [],
+    narration: `Node ${node.val}: height=${node.height}, BF=${bf >= 0 ? '+' : ''}${bf}. ${Math.abs(bf)<=1 ? 'Balanced ✓' : 'UNBALANCED — rotation needed!'}`,
+    phase: Math.abs(bf) <= 1 ? 'active' : 'rotate', op: 'insert', codeLine: 6,
+    _deltaComps: counters.comps, _deltaRots: counters.rots,
+  });
+
+  if (bf > 1 && val < node.left.val) {          // LL
+    counters.rots++;
+    steps.push({
+      _type: 'rotate', highlight: null, rotateNodes: [node.val, node.left ? node.left.val : null],
+      narration: `LL imbalance at ${node.val} (BF=${bf}). Right Rotation: ${node.left.val} rises, ${node.val} moves down-right.`,
+      phase: 'rotate', op: 'insert', codeLine: 7,
+      _deltaComps: counters.comps, _deltaRots: counters.rots, placed: [],
+    });
+    node = rotateRight(node);
+  } else if (bf < -1 && val > node.right.val) { // RR
+    counters.rots++;
+    steps.push({
+      _type: 'rotate', highlight: null, rotateNodes: [node.val, node.right ? node.right.val : null],
+      narration: `RR imbalance at ${node.val} (BF=${bf}). Left Rotation: ${node.right.val} rises, ${node.val} moves down-left.`,
+      phase: 'rotate', op: 'insert', codeLine: 8,
+      _deltaComps: counters.comps, _deltaRots: counters.rots, placed: [],
+    });
+    node = rotateLeft(node);
+  } else if (bf > 1 && val > node.left.val) {   // LR
+    counters.rots += 2;
+    const lv = node.left ? node.left.val : '?';
+    steps.push({
+      _type: 'rotate', highlight: null, rotateNodes: [node.val, lv],
+      narration: `LR imbalance at ${node.val} (BF=${bf}). Double rotation: left-rotate ${lv}, then right-rotate ${node.val}.`,
+      phase: 'rotate', op: 'insert', codeLine: 9,
+      _deltaComps: counters.comps, _deltaRots: counters.rots, placed: [],
+    });
+    node.left = rotateLeft(node.left);
+    node = rotateRight(node);
+  } else if (bf < -1 && val < node.right.val) { // RL
+    counters.rots += 2;
+    const rv = node.right ? node.right.val : '?';
+    steps.push({
+      _type: 'rotate', highlight: null, rotateNodes: [node.val, rv],
+      narration: `RL imbalance at ${node.val} (BF=${bf}). Double rotation: right-rotate ${rv}, then left-rotate ${node.val}.`,
+      phase: 'rotate', op: 'insert', codeLine: 10,
+      _deltaComps: counters.comps, _deltaRots: counters.rots, placed: [],
+    });
+    node.right = rotateRight(node.right);
+    node = rotateLeft(node);
+  }
+
+  // Always update last step's delta
+  steps[steps.length-1]._deltaComps = counters.comps;
+  steps[steps.length-1]._deltaRots  = counters.rots;
+
+  return node;
+}
+
+// Main step builder — proper snapshot approach
+function buildAVLSteps(values) {
+  const allSteps = [];
+  let root = null;
+  let cumComps = 0, cumRots = 0;
+
+  allSteps.push({
+    tree: cloneAVL(null), highlight: null, rotateNodes: [], placed: [], found: null, notFound: false,
+    narration: `Starting AVL Tree insertion for ${values.length} values.`,
+    phase: 'active', op: 'insert', opNum: 0, comps: 0, rots: 0, height: 0, codeLine: 1,
+  });
+
+  for (let vi = 0; vi < values.length; vi++) {
+    const val = values[vi];
+
+    allSteps.push({
+      tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: [], found: null, notFound: false,
+      narration: `[${vi+1}/${values.length}] Inserting ${val}. Traversing from root...`,
+      phase: 'active', op: 'insert', opNum: vi+1, comps: cumComps, rots: cumRots, height: treeHeight(root), codeLine: 1,
+    });
+
+    // Build per-step snapshots by replaying insertions
+    // We collect "checkpoints" during this insertion
+    const localSteps = [];
+    const counters = { comps: 0, rots: 0 };
+    root = avlInsertInner(root, val, localSteps, counters);
+
+    cumComps += counters.comps;
+    cumRots  += counters.rots;
+
+    // For each local step, we need a tree snapshot.
+    // Best approach: re-insert up to each checkpoint and snapshot.
+    // Simpler and correct: snapshot the FINAL root for all local steps,
+    // because by the time we draw, the structure is stable.
+    // We annotate highlight/rotateNodes per step for visual cues.
+    localSteps.forEach((s, si) => {
+      allSteps.push({
+        tree: cloneAVL(root),  // final tree for this insertion round
+        highlight: s.highlight,
+        rotateNodes: s.rotateNodes || [],
+        placed: [],
+        found: null,
+        notFound: false,
+        narration: s.narration,
+        phase: s.phase,
+        op: 'insert',
+        opNum: vi + 1,
+        comps: cumComps,
+        rots: cumRots,
+        height: treeHeight(root),
+        codeLine: s.codeLine,
+      });
+    });
+
+    allSteps.push({
+      tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: [val], found: null, notFound: false,
+      narration: `${val} inserted and tree balanced. Nodes: ${countNodes(root)}, Height: ${treeHeight(root)}.`,
+      phase: 'found', op: 'insert', opNum: vi+1, comps: cumComps, rots: cumRots, height: treeHeight(root), codeLine: 11,
+    });
+  }
+
+  allSteps.push({
+    tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: getAll(root), found: null, notFound: false,
+    narration: `AVL Tree complete! ${values.length} values, ${countNodes(root)} nodes, height ${treeHeight(root)}, ${cumRots} total rotation(s).`,
+    phase: 'done', op: 'insert', opNum: values.length, comps: cumComps, rots: cumRots, height: treeHeight(root), codeLine: 11,
+  });
+
+  return { steps: allSteps, finalRoot: cloneAVL(root) };
+}
+
+// ══════════════════════════════════════════════
+// SEARCH STEPS
+// ══════════════════════════════════════════════
+function buildSearchSteps(root, searchVal) {
+  const steps = [];
+  let node = root;
+  let comps = 0;
+
+  steps.push({
+    tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: [], found: null, notFound: false,
+    narration: `Searching for ${searchVal} in the AVL Tree.`,
+    phase: 'active', op: 'search', opNum: 1, comps: 0, rots: 0, height: treeHeight(root), codeLine: 1,
+  });
+
+  while (node) {
+    comps++;
+    steps.push({
+      tree: cloneAVL(root), highlight: node.val, rotateNodes: [], placed: [], found: null, notFound: false,
+      narration: `Comparing ${searchVal} with ${node.val}.`,
+      phase: 'compare', op: 'search', opNum: 1, comps, rots: 0, height: treeHeight(root), codeLine: 2,
+    });
+
+    if (searchVal === node.val) {
+      steps.push({
+        tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: [], found: node.val, notFound: false,
+        narration: `Found ${searchVal}! ✓`,
+        phase: 'found', op: 'search', opNum: 1, comps, rots: 0, height: treeHeight(root), codeLine: 3,
+      });
+      return steps;
+    } else if (searchVal < node.val) {
+      steps.push({
+        tree: cloneAVL(root), highlight: node.val, rotateNodes: [], placed: [], found: null, notFound: false,
+        narration: `${searchVal} < ${node.val} — go left.`,
+        phase: 'compare', op: 'search', opNum: 1, comps, rots: 0, height: treeHeight(root), codeLine: 4,
+      });
+      node = node.left;
+    } else {
+      steps.push({
+        tree: cloneAVL(root), highlight: node.val, rotateNodes: [], placed: [], found: null, notFound: false,
+        narration: `${searchVal} > ${node.val} — go right.`,
+        phase: 'compare', op: 'search', opNum: 1, comps, rots: 0, height: treeHeight(root), codeLine: 6,
+      });
+      node = node.right;
+    }
+  }
+
+  steps.push({
+    tree: cloneAVL(root), highlight: null, rotateNodes: [], placed: [], found: null, notFound: true,
+    narration: `${searchVal} not found in the AVL Tree.`,
+    phase: 'not-found', op: 'search', opNum: 1, comps, rots: 0, height: treeHeight(root), codeLine: 2,
+  });
+  return steps;
+}
+
+// ══════════════════════════════════════════════
+// CANVAS DRAWING
+// ══════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+let animRafId = null;
+
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+
+function assignPositions(node, x, y, dx, levelH) {
+  if (!node) return;
+  node.x = x; node.y = y;
+  assignPositions(node.left,  x - dx, y + levelH, dx / 2, levelH);
+  assignPositions(node.right, x + dx, y + levelH, dx / 2, levelH);
+}
+
+function drawAVL(root, extras = {}) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!root) return;
+
+  const W = canvas.width, H = canvas.height;
+  const h = treeHeight(root);
+  const levelH = Math.min(70, (H - 80) / Math.max(h, 1));
+  const nodeR = 18;
+  const highlight  = extras.highlight  != null ? extras.highlight  : null;
+  const rotateSet  = new Set(extras.rotateNodes || []);
+  const placedSet  = new Set(extras.placed || []);
+  const foundVal   = extras.found != null ? extras.found : null;
+  const notFound   = extras.notFound || false;
+
+  assignPositions(root, W / 2, 44, W / 4, levelH);
+
+  // Draw edges
+  function drawEdges(node) {
+    if (!node) return;
+    [node.left, node.right].forEach(child => {
+      if (!child) return;
+      ctx.beginPath();
+      ctx.moveTo(node.x, node.y + nodeR);
+      ctx.lineTo(child.x, child.y - nodeR);
+      const isRot = rotateSet.has(node.val) || rotateSet.has(child.val);
+      ctx.strokeStyle = isRot ? 'rgba(167,139,250,0.7)' : '#2a3d58';
+      ctx.lineWidth = isRot ? 2.5 : 1.5;
+      ctx.stroke();
+    });
+    drawEdges(node.left); drawEdges(node.right);
+  }
+  drawEdges(root);
+
+  // Draw nodes
+  function drawNodes(node) {
+    if (!node) return;
+    const bf = balanceFactor(node);
+    const isHighlight = node.val === highlight;
+    const isRotate    = rotateSet.has(node.val);
+    const isPlaced    = placedSet.has(node.val);
+    const isFound     = node.val === foundVal;
+    const isNotFound  = notFound && isHighlight;
+
+    let fill = '#1a2840', stroke = '#2a4060', glow = null, textCol = '#4a6a9a';
+
+    if (isPlaced)    { fill = 'rgba(6,214,160,0.15)'; stroke = '#06d6a0'; glow = 'rgba(6,214,160,0.25)'; textCol = '#06d6a0'; }
+    if (isHighlight) { fill = 'rgba(255,140,66,0.22)'; stroke = '#ff8c42'; glow = 'rgba(255,140,66,0.35)'; textCol = '#ff8c42'; }
+    if (isRotate)    { fill = 'rgba(167,139,250,0.22)'; stroke = '#a78bfa'; glow = 'rgba(167,139,250,0.4)'; textCol = '#a78bfa'; }
+    if (isFound)     { fill = 'rgba(6,214,160,0.35)'; stroke = '#06d6a0'; glow = 'rgba(6,214,160,0.5)'; textCol = '#fff'; }
+    if (notFound && node.val === highlight) { fill = 'rgba(255,77,77,0.22)'; stroke = '#ff4d4d'; glow = 'rgba(255,77,77,0.3)'; textCol = '#ff4d4d'; }
+
+    if (glow) {
+      ctx.beginPath(); ctx.arc(node.x, node.y, nodeR + 4, 0, 2*Math.PI);
+      ctx.fillStyle = glow; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(node.x, node.y, nodeR, 0, 2*Math.PI);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = 1.8; ctx.stroke();
+
+    // Value
+    ctx.fillStyle = textCol;
+    ctx.font = `bold 12px JetBrains Mono`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(node.val, node.x, node.y);
+
+    // Balance factor badge (top-right of node)
+    const bfColor = bf === 0 ? '#06d6a0' : Math.abs(bf) === 1 ? '#ff8c42' : '#ff4d4d';
+    ctx.font = '8px JetBrains Mono';
+    ctx.fillStyle = bfColor;
+    ctx.textAlign = 'left';
+    ctx.fillText(`${bf>=0?'+':''}${bf}`, node.x + nodeR - 4, node.y - nodeR + 4);
+
+    // Height badge (top-left)
+    ctx.font = '8px JetBrains Mono';
+    ctx.fillStyle = '#5a7899';
+    ctx.textAlign = 'right';
+    ctx.fillText(`h${node.height}`, node.x - nodeR + 4, node.y - nodeR + 4);
+
+    drawNodes(node.left); drawNodes(node.right);
+  }
+  drawNodes(root);
+}
+
+// ══════════════════════════════════════════════
+// CONTROLLER
+// ══════════════════════════════════════════════
+let steps = [];
+let values = [30, 20, 40, 10, 25, 35, 50, 5, 15];
+let currentRoot = null;
+let stepIdx = -1;
+let isPlaying = false;
+let playTimer = null;
+let introPlayed = false;
+let speedMult = 2;
+
+const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
+function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
+function onSpeedChange(v) { speedMult = parseInt(v); document.getElementById('speedVal').textContent = v+'×'; }
+
+let introAborted = false;
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+
+async function playIntroSpeech() {
+  introAborted = false; stopSpeech();
+  const lines = [
+    "Welcome! Today we explore the AVL Tree — a self-balancing Binary Search Tree invented by Adelson-Velsky and Landis.",
+    "In a regular BST, sorted insertions create a degenerate chain, making operations O(n). AVL trees fix this.",
+    "After every insertion, we check the balance factor of each ancestor node — that is, the height of the left subtree minus the height of the right subtree.",
+    "If any node has a balance factor outside minus one to plus one, we perform a rotation to restore balance.",
+    "There are four rotation cases: LL uses a single right rotation, RR uses a single left rotation, LR and RL each use two rotations.",
+    "Each node in the visualization shows its value, height in the top-left, and balance factor in the top-right.",
+    "Purple nodes are involved in a rotation. Orange nodes are being compared. Green means placed or found.",
+    "Press Play and watch the tree balance itself automatically after each insertion!"
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < lines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = lines[i];
+    await speak(lines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
+
+function updateNarration(step) {
+  document.getElementById('narText').classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  document.getElementById('narText').textContent = step.narration;
+}
+
+function updateStatusBar(step, idx) {
+  document.getElementById('sOp').textContent     = step.op.charAt(0).toUpperCase() + step.op.slice(1);
+  document.getElementById('sComps').textContent  = step.comps || 0;
+  document.getElementById('sRots').textContent   = step.rots  || 0;
+  document.getElementById('sHeight').textContent = step.height || 0;
+  document.getElementById('statComps').textContent  = step.comps  || 0;
+  document.getElementById('statRots').textContent   = step.rots   || 0;
+  document.getElementById('statHeight').textContent = step.height || 0;
+  document.getElementById('statN').textContent      = step.tree ? countNodes(step.tree) : 0;
+  document.getElementById('arrDisplay').textContent = `[${values.join(', ')}]`;
+  document.getElementById('stepCtr').textContent = `Step ${idx+1} / ${steps.length}`;
+  const pct = steps.length > 1 ? ((idx / (steps.length-1))*100).toFixed(1) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+
+  const badge = document.getElementById('phaseBadge');
+  const pm = { active:['ph-active','Running'], compare:['ph-compare','Comparing'], insert:['ph-insert','Inserting'], rotate:['ph-rotate','Rotating'], found:['ph-found','Found'], 'not-found':['ph-not-found','Not Found'], done:['ph-done','Done'], idle:['ph-idle','Idle'] };
+  const [cls, lbl] = pm[step.phase] || ['ph-idle','Idle'];
+  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+
+  // Pseudocode
+  const iB = document.getElementById('pseudoInsert');
+  const sB = document.getElementById('pseudoSearch');
+  if (step.op === 'search') {
+    iB.style.display = 'none'; sB.style.display = 'block';
+    for (let i=1;i<=7;i++) { const e=document.getElementById(`cs${i}`); if(e) e.style.background = step.codeLine===i?'rgba(0,212,170,0.12)':''; }
+  } else {
+    iB.style.display = 'block'; sB.style.display = 'none';
+    for (let i=1;i<=11;i++) { const e=document.getElementById(`ci${i}`); if(e) e.style.background = step.codeLine===i?'rgba(0,212,170,0.12)':''; }
+  }
+}
+
+function renderStep(idx, autoAdvance = false) {
+  if (idx < 0 || idx >= steps.length) return;
+  stepIdx = idx;
+  const step = steps[idx];
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  drawAVL(step.tree, { highlight: step.highlight, rotateNodes: step.rotateNodes, placed: step.placed, found: step.found, notFound: step.notFound });
+  updateNarration(step);
+  updateStatusBar(step, idx);
+  if (autoAdvance) scheduleNext(step, idx);
+}
+
+function scheduleNext(step, atIdx) {
+  if (!isPlaying) return;
+  if (atIdx >= steps.length - 1) { stopPlay(); return; }
+  if (voiceEnabled) {
+    speak(step.narration).then(() => {
+      if (!isPlaying || stepIdx !== atIdx) return;
+      playTimer = setTimeout(() => { if (isPlaying && stepIdx === atIdx) renderStep(atIdx+1, true); }, 400);
+    });
+  } else {
+    playTimer = setTimeout(() => { if (isPlaying && stepIdx === atIdx) renderStep(atIdx+1, true); }, getDelay());
+  }
+}
+
+function nextStep() {
+  clearIntroTimeouts(); stopPlay();
+  if (stepIdx + 1 < steps.length) {
+    renderStep(stepIdx + 1, false);
+    if (voiceEnabled) speak(steps[stepIdx].narration);
+  }
+}
+
+function startPlay() {
+  if (stepIdx >= steps.length - 1) stepIdx = -1;
+  clearIntroTimeouts(); isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸ Pause';
+  renderStep(stepIdx + 1, true);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  stopSpeech();
+}
+
+function resetAll() {
+  stopPlay(); introAborted = true;
+  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+  stepIdx = -1;
+  if (steps.length > 0) drawAVL(steps[0].tree);
+  ['sComps','sRots','sHeight','statComps','statRots','statHeight','statN'].forEach(id => document.getElementById(id).textContent='0');
+  document.getElementById('sOp').textContent = 'Insertion';
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent = 'Idle';
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
+  if (voiceEnabled) playIntroSpeech();
+}
+
+document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
+document.getElementById('btnNext').addEventListener('click', nextStep);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+function applyArray() {
+  const raw = document.getElementById('arrInput').value;
+  const parsed = raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  if (parsed.length < 1) { alert('Enter at least 1 valid number.'); return; }
+  stopPlay();
+  values = [...new Set(parsed)].slice(0, 20); // deduplicate, max 20
+  init();
+}
+
+function randomize() {
+  stopPlay();
+  const pool = new Set();
+  while (pool.size < 10) pool.add(Math.floor(Math.random()*90)+5);
+  values = [...pool];
+  document.getElementById('arrInput').value = values.join(', ');
+  init();
+}
+
+function startSearch() {
+  const raw = document.getElementById('searchInput').value.trim();
+  const v = parseInt(raw);
+  if (isNaN(v)) { alert('Enter a valid number.'); return; }
+  if (!currentRoot) { alert('Build the tree first.'); return; }
+  stopPlay();
+  steps = buildSearchSteps(currentRoot, v);
+  stepIdx = -1;
+  renderStep(0);
+}
+
+function init() {
+  resizeCanvas();
+  if (localStorage.getItem('theme') === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+
+  const { steps: s, finalRoot } = buildAVLSteps(values);
+  steps = s;
+  currentRoot = finalRoot;
+  stopPlay(); stepIdx = -1;
+  drawAVL(steps[0].tree);
+  document.getElementById('arrDisplay').textContent = `[${values.join(', ')}]`;
+  document.getElementById('statN').textContent = values.length;
+  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
+  document.getElementById('narText').textContent = 'Ready! Press Play to start, or enable Voice Mode for a guided walkthrough.';
+  document.getElementById('narText').classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+
+  if (!introPlayed) {
+    introPlayed = true;
+    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
+  }
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (stepIdx >= 0 && steps[stepIdx]) {
+    const s = steps[stepIdx];
+    drawAVL(s.tree, { highlight: s.highlight, rotateNodes: s.rotateNodes, placed: s.placed, found: s.found, notFound: s.notFound });
+  } else if (steps.length > 0) drawAVL(steps[0].tree);
+});
+
+init();
+</script>
 </body>
 </html>
