@@ -3,77 +3,846 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Topological Sort — AlgoClassroom</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
+<title>Topological Sort — Kahn's & DFS | AlgoClassroom</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+:root{
+  --bg:#07101c;--surface:#0b1828;--surface2:#0f1f32;--border:rgba(255,255,255,0.07);
+  --text:#e2eaf5;--text-dim:#5a7a9a;
+  --teal:#00d4aa;--blue:#4da6ff;--orange:#ff8c42;--yellow:#ffd166;
+  --green:#06d6a0;--red:#ff6b6b;--purple:#b06aff;--pink:#ff6b9d;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
-}
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
-}
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+[data-theme="light"]{--bg:#f0f4fa;--surface:#fff;--surface2:#eef2f8;--border:rgba(0,0,0,.1);--text:#1a2540;--text-dim:#6a80a0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(176,106,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(176,106,255,.03) 1px,transparent 1px);background-size:40px 40px;}
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 50% 60% at 10% 20%,rgba(176,106,255,.05) 0%,transparent 70%),radial-gradient(ellipse 40% 50% at 90% 80%,rgba(255,209,102,.04) 0%,transparent 70%);}
+/* Nav */
+.navbar{position:sticky;top:0;z-index:100;background:rgba(7,16,28,.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:54px;display:flex;align-items:center;gap:28px;}
+.nav-logo{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--purple);text-decoration:none;letter-spacing:-.5px;}
+.logo-bracket{color:var(--text-dim);}.logo-dot{color:var(--yellow);}
+.nav-links{display:flex;gap:18px;margin-left:8px;}
+.nav-links a{font-size:12px;color:var(--text-dim);text-decoration:none;letter-spacing:.5px;transition:color .2s;}
+.nav-links a:hover{color:var(--purple);}
+.theme-toggle{margin-left:auto;display:flex;align-items:center;gap:9px;background:none;border:1px solid var(--border);border-radius:30px;padding:5px 10px 5px 5px;cursor:pointer;transition:border-color .2s;}
+.theme-toggle:hover{border-color:rgba(176,106,255,.4);}
+.toggle-track{width:32px;height:18px;background:var(--surface2);border-radius:9px;position:relative;}
+.toggle-thumb{width:14px;height:14px;background:var(--purple);border-radius:50%;position:absolute;top:2px;left:2px;display:flex;align-items:center;justify-content:center;transition:transform .3s;}
+[data-theme="light"] .toggle-thumb{transform:translateX(14px);}
+.toggle-icon{font-size:9px;}
+[data-theme="light"] .toggle-icon::before{content:'☀️';}
+.toggle-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+/* Page */
+.algo-page{max-width:1200px;margin:0 auto;padding:28px 24px 60px;position:relative;z-index:1;}
+.back-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;transition:color .2s;}
+.back-link:hover{color:var(--purple);}
+.complexity{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.cplx-chip{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);}
+.cplx-chip span{color:var(--purple);font-weight:700;}
+.card-difficulty{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;font-weight:700;}
+.intermediate{background:rgba(176,106,255,.15);color:var(--purple);border:1px solid rgba(176,106,255,.3);}
+/* Narration */
+.narration{background:var(--surface);border:1px solid rgba(176,106,255,.15);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.teacher{font-size:28px;flex-shrink:0;}
+.narration-text{font-size:13px;color:var(--text-dim);line-height:1.7;flex:1;}
+.speak-bars{display:flex;gap:2px;align-items:center;height:16px;flex-shrink:0;}
+.speak-bars span{width:3px;border-radius:2px;background:var(--purple);transform:scaleY(.2);}
+.speak-bars.on span:nth-child(1){animation:bar .6s 0s infinite alternate;}
+.speak-bars.on span:nth-child(2){animation:bar .6s .1s infinite alternate;}
+.speak-bars.on span:nth-child(3){animation:bar .6s .2s infinite alternate;}
+.speak-bars.on span:nth-child(4){animation:bar .6s .15s infinite alternate;}
+.speak-bars.on span:nth-child(5){animation:bar .6s .05s infinite alternate;}
+@keyframes bar{from{transform:scaleY(.2);height:6px;}to{transform:scaleY(1);height:16px;}}
+/* Status row */
+.status-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;}
+.si{display:flex;flex-direction:column;gap:2px;}
+.sl{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+.sv{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);}
+.phase-badge{padding:3px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;}
+.ph-idle{background:rgba(90,122,154,.15);color:var(--text-dim);border:1px solid rgba(90,122,154,.2);}
+.ph-visit{background:rgba(176,106,255,.15);color:var(--purple);border:1px solid rgba(176,106,255,.3);}
+.ph-explore{background:rgba(77,166,255,.15);color:var(--blue);border:1px solid rgba(77,166,255,.3);}
+.ph-finish{background:rgba(6,214,160,.15);color:var(--green);border:1px solid rgba(6,214,160,.3);}
+.ph-cycle{background:rgba(255,107,107,.15);color:var(--red);border:1px solid rgba(255,107,107,.3);}
+.ph-done{background:rgba(255,209,102,.15);color:var(--yellow);border:1px solid rgba(255,209,102,.3);}
+.divider-auto{flex:1;}
+.prog-wrap{width:100px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--blue));border-radius:2px;transition:width .4s;}
+.step-ctr{font-family:var(--mono);font-size:10px;color:var(--text-dim);white-space:nowrap;}
+/* Panel */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.panel-hd{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--purple);text-transform:uppercase;margin-bottom:12px;}
+/* Buttons */
+.btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn:hover{border-color:rgba(176,106,255,.4);color:var(--purple);background:rgba(176,106,255,.05);}
+.btn-primary{background:rgba(176,106,255,.12);border-color:rgba(176,106,255,.4);color:var(--purple);}
+.btn-primary:hover{background:rgba(176,106,255,.22);}
+.btn-danger{border-color:rgba(255,107,107,.3);color:var(--red);}
+.btn-danger:hover{background:rgba(255,107,107,.08);border-color:var(--red);}
+/* Tab switcher */
+.tab-row{display:flex;gap:0;margin-bottom:20px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;}
+.tab-btn{padding:8px 22px;border-radius:7px;font-family:var(--mono);font-size:11px;letter-spacing:1px;cursor:pointer;border:none;background:none;color:var(--text-dim);transition:all .2s;}
+.tab-btn.active{background:rgba(176,106,255,.15);color:var(--purple);border:1px solid rgba(176,106,255,.3);}
+.tab-btn:hover:not(.active){color:var(--text);}
+/* Speed */
+.speed-ctrl{display:flex;align-items:center;gap:8px;margin-left:4px;}
+.speed-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+input[type=range]{width:80px;accent-color:var(--purple);cursor:pointer;}
+.speed-val{font-family:var(--mono);font-size:10px;color:var(--purple);min-width:20px;}
+/* Code */
+.code-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11px;line-height:2;overflow-x:auto;}
+.code-line{display:block;color:var(--text-dim);padding-left:4px;border-left:3px solid transparent;border-radius:2px;white-space:pre;}
+.code-line.active{background:rgba(176,106,255,.12);border-left:3px solid var(--purple);color:var(--purple);padding-left:7px;}
+.kw{color:#ff8c42;}.fn{color:#4da6ff;}.cm{color:#3d6080;font-style:italic;}.num{color:#b06aff;}
+/* Concepts */
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px;}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;transition:border-color .3s,transform .3s;position:relative;overflow:hidden;}
+.cc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--blue));opacity:0;transition:opacity .3s;}
+.cc:hover{border-color:rgba(176,106,255,.3);transform:translateY(-2px);}
+.cc:hover::after{opacity:1;}
+.cc-icon{font-size:22px;margin-bottom:7px;display:block;}
+.cc-title{font-family:var(--mono);font-size:9px;color:var(--purple);margin-bottom:5px;text-transform:uppercase;letter-spacing:2px;}
+.cc-desc{font-size:12px;color:var(--text-dim);line-height:1.5;}
+/* Layout */
+.two-col{display:grid;grid-template-columns:1fr 390px;gap:16px;margin-bottom:16px;}
+@media(max-width:960px){.two-col{grid-template-columns:1fr;}}
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;}
+.ctrl-top{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+.preset-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.preset-lbl{font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:1px;}
+.preset-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-family:var(--mono);font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.preset-btn:hover{border-color:var(--purple);color:var(--purple);}
+.preset-btn.active{background:rgba(176,106,255,.1);border-color:var(--purple);color:var(--purple);}
+/* Legend */
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;align-items:center;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);}
+.ld{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+/* Voice */
+.voice-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--purple);letter-spacing:1px;transition:background .2s,border-color .2s;white-space:nowrap;}
+.voice-btn:hover{background:rgba(176,106,255,.08);border-color:rgba(176,106,255,.4);}
+.voice-btn.off{color:var(--text-dim);border-color:var(--border);}
+@keyframes qPop{from{transform:scale(0) rotate(-8deg);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+/* In-degree table */
+.indeg-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;}
+.indeg-table th{padding:5px 8px;text-align:center;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-size:10px;letter-spacing:1px;}
+.indeg-table td{padding:5px 8px;text-align:center;border:1px solid var(--border);background:var(--surface);color:var(--text-dim);transition:all .3s;}
+.indeg-table td.zero{color:var(--green);font-weight:700;background:rgba(6,214,160,.08);}
+.indeg-table td.current{color:var(--purple);font-weight:700;background:rgba(176,106,255,.12);border-color:rgba(176,106,255,.3);}
+.indeg-table td.done{color:rgba(90,122,154,.4);}
+
+/* Queue / Stack visual */
+.queue-visual{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:44px;padding:6px 0;}
+.q-item{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;border:2px solid;animation:qPop .3s cubic-bezier(.34,1.56,.64,1);position:relative;flex-shrink:0;}
+.q-arrow{color:var(--text-dim);font-size:13px;flex-shrink:0;}
+
+/* Topo order */
+.topo-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:36px;padding:4px 0;}
+.topo-node{padding:4px 12px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:700;animation:qPop .3s cubic-bezier(.34,1.56,.64,1);}
+.topo-arrow{color:var(--text-dim);font-size:11px;}
+
+/* DFS call stack */
+.stack-visual{display:flex;flex-direction:column-reverse;gap:4px;min-height:44px;}
+.stack-item{padding:5px 12px;border-radius:6px;font-family:var(--mono);font-size:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;animation:qPop .25s cubic-bezier(.34,1.56,.64,1);}
+.stack-top-label{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--purple);margin-bottom:4px;}
+
+/* Color states */
+.st-white{color:var(--text-dim);}
+.st-gray{color:var(--orange);}
+.st-black{color:var(--green);}
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <div class="toggle-track"><div class="toggle-thumb"><span class="toggle-icon">🌙</span></div></div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
-  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+<a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">📋</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Topological Sort</h1>
-    <p class="cs-sub">Linear ordering of DAG vertices respecting dependency order.</p>
-
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>DFS-based Kahn's algorithm</li>
-        <li>Dependency resolution</li>
-        <li>Detecting cycles in directed graphs</li>
-      </ul>
+<header style="margin-bottom:20px;">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+    <span style="font-size:40px;">🔀</span>
+    <div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Graph Algorithm · DAG · Topological Sort</div>
+      <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Topological Sort</h1>
     </div>
+    <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+  </div>
+  <p style="color:var(--text-dim);font-size:14px;max-width:660px;line-height:1.7;">Order the vertices of a Directed Acyclic Graph so every edge goes <em>left → right</em>. Two classic approaches: <strong>Kahn's (BFS / in-degree)</strong> and <strong>DFS post-order</strong>. Both run in O(V+E).</p>
+  <div class="complexity" style="margin-top:10px;">
+    <div class="cplx-chip">Time: <span>O(V + E)</span></div>
+    <div class="cplx-chip">Space: <span>O(V)</span></div>
+    <div class="cplx-chip">Input: <span>DAG only</span></div>
+    <div class="cplx-chip">Cycle detect: <span>✓ Both</span></div>
+  </div>
+</header>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+<div class="concepts">
+  <div class="cc"><span class="cc-icon">📐</span><div class="cc-title">DAG Prerequisite</div><div class="cc-desc">Topological sort only exists for Directed Acyclic Graphs. Any cycle makes a linear ordering impossible.</div></div>
+  <div class="cc"><span class="cc-icon">📥</span><div class="cc-title">Kahn's — In-degree</div><div class="cc-desc">Repeatedly remove nodes with in-degree 0 (no prerequisites). Uses a queue; detects cycles if not all nodes are processed.</div></div>
+  <div class="cc"><span class="cc-icon">🌀</span><div class="cc-title">DFS Post-order</div><div class="cc-desc">Run DFS; push each node onto a stack when fully explored (post-order). Pop the stack for topological order.</div></div>
+  <div class="cc"><span class="cc-icon">🎨</span><div class="cc-title">3-Color DFS</div><div class="cc-desc">White = unvisited, Gray = in current path (on stack), Black = finished. A Gray→Gray back edge means a cycle.</div></div>
+</div>
+
+<!-- Algorithm tabs -->
+<div class="tab-row">
+  <button class="tab-btn active" id="tabKahn" onclick="switchTab('kahn')">📥 Kahn's (BFS)</button>
+  <button class="tab-btn" id="tabDFS" onclick="switchTab('dfs')">🌀 DFS Post-order</button>
+</div>
+
+<div class="narration">
+  <span class="teacher" id="teacher">🧑‍💻</span>
+  <div class="narration-text" id="narText">Welcome! Kahn's algorithm is active. Choose a graph and press ▶ Play.</div>
+  <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+</div>
+
+<div class="status-row">
+  <div class="si"><span class="sl">Current</span><span class="sv" style="color:var(--purple)" id="sCurrent">—</span></div>
+  <div class="si"><span class="sl" id="slQueue">Queue / Stack</span><span class="sv" style="color:var(--blue)" id="sQueueSize">0</span></div>
+  <div class="si"><span class="sl">Topo Order</span><span class="sv" style="color:var(--green)" id="sTopoCount">0</span></div>
+  <div class="si"><span class="sl">Cycle?</span><span class="sv" id="sCycle">—</span></div>
+  <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+  <div class="divider-auto"></div>
+  <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+  <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+</div>
+
+<div class="two-col">
+  <!-- LEFT: canvas + controls -->
+  <div class="panel">
+    <div class="panel-hd" id="graphPanelHd">🕸️ DAG Visualization</div>
+    <div class="legend" id="legendEl">
+      <div class="li"><div class="ld" style="background:#1a2840;border:2px solid #2a4060"></div>Unvisited</div>
+      <div class="li" id="leg2"><div class="ld" style="background:rgba(176,106,255,.6)"></div>In queue (in-deg 0)</div>
+      <div class="li"><div class="ld" style="background:var(--teal)"></div>Processing</div>
+      <div class="li"><div class="ld" style="background:#1e3a2a;border:2px solid var(--green)"></div>Done</div>
+      <div class="li"><div class="ld" style="background:var(--red)"></div>Cycle!</div>
+      <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+        <span id="voiceIcon">🔇</span><span id="voiceLabel">Voice Off</span>
+      </button>
+    </div>
+    <canvas id="graphCanvas" height="420" style="width:100%;display:block;border-radius:8px;"></canvas>
+    <div class="controls" style="margin-top:14px;">
+      <div class="ctrl-top">
+        <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">▶ Play</button>
+        <button class="btn" onclick="doNext()">⏭ Next Step</button>
+        <button class="btn btn-danger" onclick="resetAll()">⏮ Reset</button>
+        <div class="speed-ctrl">
+          <span class="speed-lbl">⚡ Speed</span>
+          <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="setSpeed(this.value)">
+          <span class="speed-val" id="speedVal">2×</span>
+        </div>
+      </div>
+      <div class="preset-row">
+        <span class="preset-lbl">Graph:</span>
+        <button class="preset-btn active" onclick="loadPreset('simple')" id="p-simple">Simple</button>
+        <button class="preset-btn" onclick="loadPreset('course')" id="p-course">Course Deps</button>
+        <button class="preset-btn" onclick="loadPreset('wide')" id="p-wide">Wide DAG</button>
+        <button class="preset-btn" onclick="loadPreset('deep')" id="p-deep">Deep Chain</button>
+        <button class="preset-btn" onclick="loadPreset('cycle')" id="p-cycle">Has Cycle!</button>
+        <button class="preset-btn" onclick="loadPreset('random')" id="p-random">Random</button>
+      </div>
     </div>
   </div>
+
+  <!-- RIGHT -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Kahn's panels -->
+    <div id="kahnPanels">
+      <div class="panel" style="margin-bottom:14px;">
+        <div class="panel-hd">📊 In-Degree Table</div>
+        <div style="overflow-x:auto;"><table class="indeg-table" id="indegTable"></table></div>
+      </div>
+      <div class="panel" style="margin-bottom:14px;">
+        <div class="panel-hd">📬 Queue (in-degree 0 nodes)</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;">FRONT → BACK</div>
+        <div class="queue-visual" id="queueVisual">
+          <span style="color:var(--text-dim);font-size:12px;font-style:italic;">Queue empty</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DFS panels -->
+    <div id="dfsPanels" style="display:none;">
+      <div class="panel" style="margin-bottom:14px;">
+        <div class="panel-hd">🎨 Node Colors (3-color DFS)</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:10px;">WHITE → GRAY → BLACK</div>
+        <div id="colorGrid" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+      <div class="panel" style="margin-bottom:14px;">
+        <div class="panel-hd">📚 DFS Call Stack</div>
+        <div class="stack-top-label" id="stackTopLabel"></div>
+        <div class="stack-visual" id="stackVisual">
+          <span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack empty</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shared: topo order -->
+    <div class="panel">
+      <div class="panel-hd">🏁 Topological Order</div>
+      <div class="topo-row" id="topoRow">
+        <span style="color:var(--text-dim);font-size:12px;font-style:italic;">Order builds as nodes finish.</span>
+      </div>
+    </div>
+
+    <!-- Pseudocode — Kahn -->
+    <div class="panel" id="codeKahn">
+      <div class="panel-hd">💻 Pseudocode — Kahn's</div>
+      <div class="code-block">
+<span id="k1"  class="code-line"><span class="kw">function</span> <span class="fn">Kahn</span>(graph):</span>
+<span id="k2"  class="code-line">  indegree = <span class="fn">computeInDegrees</span>(graph)</span>
+<span id="k3"  class="code-line">  queue = [v <span class="kw">for</span> v <span class="kw">if</span> indegree[v] == <span class="num">0</span>]</span>
+<span id="k4"  class="code-line">  topo = []</span>
+<span id="k5"  class="code-line">  <span class="kw">while</span> queue <span class="kw">not empty</span>:</span>
+<span id="k6"  class="code-line">    u = queue.<span class="fn">dequeue</span>()</span>
+<span id="k7"  class="code-line">    topo.<span class="fn">append</span>(u)</span>
+<span id="k8"  class="code-line">    <span class="kw">for</span> v <span class="kw">in</span> graph.adj[u]:</span>
+<span id="k9"  class="code-line">      indegree[v] -= <span class="num">1</span></span>
+<span id="k10" class="code-line">      <span class="kw">if</span> indegree[v] == <span class="num">0</span>:</span>
+<span id="k11" class="code-line">        queue.<span class="fn">enqueue</span>(v)</span>
+<span id="k12" class="code-line">  <span class="kw">if</span> topo.length &lt; V:  <span class="cm"># cycle!</span></span>
+<span id="k13" class="code-line">    <span class="kw">return</span> <span class="fn">null</span></span>
+<span id="k14" class="code-line">  <span class="kw">return</span> topo</span>
+      </div>
+    </div>
+
+    <!-- Pseudocode — DFS -->
+    <div class="panel" id="codeDFS" style="display:none;">
+      <div class="panel-hd">💻 Pseudocode — DFS</div>
+      <div class="code-block">
+<span id="d1"  class="code-line"><span class="kw">function</span> <span class="fn">TopoSortDFS</span>(graph):</span>
+<span id="d2"  class="code-line">  color = {v: WHITE <span class="kw">for</span> v <span class="kw">in</span> V}</span>
+<span id="d3"  class="code-line">  stack = []  <span class="cm"># result (reversed)</span></span>
+<span id="d4"  class="code-line">  <span class="kw">for</span> v <span class="kw">in</span> V:  <span class="cm"># visit all</span></span>
+<span id="d5"  class="code-line">    <span class="kw">if</span> color[v] == WHITE:</span>
+<span id="d6"  class="code-line">      <span class="fn">dfs</span>(v)</span>
+<span id="d7"  class="code-line"><span class="kw">function</span> <span class="fn">dfs</span>(u):</span>
+<span id="d8"  class="code-line">  color[u] = GRAY  <span class="cm"># on path</span></span>
+<span id="d9"  class="code-line">  <span class="kw">for</span> v <span class="kw">in</span> adj[u]:</span>
+<span id="d10" class="code-line">    <span class="kw">if</span> color[v] == GRAY:  <span class="cm"># cycle!</span></span>
+<span id="d11" class="code-line">      <span class="kw">raise</span> CycleError</span>
+<span id="d12" class="code-line">    <span class="kw">if</span> color[v] == WHITE:</span>
+<span id="d13" class="code-line">      <span class="fn">dfs</span>(v)</span>
+<span id="d14" class="code-line">  color[u] = BLACK  <span class="cm"># finished</span></span>
+<span id="d15" class="code-line">  stack.<span class="fn">push</span>(u)  <span class="cm"># post-order</span></span>
+      </div>
+    </div>
+
+  </div>
 </div>
+
+</div><!-- end algo-page -->
+
+<script>
+// ── Theme ──────────────────────────────────────────────
+function toggleTheme(){const h=document.documentElement,l=h.getAttribute('data-theme')!=='light';h.setAttribute('data-theme',l?'light':'dark');document.getElementById('toggleLabel').textContent=l?'Dark mode':'Light mode';localStorage.setItem('theme',l?'light':'dark');}
+(function(){const s=localStorage.getItem('theme');if(s==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('toggleLabel').textContent='Dark mode';}})();
+
+// ── Presets — directed graphs ──────────────────────────
+const PRESETS = {
+  simple:{
+    nodes:[{id:0,x:.1,y:.5},{id:1,x:.3,y:.2},{id:2,x:.3,y:.78},{id:3,x:.55,y:.2},{id:4,x:.55,y:.55},{id:5,x:.55,y:.85},{id:6,x:.8,y:.35},{id:7,x:.8,y:.72}],
+    edges:[[0,1],[0,2],[1,3],[1,4],[2,4],[2,5],[3,6],[4,6],[4,7],[5,7]]
+  },
+  course:{
+    nodes:[{id:0,x:.1,y:.5,label:'Math'},{id:1,x:.32,y:.2,label:'CS101'},{id:2,x:.32,y:.8,label:'Phys'},{id:3,x:.55,y:.12,label:'Algo'},{id:4,x:.55,y:.45,label:'OS'},{id:5,x:.55,y:.78,label:'Chem'},{id:6,x:.78,y:.28,label:'Comp'},{id:7,x:.78,y:.62,label:'ML'},{id:8,x:.95,y:.45,label:'Thesis'}],
+    edges:[[0,1],[0,2],[1,3],[1,4],[2,5],[3,6],[4,6],[4,7],[5,7],[6,8],[7,8]]
+  },
+  wide:{
+    nodes:[{id:0,x:.5,y:.08},{id:1,x:.15,y:.35},{id:2,x:.38,y:.35},{id:3,x:.62,y:.35},{id:4,x:.85,y:.35},{id:5,x:.08,y:.68},{id:6,x:.28,y:.68},{id:7,x:.5,y:.68},{id:8,x:.72,y:.68},{id:9,x:.92,y:.68},{id:10,x:.5,y:.93}],
+    edges:[[0,1],[0,2],[0,3],[0,4],[1,5],[1,6],[2,6],[2,7],[3,7],[3,8],[4,8],[4,9],[5,10],[6,10],[7,10],[8,10],[9,10]]
+  },
+  deep:{
+    nodes:[{id:0,x:.5,y:.05},{id:1,x:.35,y:.22},{id:2,x:.65,y:.22},{id:3,x:.2,y:.42},{id:4,x:.5,y:.42},{id:5,x:.8,y:.42},{id:6,x:.35,y:.62},{id:7,x:.65,y:.62},{id:8,x:.5,y:.82},{id:9,x:.5,y:.97}],
+    edges:[[0,1],[0,2],[1,3],[1,4],[2,4],[2,5],[3,6],[4,6],[4,7],[5,7],[6,8],[7,8],[8,9]]
+  },
+  cycle:{
+    nodes:[{id:0,x:.5,y:.08},{id:1,x:.2,y:.5},{id:2,x:.8,y:.5},{id:3,x:.5,y:.88},{id:4,x:.5,y:.45}],
+    edges:[[0,1],[0,2],[1,4],[4,2],[2,3],[3,1]]  // 1→4→2→3→1 cycle
+  },
+  random:null
+};
+
+let graph=null, steps=[], stepIdx=-1, isPlaying=false, playTimer=null, speedMult=2;
+let activeTab='kahn';
+const SPEEDS=[2400,1800,1200,800,450];
+
+// ── Voice ──────────────────────────────────────────────
+let voiceEnabled=false;
+const synth=window.speechSynthesis; let ttsVoice=null;
+function loadVoices(){const v=synth.getVoices();ttsVoice=v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;}
+loadVoices(); if(synth.onvoiceschanged!==undefined) synth.onvoiceschanged=loadVoices;
+function speak(t){return new Promise(r=>{if(!voiceEnabled||!synth){r();return;} synth.cancel(); const u=new SpeechSynthesisUtterance(t); u.voice=ttsVoice; u.rate=.88; u.pitch=1.05; u.volume=1; u.onstart=()=>document.getElementById('speakBars').classList.add('on'); u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');r();}; synth.speak(u);});}
+function stopSpeech(){synth&&synth.cancel(); document.getElementById('speakBars').classList.remove('on');}
+function toggleVoice(){voiceEnabled=!voiceEnabled; const b=document.getElementById('voiceToggle'),ic=document.getElementById('voiceIcon'),lb=document.getElementById('voiceLabel'); if(voiceEnabled){ic.textContent='🔊';lb.textContent='Voice On';b.classList.remove('off');}else{ic.textContent='🔇';lb.textContent='Voice Off';b.classList.add('off');stopSpeech();} if(isPlaying){pause();play();}}
+
+// ── Build graph ────────────────────────────────────────
+function buildGraph(p){
+  const adj={}, radj={};
+  p.nodes.forEach(n=>{adj[n.id]=[];radj[n.id]=[];});
+  p.edges.forEach(([a,b])=>{adj[a].push(b); radj[b].push(a);});
+  return{nodes:p.nodes,edges:p.edges,adj,radj,n:p.nodes.length};
+}
+
+// ── Kahn's steps ───────────────────────────────────────
+function buildKahnSteps(g){
+  const steps=[];
+  const n=g.n;
+  const indeg={};
+  g.nodes.forEach(nd=>indeg[nd.id]=0);
+  g.edges.forEach(([a,b])=>indeg[b]++);
+
+  // helper copies
+  const snap=(extra)=>Object.assign({
+    indeg:{...indeg},queue:[...queue],topo:[...topo],
+    current:null,phase:'idle',codeLine:null,narration:'',hasCycle:false,
+    processingNode:null,neighborNode:null
+  },extra);
+
+  const queue=[], topo=[];
+  const processed=new Set();
+
+  steps.push(snap({phase:'idle',codeLine:2,narration:`Compute in-degrees for all ${n} nodes. In-degree = number of incoming edges.`}));
+
+  // seed queue
+  g.nodes.forEach(nd=>{ if(indeg[nd.id]===0) queue.push(nd.id); });
+  queue.sort((a,b)=>a-b);
+  steps.push(snap({phase:'idle',codeLine:3,narration:`Find all nodes with in-degree 0: [${queue.join(', ')}]. These have no prerequisites — enqueue them.`}));
+
+  let safety=0;
+  while(queue.length>0 && safety++<500){
+    const u=queue.shift();
+    steps.push(snap({current:u,processingNode:u,phase:'visit',codeLine:6,
+      narration:`Dequeue node ${u}. It has no remaining prerequisites.`}));
+    topo.push(u);
+    processed.add(u);
+    steps.push(snap({current:u,processingNode:u,phase:'visit',codeLine:7,
+      narration:`Append node ${u} to topological order. Order so far: [${topo.join(' → ')}].`}));
+
+    const neighbors=[...g.adj[u]].sort((a,b)=>a-b);
+    for(const v of neighbors){
+      indeg[v]--;
+      steps.push(snap({current:u,processingNode:u,neighborNode:v,phase:'explore',codeLine:9,
+        narration:`Decrement in-degree of neighbor ${v}: now ${indeg[v]}.`}));
+      if(indeg[v]===0){
+        queue.push(v);
+        queue.sort((a,b)=>a-b);
+        steps.push(snap({current:u,processingNode:u,neighborNode:v,phase:'explore',codeLine:11,
+          narration:`Node ${v} in-degree reached 0 — enqueue it. Queue: [${queue.join(', ')}].`}));
+      }
+    }
+  }
+
+  const hasCycle=topo.length<n;
+  steps.push(snap({phase:hasCycle?'cycle':'done',codeLine:hasCycle?13:14,hasCycle,
+    narration:hasCycle
+      ?`⚠️ Cycle detected! Only ${topo.length}/${n} nodes processed. Topological order is impossible.`
+      :`✅ Kahn's complete! Topological order: [${topo.join(' → ')}].`
+  }));
+  return steps;
+}
+
+// ── DFS topo steps ─────────────────────────────────────
+function buildDFSSteps(g){
+  const steps=[];
+  const n=g.n;
+  // WHITE=0, GRAY=1, BLACK=2
+  const color={};
+  g.nodes.forEach(nd=>color[nd.id]=0);
+  const stack=[], topo=[];
+  let hasCycle=false, cycleEdge=null;
+
+  const snap=(extra)=>Object.assign({
+    color:{...color},callStack:[...callStack],topo:[...topo],
+    current:null,phase:'idle',codeLine:null,narration:'',hasCycle,cycleEdge
+  },extra);
+
+  const callStack=[];
+
+  steps.push(snap({phase:'idle',codeLine:2,narration:`Initialize all ${n} nodes as WHITE (unvisited). We'll run DFS from each unvisited node.`}));
+
+  const nodeList=[...g.nodes].map(nd=>nd.id);
+
+  function dfs(u){
+    color[u]=1; // GRAY
+    callStack.push(u);
+    steps.push(snap({current:u,phase:'visit',codeLine:8,
+      narration:`Visit node ${u}: color → GRAY (on current DFS path). Push onto call stack.`}));
+
+    const neighbors=[...g.adj[u]].sort((a,b)=>a-b);
+    for(const v of neighbors){
+      if(color[v]===1){
+        hasCycle=true; cycleEdge=[u,v];
+        steps.push(snap({current:u,phase:'cycle',codeLine:10,
+          narration:`⚠️ Back edge ${u}→${v}! Node ${v} is GRAY (on current path) → CYCLE DETECTED.`}));
+        return;
+      }
+      if(color[v]===0){
+        steps.push(snap({current:u,phase:'explore',codeLine:12,
+          narration:`Explore edge ${u}→${v}. Node ${v} is WHITE — recurse into it.`}));
+        dfs(v);
+        if(hasCycle) return;
+      } else {
+        steps.push(snap({current:u,phase:'explore',codeLine:12,
+          narration:`Edge ${u}→${v}: node ${v} is BLACK (finished) — skip.`}));
+      }
+    }
+    color[u]=2; // BLACK
+    callStack.pop();
+    topo.unshift(u);
+    steps.push(snap({current:u,phase:'finish',codeLine:14,
+      narration:`Node ${u} fully explored → color BLACK. Push to result: prepend to front. Order: [${topo.join(' → ')}].`}));
+  }
+
+  for(const v of nodeList){
+    if(color[v]===0){
+      steps.push(snap({current:v,phase:'idle',codeLine:5,
+        narration:`Node ${v} is WHITE — start DFS from it.`}));
+      dfs(v);
+      if(hasCycle) break;
+    }
+  }
+
+  if(!hasCycle){
+    steps.push(snap({phase:'done',codeLine:null,
+      narration:`✅ DFS Topological Sort complete! Order: [${topo.join(' → ')}].`}));
+  } else {
+    steps.push(snap({phase:'cycle',codeLine:11,
+      narration:`⚠️ Cycle confirmed via back edge ${cycleEdge[0]}→${cycleEdge[1]}. No topological order exists.`}));
+  }
+  return steps;
+}
+
+// ── Canvas ─────────────────────────────────────────────
+const canvas=document.getElementById('graphCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=canvas.parentElement.clientWidth;}
+function nodePos(nd){return{x:nd.x*canvas.width,y:nd.y*canvas.height};}
+
+function drawArrow(x1,y1,x2,y2,col,lw,dashed){
+  const R=18, HEAD=9;
+  const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy);
+  if(len<1) return;
+  const ux=dx/len, uy=dy/len;
+  const sx=x1+ux*R, sy=y1+uy*R;
+  const ex=x2-ux*(R+HEAD*.7), ey=y2-uy*(R+HEAD*.7);
+  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey);
+  ctx.strokeStyle=col; ctx.lineWidth=lw;
+  ctx.setLineDash(dashed?[5,3]:[]);
+  ctx.stroke(); ctx.setLineDash([]);
+  const ang=Math.atan2(ey-sy,ex-sx);
+  ctx.beginPath();
+  ctx.moveTo(ex,ey);
+  ctx.lineTo(ex-HEAD*Math.cos(ang-.4),ey-HEAD*Math.sin(ang-.4));
+  ctx.lineTo(ex-HEAD*Math.cos(ang+.4),ey-HEAD*Math.sin(ang+.4));
+  ctx.closePath(); ctx.fillStyle=col; ctx.fill();
+}
+
+function drawGraph(step){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!graph) return;
+  const s=step||{};
+
+  // determine node states from step
+  const isKahn=activeTab==='kahn';
+  const current=s.current??null;
+  const processingNode=s.processingNode??null;
+  const neighborNode=s.neighborNode??null;
+  const topo=s.topo||[];
+  const topoSet=new Set(topo);
+  const queueSet=new Set(isKahn?(s.queue||[]):[]);
+  const color=isKahn?null:(s.color||{});
+  const cycleEdge=s.cycleEdge||null;
+  const callStackSet=new Set(isKahn?[]:(s.callStack||[]));
+
+  // Draw edges
+  graph.edges.forEach(([a,b])=>{
+    const pa=nodePos(graph.nodes[a]), pb=nodePos(graph.nodes[b]);
+    const isCycle=cycleEdge&&cycleEdge[0]===a&&cycleEdge[1]===b;
+    const isActive=isKahn?(processingNode===a&&neighborNode===b):(current===a||current===b);
+    let col='rgba(28,45,75,0.7)', lw=1.2;
+    if(isCycle){col='rgba(255,107,107,0.9)';lw=3;}
+    else if(isActive){col='rgba(176,106,255,0.8)';lw=2.5;}
+    else if(isKahn&&topoSet.has(a)&&topoSet.has(b)){col='rgba(6,214,160,0.4)';lw=1.5;}
+    else if(!isKahn&&color&&color[a]===2&&color[b]===2){col='rgba(6,214,160,0.4)';lw=1.5;}
+    drawArrow(pa.x,pa.y,pb.x,pb.y,col,lw,false);
+  });
+
+  // Draw nodes
+  graph.nodes.forEach(nd=>{
+    const p=nodePos(nd);
+    let fill='#1a2840', stroke='#2a4060', sw=2, textCol='#4a6a9a';
+
+    if(isKahn){
+      if(s.hasCycle&&!topoSet.has(nd.id)){fill='#3a0a0a';stroke='var(--red)';textCol='var(--red)';}
+      else if(nd.id===current){fill='#1a0a40';stroke='#b06aff';sw=3;textCol='#b06aff';}
+      else if(queueSet.has(nd.id)){fill='#150a30';stroke='rgba(176,106,255,.6)';textCol='rgba(176,106,255,.8)';}
+      else if(topoSet.has(nd.id)){fill='#0d2a1a';stroke='#06d6a0';textCol='#06d6a0';}
+    } else {
+      const c=color?color[nd.id]:0;
+      if(s.hasCycle&&cycleEdge&&(cycleEdge[0]===nd.id||cycleEdge[1]===nd.id)){fill='#3a0a0a';stroke='#ff6b6b';sw=3;textCol='#ff6b6b';}
+      else if(nd.id===current){fill='#1a0a40';stroke='#b06aff';sw=3;textCol='#b06aff';}
+      else if(c===1){fill='#2a1800';stroke='#ff8c42';sw=2;textCol='#ff8c42';} // gray
+      else if(c===2){fill='#0d2a1a';stroke='#06d6a0';textCol='#06d6a0';} // black
+    }
+
+    // glow for current
+    if(nd.id===current){ctx.beginPath();ctx.arc(p.x,p.y,26,0,Math.PI*2);ctx.fillStyle='rgba(176,106,255,.18)';ctx.fill();}
+
+    ctx.beginPath(); ctx.arc(p.x,p.y,18,0,Math.PI*2);
+    ctx.fillStyle=fill; ctx.fill();
+    ctx.strokeStyle=stroke; ctx.lineWidth=sw; ctx.stroke();
+
+    // label
+    const label=nd.label||String(nd.id);
+    const shortLabel=label.length>4?String(nd.id):label;
+    ctx.fillStyle=textCol;
+    ctx.font="bold 11px 'JetBrains Mono'";
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(shortLabel,p.x,p.y);
+
+    // topo index badge
+    const topoIdx=topo.indexOf(nd.id);
+    if(topoIdx>=0){
+      ctx.fillStyle='rgba(6,214,160,.9)';
+      ctx.font="bold 8px 'JetBrains Mono'";
+      ctx.fillText(topoIdx+1,p.x+20,p.y-14);
+    }
+  });
+}
+
+// ── Render step ────────────────────────────────────────
+const NODE_COLS=['#b06aff','#4da6ff','#ff8c42','#ffd166','#06d6a0','#ff6b9d','#00d4aa','#ff6b6b','#a0e0ff','#ffb347'];
+function nc(id){return NODE_COLS[id%NODE_COLS.length];}
+
+function renderStep(idx){
+  if(idx<0||idx>=steps.length) return;
+  const s=steps[idx];
+
+  document.getElementById('narText').textContent=s.narration;
+  document.getElementById('sCurrent').textContent=s.current!==null?s.current:'—';
+  document.getElementById('sTopoCount').textContent=(s.topo||[]).length;
+
+  const cycleEl=document.getElementById('sCycle');
+  if(s.hasCycle){cycleEl.textContent='Yes ⚠️';cycleEl.style.color='var(--red)';}
+  else{cycleEl.textContent='No ✓';cycleEl.style.color='var(--green)';}
+
+  const pb=document.getElementById('phaseBadge');
+  const pcls={idle:'ph-idle',visit:'ph-visit',explore:'ph-explore',finish:'ph-finish',cycle:'ph-cycle',done:'ph-done'};
+  const plbl={idle:'Idle',visit:'Visiting',explore:'Exploring',finish:'Finished ✓',cycle:'Cycle ⚠️',done:'Complete ✅'};
+  pb.className='phase-badge '+(pcls[s.phase]||'ph-idle');
+  pb.textContent=plbl[s.phase]||'Idle';
+
+  document.getElementById('progFill').style.width=`${((idx+1)/steps.length)*100}%`;
+  document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
+
+  // Pseudocode
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  if(s.codeLine){
+    const prefix=activeTab==='kahn'?'k':'d';
+    const el=document.getElementById(prefix+s.codeLine);
+    if(el) el.classList.add('active');
+  }
+
+  if(activeTab==='kahn'){
+    document.getElementById('sQueueSize').textContent=(s.queue||[]).length;
+    document.getElementById('slQueue').textContent='Queue Size';
+
+    // In-degree table
+    const tbl=document.getElementById('indegTable');
+    const ids=graph.nodes.map(nd=>nd.id);
+    const topoSet=new Set(s.topo||[]);
+    tbl.innerHTML=`<tr><th>Node</th>${ids.map(id=>`<th>${graph.nodes[id].label||id}</th>`).join('')}</tr>`+
+      `<tr><td style="color:var(--text-dim);font-size:10px;letter-spacing:1px;">IN-DEG</td>${ids.map(id=>{
+        let cls='';
+        if(topoSet.has(id)) cls='done';
+        else if(s.indeg[id]===0) cls='zero';
+        else if(id===s.neighborNode) cls='current';
+        return`<td class="${cls}">${s.indeg[id]}</td>`;
+      }).join('')}</tr>`;
+
+    // Queue visual
+    const qEl=document.getElementById('queueVisual');
+    if(!s.queue||s.queue.length===0){
+      qEl.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Queue empty</span>';
+    } else {
+      qEl.innerHTML=s.queue.map((id,i)=>`
+        <div class="q-item" style="background:rgba(${hexToRgb(nc(id))},.15);border-color:${nc(id)};color:${nc(id)};">${graph.nodes[id].label||id}</div>
+        ${i<s.queue.length-1?'<span class="q-arrow">→</span>':''}
+      `).join('');
+    }
+
+  } else {
+    // DFS
+    document.getElementById('sQueueSize').textContent=(s.callStack||[]).length;
+    document.getElementById('slQueue').textContent='Stack Depth';
+
+    // Color grid
+    const cg=document.getElementById('colorGrid');
+    const colorName=['WHITE','GRAY','BLACK'];
+    const colorStyle=['color:var(--text-dim);border-color:#2a4060;background:#1a2840;',
+      'color:var(--orange);border-color:var(--orange);background:rgba(255,140,66,.12);',
+      'color:var(--green);border-color:var(--green);background:rgba(6,214,160,.1);'];
+    cg.innerHTML=graph.nodes.map(nd=>{
+      const c=s.color?s.color[nd.id]:0;
+      const isCur=nd.id===s.current;
+      return`<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <div style="width:32px;height:32px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;${colorStyle[c]}${isCur?'box-shadow:0 0 8px rgba(176,106,255,.5);':''}">${graph.nodes[nd.id].label||nd.id}</div>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--text-dim);">${colorName[c]}</span>
+      </div>`;
+    }).join('');
+
+    // Call stack
+    const sv=document.getElementById('stackVisual');
+    document.getElementById('stackTopLabel').textContent=(s.callStack&&s.callStack.length>0)?'← TOP OF STACK':'';
+    if(!s.callStack||s.callStack.length===0){
+      sv.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack empty</span>';
+    } else {
+      sv.innerHTML=s.callStack.map((id,i)=>{
+        const isTop=i===s.callStack.length-1;
+        const col=nc(id);
+        return`<div class="stack-item" style="background:rgba(${hexToRgb(col)},.${isTop?'14':'07'});border:1px solid rgba(${hexToRgb(col)},.${isTop?'5':'2'});color:${isTop?col:'var(--text-dim)'};">
+          <span>${graph.nodes[id].label||id}</span>
+          <span style="font-size:9px;letter-spacing:1px;opacity:.6;">dfs(${id})</span>
+          ${isTop?`<span style="font-size:9px;color:${col};letter-spacing:1px;">ACTIVE</span>`:''}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Topo order — shared
+  const tr=document.getElementById('topoRow');
+  const topo=s.topo||[];
+  if(topo.length===0){
+    tr.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Order builds as nodes finish.</span>';
+  } else {
+    tr.innerHTML=topo.map((id,i)=>{
+      const col=nc(id);
+      return`<div class="topo-node" style="background:rgba(${hexToRgb(col)},.12);border:1px solid rgba(${hexToRgb(col)},.3);color:${col};">${graph.nodes[id].label||id}</div>${i<topo.length-1?'<span class="topo-arrow">→</span>':''}`;
+    }).join('');
+  }
+
+  drawGraph(s);
+}
+
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return`${r},${g},${b}`;
+}
+
+// ── Tab switch ─────────────────────────────────────────
+function switchTab(tab){
+  activeTab=tab;
+  document.getElementById('tabKahn').classList.toggle('active',tab==='kahn');
+  document.getElementById('tabDFS').classList.toggle('active',tab==='dfs');
+  document.getElementById('kahnPanels').style.display=tab==='kahn'?'':'none';
+  document.getElementById('dfsPanels').style.display=tab==='dfs'?'':'none';
+  document.getElementById('codeKahn').style.display=tab==='kahn'?'':'none';
+  document.getElementById('codeDFS').style.display=tab==='dfs'?'':'none';
+  // update legend
+  document.getElementById('leg2').innerHTML=tab==='kahn'
+    ?'<div class="ld" style="background:rgba(176,106,255,.6)"></div>In queue (in-deg 0)'
+    :'<div class="ld" style="background:rgba(255,140,66,.6)"></div>GRAY (on path)';
+  resetAll();
+}
+
+// ── Playback ───────────────────────────────────────────
+function togglePlay(){isPlaying?pause():play();}
+function play(){if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').innerHTML='⏸ Pause';advance();}
+function pause(){isPlaying=false;stopSpeech();clearTimeout(playTimer);document.getElementById('btnPlay').innerHTML='▶ Play';}
+function advance(){if(!isPlaying)return;if(stepIdx>=steps.length-1){pause();return;}stepIdx++;renderStep(stepIdx);if(voiceEnabled){speak(steps[stepIdx].narration).then(()=>{if(isPlaying)playTimer=setTimeout(advance,300);});}else{playTimer=setTimeout(advance,SPEEDS[speedMult-1]||1200);}}
+function doNext(){if(isPlaying)pause();if(stepIdx>=steps.length-1)return;stepIdx++;renderStep(stepIdx);if(voiceEnabled)speak(steps[stepIdx].narration);}
+function setSpeed(v){speedMult=parseInt(v);document.getElementById('speedVal').textContent=`${v}×`;}
+
+// ── Reset ──────────────────────────────────────────────
+function resetAll(){
+  pause(); stepIdx=-1;
+  steps=activeTab==='kahn'?buildKahnSteps(graph):buildDFSSteps(graph);
+  document.getElementById('narText').textContent=`Press ▶ Play to begin ${activeTab==='kahn'?"Kahn's":"DFS"} topological sort.`;
+  document.getElementById('sCurrent').textContent='—';
+  document.getElementById('sCycle').textContent='—';
+  document.getElementById('sCycle').style.color='';
+  document.getElementById('sTopoCount').textContent='0';
+  document.getElementById('sQueueSize').textContent='0';
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('btnPlay').innerHTML='▶ Play';
+  document.getElementById('topoRow').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Order builds as nodes finish.</span>';
+  if(activeTab==='kahn'){
+    document.getElementById('queueVisual').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Queue empty</span>';
+    document.getElementById('indegTable').innerHTML='';
+  } else {
+    document.getElementById('colorGrid').innerHTML='';
+    document.getElementById('stackVisual').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack empty</span>';
+    document.getElementById('stackTopLabel').textContent='';
+  }
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  drawGraph(null);
+}
+
+// ── Presets ────────────────────────────────────────────
+function generateRandom(){
+  const n=Math.floor(Math.random()*3)+6;
+  const nodes=[];
+  // layer-based layout for DAG guarantee
+  const layers=3+Math.floor(Math.random()*2);
+  let id=0;
+  const layerNodes=[];
+  for(let l=0;l<layers;l++){
+    const cnt=Math.floor(Math.random()*2)+2;
+    const arr=[];
+    for(let i=0;i<cnt&&id<n+4;i++){
+      nodes.push({id,x:(l+.5)/layers*0.85+0.07,y:(i+.5)/cnt*0.85+0.07});
+      arr.push(id++);
+    }
+    layerNodes.push(arr);
+  }
+  const edges=[];
+  for(let l=0;l<layerNodes.length-1;l++){
+    for(const a of layerNodes[l]){
+      for(const b of layerNodes[l+1]){
+        if(Math.random()<0.55) edges.push([a,b]);
+      }
+    }
+    // ensure at least one edge per layer
+    if(!edges.some(([a])=>layerNodes[l].includes(a))){
+      edges.push([layerNodes[l][0],layerNodes[l+1][0]]);
+    }
+  }
+  return{nodes,edges};
+}
+
+function loadPreset(name){
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('p-'+name); if(btn) btn.classList.add('active');
+  const p=(name==='random')?generateRandom():(PRESETS[name]||PRESETS['simple']);
+  graph=buildGraph(p);
+  resizeCanvas();
+  resetAll();
+}
+
+window.addEventListener('resize',()=>{resizeCanvas();drawGraph(stepIdx>=0?steps[stepIdx]:null);});
+loadPreset('simple');
+</script>
 </body>
 </html>

@@ -14,7 +14,6 @@
   margin-bottom: 16px;
 }
 @media (max-width: 960px) { .two-col { grid-template-columns: 1fr; } }
-
 .queue-visual {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   min-height: 44px; padding: 6px 0;
@@ -29,18 +28,14 @@
 @keyframes qPop { from { transform: scale(0) rotate(-20deg); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .q-front { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 8px; color: var(--orange); letter-spacing: 1px; white-space: nowrap; }
 .q-arrow { color: var(--text-dim); font-size: 14px; flex-shrink: 0; }
-
 .visited-list { display: flex; gap: 6px; flex-wrap: wrap; min-height: 32px; padding: 4px 0; }
 .v-chip { padding: 3px 10px; border-radius: 4px; font-family: var(--mono); font-size: 12px; font-weight: 700; animation: qPop .3s cubic-bezier(.34,1.56,.64,1); }
-
 .path-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; min-height: 28px; }
 .path-node { padding: 3px 10px; border-radius: 4px; font-family: var(--mono); font-size: 11px; font-weight: 700; background: rgba(6,214,160,.12); border: 1px solid rgba(6,214,160,.3); color: var(--green); animation: qPop .3s cubic-bezier(.34,1.56,.64,1); }
 .path-arrow { color: var(--text-dim); font-size: 12px; }
-
 .legend { display: flex; gap: 14px; flex-wrap: wrap; padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
 .li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
 .ld { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
-
 .concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
 .cc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; transition: border-color .3s, transform .3s; position: relative; overflow: hidden; }
 .cc::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--teal), var(--blue)); opacity: 0; transition: opacity .3s; }
@@ -49,25 +44,45 @@
 .cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
 .cc-title { font-family: var(--mono); font-size: 9px; color: var(--teal); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
 .cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
-
 .preset-row { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
 .preset-lbl { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
 .preset-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-dim); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all .2s; }
 .preset-btn:hover { border-color: var(--teal); color: var(--teal); }
 .preset-btn.active { background: rgba(0,212,170,.1); border-color: var(--teal); color: var(--teal); }
-
 .controls { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
 .ctrl-top { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
 .input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
 .input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; white-space: nowrap; }
 .target-input { width: 65px; background: var(--surface2); border: 1px solid rgba(255,209,102,.3); border-radius: 7px; padding: 7px 10px; color: var(--yellow); font-family: var(--mono); font-size: 12px; font-weight: 700; outline: none; text-align: center; }
 .target-input:focus { border-color: var(--yellow); box-shadow: 0 0 8px rgba(255,209,102,.2); }
+/* Voice toggle */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
+.code-line.active { background: rgba(255,209,102,.12); border-left: 3px solid var(--yellow); color: var(--yellow); padding-left: 7px; }
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
@@ -76,13 +91,18 @@
       <a href="../../index.html#sorting">Sorting</a>
       <a href="../../index.html#dp">Dynamic Programming</a>
     </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
-
 <div class="algo-page">
-
 <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
-
 <header style="margin-bottom:20px;">
   <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
     <span style="font-size:40px;">🌊</span>
@@ -100,20 +120,17 @@
     <div class="cplx-chip">Structure: <span>Queue (FIFO)</span></div>
   </div>
 </header>
-
 <div class="concepts">
   <div class="cc"><span class="cc-icon">🌊</span><div class="cc-title">Wave Expansion</div><div class="cc-desc">BFS spreads out like ripples — visits all neighbors at distance 1 before distance 2, and so on.</div></div>
   <div class="cc"><span class="cc-icon">📬</span><div class="cc-title">Queue — FIFO</div><div class="cc-desc">A queue (First-In, First-Out) ensures we process nodes in the order they were discovered.</div></div>
   <div class="cc"><span class="cc-icon">📍</span><div class="cc-title">Shortest Path</div><div class="cc-desc">BFS always finds the shortest path in an unweighted graph — guaranteed by level-by-level exploration.</div></div>
   <div class="cc"><span class="cc-icon">⏱️</span><div class="cc-title">O(V + E) Time</div><div class="cc-desc">Each vertex and edge is visited once. Space complexity is also O(V) for the queue and visited set.</div></div>
 </div>
-
 <div class="narration" id="narration">
   <span class="teacher" id="teacher">🧑‍💻</span>
   <div class="narration-text" id="narText">Welcome to BFS! Choose a graph preset, set your start and target nodes, then press ▶ Play to watch the wave expand.</div>
   <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
 </div>
-
 <div class="status-row">
   <div class="si"><span class="sl">Current</span><span class="sv" id="sCurrent">—</span></div>
   <div class="si"><span class="sl">Target</span><span class="sv yellow" id="sTarget">—</span></div>
@@ -124,7 +141,6 @@
   <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
   <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
 </div>
-
 <div class="two-col">
   <div class="panel">
     <div class="panel-hd">🕸️ Graph Visualization</div>
@@ -135,37 +151,13 @@
       <div class="li"><div class="ld" style="background:#1e3a5a"></div>Visited</div>
       <div class="li"><div class="ld" style="background:var(--yellow);box-shadow:0 0 8px rgba(255,209,102,.6)"></div>Target Found</div>
       <div class="li"><div class="ld" style="background:var(--green)"></div>Shortest Path</div>
+      <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+        <span class="voice-icon" id="voiceIcon">🔇</span>
+        <span id="voiceLabel">Voice Off</span>
+      </button>
     </div>
     <canvas id="graphCanvas" height="420" style="width:100%;display:block;border-radius:8px;"></canvas>
-  </div>
-
-  <div style="display:flex;flex-direction:column;gap:14px;">
-    <div class="panel">
-      <div class="panel-hd">📬 Queue (FIFO)</div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;">FRONT → BACK</div>
-      <div class="queue-visual" id="queueVisual"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Queue is empty</span></div>
-    </div>
-    <div class="panel">
-      <div class="panel-hd">✅ Visited Order</div>
-      <div class="visited-list" id="visitedList"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Nothing visited yet</span></div>
-    </div>
-    <div class="panel">
-      <div class="panel-hd">🗺️ Shortest Path</div>
-      <div class="path-row" id="pathRow"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Path shown when target is found</span></div>
-      <div class="complexity">
-        <div class="cplx-chip">Time: <span>O(V + E)</span></div>
-        <div class="cplx-chip">Space: <span>O(V)</span></div>
-        <div class="cplx-chip">Shortest: <span>✓</span></div>
-      </div>
-    </div>
-    <div class="panel" style="padding:14px 16px;">
-      <div class="panel-hd">📊 BFS Levels</div>
-      <div id="levelInfo" style="font-size:12px;color:var(--text-dim);line-height:1.8;font-family:var(--mono);">Levels appear as BFS explores.</div>
-    </div>
-  </div>
-</div>
-
-<div class="controls">
+    <div class="controls">
   <div class="ctrl-top">
     <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">▶ Play</button>
     <button class="btn" onclick="doNext()">⏭ Next Step</button>
@@ -193,11 +185,79 @@
     <button class="btn" onclick="applyInputs()">Apply</button>
   </div>
 </div>
-
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div class="panel">
+      <div class="panel-hd">📬 Queue (FIFO)</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;">FRONT → BACK</div>
+      <div class="queue-visual" id="queueVisual"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Queue is empty</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd">✅ Visited Order</div>
+      <div class="visited-list" id="visitedList"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Nothing visited yet</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd">🗺️ Shortest Path</div>
+      <div class="path-row" id="pathRow"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Path shown when target is found</span></div>
+      <div class="complexity">
+        <div class="cplx-chip">Time: <span>O(V + E)</span></div>
+        <div class="cplx-chip">Space: <span>O(V)</span></div>
+        <div class="cplx-chip">Shortest: <span>✓</span></div>
+      </div>
+    </div>
+          <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">BFS</span>(graph, start, target):</span>
+<span id="cl2" class="code-line">  queue = <span class="kw">new</span> <span class="fn">Queue</span>()</span>
+<span id="cl3" class="code-line">  visited = <span class="kw">new</span> <span class="fn">Set</span>()</span>
+<span id="cl4" class="code-line">  parent = {}</span>
+<span id="cl5" class="code-line">  queue.<span class="fn">enqueue</span>(start)</span>
+<span id="cl6" class="code-line">  visited.<span class="fn">add</span>(start)</span>
+<span id="cl7" class="code-line">  parent[start] = <span class="kw">null</span></span>
+<span id="cl8" class="code-line">  <span class="kw">while</span> queue <span class="kw">not empty</span>:</span>
+<span id="cl9" class="code-line">    current = queue.<span class="fn">dequeue</span>()</span>
+<span id="cl10" class="code-line">    <span class="kw">if</span> current == target:</span>
+<span id="cl11" class="code-line">      path = <span class="fn">reconstructPath</span>(parent, target)</span>
+<span id="cl12" class="code-line">      <span class="kw">return</span> path</span>
+<span id="cl13" class="code-line">    <span class="kw">for</span> neighbor <span class="kw">in</span> graph.adj[current]:</span>
+<span id="cl14" class="code-line">      <span class="kw">if</span> neighbor <span class="kw">not in</span> visited:</span>
+<span id="cl15" class="code-line">        visited.<span class="fn">add</span>(neighbor)</span>
+<span id="cl16" class="code-line">        parent[neighbor] = current</span>
+<span id="cl17" class="code-line">        queue.<span class="fn">enqueue</span>(neighbor)</span>
+<span id="cl18" class="code-line">  <span class="kw">return</span> <span class="kw">null</span>  # Not found</span>
+        </div>
+      </div>
+    <div class="panel" style="padding:14px 16px;">
+      <div class="panel-hd">📊 BFS Levels</div>
+      <div id="levelInfo" style="font-size:12px;color:var(--text-dim);line-height:1.8;font-family:var(--mono);">Levels appear as BFS explores.</div>
+    </div>
+  </div>
 </div>
 
-<script src="../../assets/js/main.js"></script>
+</div>
 <script>
+// ════════════════════════════════════════════════
+// THEME TOGGLE
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+// Restore saved theme on load
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+// Sync theme toggle label on load
+const saved = localStorage.getItem('theme');
+if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+
 const PRESETS = {
   simple: {
     nodes: [{id:0,x:.15,y:.5},{id:1,x:.3,y:.2},{id:2,x:.3,y:.78},{id:3,x:.5,y:.2},{id:4,x:.5,y:.55},{id:5,x:.5,y:.85},{id:6,x:.72,y:.35},{id:7,x:.72,y:.72},{id:8,x:.88,y:.5}],
@@ -221,27 +281,106 @@ const PRESETS = {
   },
   random: null
 };
-
 let currentPreset='simple',graph=null,steps=[],stepIdx=-1,isPlaying=false,playTimer=null,startNode=0,targetNode=6;
-const SPEEDS=[2400,1800,1300,900,500];
-
+let voiceEnabled = false;
+let introAborted = false;
+let speedMult = 2;
+const SPEEDS = [2400,1800,1300,900,500];
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English')) ||
+    voices.find(v => v.lang === 'en-US' && v.localService) ||
+    voices.find(v => v.lang.startsWith('en')) ||
+    voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice = ttsVoice;
+    utt.rate = 0.88;
+    utt.pitch = 1.05;
+    utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+function stopSpeech() {
+  synth && synth.cancel();
+  document.getElementById('speakBars').classList.remove('on');
+}
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('voiceToggle');
+  const icon = document.getElementById('voiceIcon');
+  const lbl = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.querySelector('.speed-ctrl').style.display = 'none';
+    if (isPlaying) { pause(); play(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.querySelector('.speed-ctrl').style.display = '';
+    if (isPlaying) { pause(); play(); }
+  }
+}
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const introLines = [
+    "Hello! I am your algorithm teacher. Today we are learning Breadth-First Search — a fundamental graph traversal algorithm.",
+    "BFS explores the graph level by level, starting from the source node. It uses a queue to visit all nodes at the current distance before moving further.",
+    "It's perfect for finding the shortest path in an unweighted graph, as it guarantees the minimal number of edges.",
+    "In the visualization, orange nodes are in the queue, teal is the current node being processed, and yellow is the target when found.",
+    "The green path highlights the shortest route once the target is reached.",
+    "An important property: BFS visits nodes in order of increasing distance from the start.",
+    "Now, turn on Voice Mode and press Play. I will guide you through every step of the BFS traversal."
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < introLines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = introLines[i];
+    await speak(introLines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
 function buildGraph(p){const adj={};p.nodes.forEach(n=>adj[n.id]=[]);p.edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});return{nodes:p.nodes,edges:p.edges,adj};}
-
 function buildBFSSteps(g,start,target){
   const steps=[],validIds=g.nodes.map(n=>n.id);
   const s=validIds.includes(start)?start:validIds[0];
   const t=validIds.includes(target)?target:validIds[validIds.length-1];
   const visited=new Set(),queue=[],parent={},level={},levelMap={};
-  steps.push({queue:[],visited:[],current:null,found:null,path:[],highlightEdge:null,levelMap:{},narration:`Run BFS from node ${s} to find node ${t}. We use a queue and explore level by level.`,phase:'idle'});
+  steps.push({queue:[],visited:[],current:null,found:null,path:[],highlightEdge:null,levelMap:{},narration:`Run BFS from node ${s} to find node ${t}. We use a queue and explore level by level.`,phase:'idle', codeLine: null});
   queue.push(s);visited.add(s);level[s]=0;levelMap[0]=[s];parent[s]=null;
-  steps.push({queue:[...queue],visited:[...visited],current:null,found:null,path:[],highlightEdge:null,levelMap:{...levelMap},narration:`Enqueue start node ${s}, mark visited. Level 0: [${s}].`,phase:'enqueue'});
+  steps.push({queue:[...queue],visited:[...visited],current:null,found:null,path:[],highlightEdge:null,levelMap:{...levelMap},narration:`Enqueue start node ${s}, mark visited. Level 0: [${s}].`,phase:'enqueue', codeLine: 5});
   let foundTarget=false;
   while(queue.length>0){
     const curr=queue.shift(),currLevel=level[curr];
-    steps.push({queue:[...queue],visited:[...visited],current:curr,found:null,path:[],highlightEdge:null,levelMap:{...levelMap},narration:`Dequeue node ${curr} (level ${currLevel}). Process its unvisited neighbors.`,phase:'dequeue'});
+    steps.push({queue:[...queue],visited:[...visited],current:curr,found:null,path:[],highlightEdge:null,levelMap:{...levelMap},narration:`Dequeue node ${curr} (level ${currLevel}). Process its unvisited neighbors.`,phase:'dequeue', codeLine: 9});
     if(curr===t){
       const path=[];let node=curr;while(node!==null){path.unshift(node);node=parent[node];}
-      steps.push({queue:[...queue],visited:[...visited],current:curr,found:curr,path,highlightEdge:null,levelMap:{...levelMap},narration:`🎯 Found node ${t} at level ${currLevel}! Shortest path has ${currLevel} edges: ${path.join(' → ')}.`,phase:'found'});
+      steps.push({queue:[...queue],visited:[...visited],current:curr,found:curr,path,highlightEdge:null,levelMap:{...levelMap},narration:`🎯 Found node ${t} at level ${currLevel}! Shortest path has ${currLevel} edges: ${path.join(' → ')}.`,phase:'found', codeLine: 10});
       foundTarget=true;break;
     }
     const neighbors=g.adj[curr].slice().sort((a,b)=>a-b);
@@ -250,20 +389,17 @@ function buildBFSSteps(g,start,target){
         visited.add(nb);parent[nb]=curr;level[nb]=currLevel+1;
         if(!levelMap[currLevel+1])levelMap[currLevel+1]=[];
         levelMap[currLevel+1].push(nb);queue.push(nb);
-        steps.push({queue:[...queue],visited:[...visited],current:curr,found:null,path:[],highlightEdge:[curr,nb],levelMap:{...levelMap},narration:`Enqueue neighbor ${nb} (level ${currLevel+1}). Queue: [${queue.join(', ')}].`,phase:'enqueue'});
+        steps.push({queue:[...queue],visited:[...visited],current:curr,found:null,path:[],highlightEdge:[curr,nb],levelMap:{...levelMap},narration:`Enqueue neighbor ${nb} (level ${currLevel+1}). Queue: [${queue.join(', ')}].`,phase:'enqueue', codeLine: 17});
       }
     }
   }
-  if(!foundTarget){steps.push({queue:[],visited:[...visited],current:null,found:-1,path:[],highlightEdge:null,levelMap:{...levelMap},narration:`BFS complete. ${visited.size} nodes visited. Node ${t} not reachable from ${s}.`,phase:'done'});}
+  if(!foundTarget){steps.push({queue:[],visited:[...visited],current:null,found:-1,path:[],highlightEdge:null,levelMap:{...levelMap},narration:`BFS complete. ${visited.size} nodes visited. Node ${t} not reachable from ${s}.`,phase:'done', codeLine: 18});}
   return steps;
 }
-
 const canvas=document.getElementById('graphCanvas');
 const ctx=canvas.getContext('2d');
 function resizeCanvas(){canvas.width=canvas.parentElement.clientWidth;}
-
 function nodePos(n){return{x:n.x*canvas.width,y:n.y*canvas.height};}
-
 function drawGraph(step){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   if(!graph)return;
@@ -296,10 +432,8 @@ function drawGraph(step){
     if(isTarget){ctx.fillStyle='rgba(255,209,102,0.9)';ctx.font="bold 9px 'JetBrains Mono'";ctx.fillText('T',p.x+22,p.y+14);}
   });
 }
-
 function hexToRgb(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`${r},${g},${b}`;}
 function findLevel(lm,node){for(const[lv,nodes]of Object.entries(lm)){if(nodes.includes(node))return parseInt(lv);}return null;}
-
 function renderStep(idx){
   if(idx<0||idx>=steps.length)return;
   const s=steps[idx];
@@ -331,14 +465,18 @@ function renderStep(idx){
   const lel=document.getElementById('levelInfo');
   if(!s.levelMap||Object.keys(s.levelMap).length===0){lel.textContent='Levels appear as BFS explores.';}
   else{lel.innerHTML=Object.entries(s.levelMap).map(([lv,ns])=>`<div style="margin-bottom:3px;"><span style="color:var(--orange);margin-right:8px;">L${lv}:</span><span style="color:var(--text);">[${ns.join(', ')}]</span></div>`).join('');}
+  // Highlight pseudocode
+  document.querySelectorAll('.code-line').forEach(el => el.classList.remove('active'));
+  if (s.codeLine) {
+    const el = document.getElementById('cl' + s.codeLine);
+    if (el) el.classList.add('active');
+  }
 }
-
 function togglePlay(){isPlaying?pause():play();}
-function play(){if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').innerHTML='⏸ Pause';advance();}
-function pause(){isPlaying=false;AlgoUtils.stopSpeech();clearTimeout(playTimer);document.getElementById('btnPlay').innerHTML='▶ Play';}
-function advance(){if(!isPlaying)return;if(stepIdx>=steps.length-1){pause();return;}stepIdx++;renderStep(stepIdx);AlgoUtils.speak(steps[stepIdx].narration,()=>{if(isPlaying)playTimer=setTimeout(advance,300);});}
-function doNext(){if(isPlaying)pause();if(stepIdx>=steps.length-1)return;stepIdx++;renderStep(stepIdx);AlgoUtils.speak(steps[stepIdx].narration,null);}
-
+function play(){clearIntroTimeouts();if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').innerHTML='⏸ Pause';advance();}
+function pause(){isPlaying=false;stopSpeech();clearTimeout(playTimer);document.getElementById('btnPlay').innerHTML='▶ Play';}
+function advance(){if(!isPlaying)return;if(stepIdx>=steps.length-1){pause();return;}stepIdx++;renderStep(stepIdx);if(voiceEnabled){speak(steps[stepIdx].narration).then(()=>{if(isPlaying)playTimer=setTimeout(advance,300);});}else{playTimer=setTimeout(advance,SPEEDS[speedMult-1]||1300);}}
+function doNext(){clearIntroTimeouts();if(isPlaying)pause();if(stepIdx>=steps.length-1)return;stepIdx++;renderStep(stepIdx);if(voiceEnabled)speak(steps[stepIdx].narration);}
 function resetAll(){
   pause();stepIdx=-1;
   steps=buildBFSSteps(graph,startNode,targetNode);
@@ -352,18 +490,18 @@ function resetAll(){
   document.getElementById('pathRow').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Path shown when target is found</span>';
   document.getElementById('levelInfo').textContent='Levels appear as BFS explores.';
   drawGraph(null);
+  introAborted = true;
+  if (voiceEnabled) playIntroSpeech();
 }
-
-function setSpeed(v){document.getElementById('speedVal').textContent=`${v}×`;}
-
+function setSpeed(v){speedMult = parseInt(v);document.getElementById('speedVal').textContent=`${v}×`;}
 function generateRandomGraph() {
   // Configurable parameters
-  const nodeCount = Math.floor(Math.random() * 6) + 7;     // 7–12 nodes
-  const edgeProbability = 0.20 + Math.random() * 0.25;      // 20–45% chance per pair
-  
+  const nodeCount = Math.floor(Math.random() * 6) + 7; // 7–12 nodes
+  const edgeProbability = 0.20 + Math.random() * 0.25; // 20–45% chance per pair
+ 
   const nodes = [];
   const edges = [];
-  
+ 
   // Place nodes in a slightly noisy circle + some in center
   for (let i = 0; i < nodeCount; i++) {
     let x, y;
@@ -380,7 +518,6 @@ function generateRandomGraph() {
     }
     nodes.push({ id: i, x, y });
   }
-
   // Create undirected edges
   for (let i = 0; i < nodeCount; i++) {
     for (let j = i + 1; j < nodeCount; j++) {
@@ -389,7 +526,6 @@ function generateRandomGraph() {
       }
     }
   }
-
   // Guarantee connected graph (very simple union-find + connect components)
   const parent = Array.from({length: nodeCount}, (_, i) => i);
   function find(x) {
@@ -400,9 +536,7 @@ function generateRandomGraph() {
     const px = find(x), py = find(y);
     if (px !== py) parent[px] = py;
   }
-
   edges.forEach(([a, b]) => union(a, b));
-
   // Find components
   const components = {};
   for (let i = 0; i < nodeCount; i++) {
@@ -410,7 +544,6 @@ function generateRandomGraph() {
     if (!components[p]) components[p] = [];
     components[p].push(i);
   }
-
   const compKeys = Object.keys(components);
   if (compKeys.length > 1) {
     // connect components in chain
@@ -420,20 +553,16 @@ function generateRandomGraph() {
       edges.push([a, b]);
     }
   }
-
   return { nodes, edges };
 }
-
 function loadPreset(name) {
   currentPreset = name;
-  
+ 
   // Visual feedback
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('p-' + name);
   if (btn) btn.classList.add('active');
-
   let presetData;
-
   if (name === 'random') {
     presetData = generateRandomGraph();
   } else if (PRESETS[name]) {
@@ -444,25 +573,21 @@ function loadPreset(name) {
     currentPreset = 'simple';
     document.getElementById('p-simple').classList.add('active');
   }
-
   graph = buildGraph(presetData);
-  
+ 
   // Choose sensible start & target
   const allIds = graph.nodes.map(n => n.id);
   const maxId = Math.max(...allIds);
   startNode = 0;
   // Try to pick something far-ish from start
   targetNode = maxId >= 6 ? Math.floor(maxId * 0.7) : maxId;
-
   // Update inputs
   document.getElementById('startInput').value = startNode;
   document.getElementById('targetInputEl').value = targetNode;
   document.getElementById('sTarget').textContent = targetNode;
-
   resizeCanvas();
   resetAll();
 }
-
 function applyInputs(){
   const s=parseInt(document.getElementById('startInput').value),t=parseInt(document.getElementById('targetInputEl').value);
   const ids=graph.nodes.map(n=>n.id);

@@ -3,77 +3,842 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Floyd-Warshall — AlgoClassroom</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
+<title>Floyd-Warshall | AlgoClassroom</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+/* ── CSS Variables ── */
+:root {
+  --bg: #080e1a;
+  --surface: #0d1525;
+  --surface2: #111c30;
+  --border: rgba(255,255,255,0.07);
+  --text: #e2eaf5;
+  --text-dim: #5a7a9a;
+  --teal: #00d4aa;
+  --blue: #4da6ff;
+  --orange: #ff8c42;
+  --yellow: #ffd166;
+  --green: #06d6a0;
+  --red: #ff6b6b;
+  --purple: #b06aff;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
+[data-theme="light"] {
+  --bg: #f0f4fa;
+  --surface: #ffffff;
+  --surface2: #eef2f8;
+  --border: rgba(0,0,0,0.1);
+  --text: #1a2540;
+  --text-dim: #6a80a0;
 }
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
-}
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+.bg-grid { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(0,212,170,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,0.03) 1px,transparent 1px); background-size: 40px 40px; }
+.bg-glow { position: fixed; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(ellipse 50% 60% at 20% 30%, rgba(0,212,170,0.05) 0%, transparent 70%), radial-gradient(ellipse 40% 50% at 80% 70%, rgba(77,166,255,0.04) 0%, transparent 70%); }
+
+/* ── Navbar ── */
+.navbar { position: sticky; top: 0; z-index: 100; background: rgba(8,14,26,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+.nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 54px; display: flex; align-items: center; gap: 28px; }
+.nav-logo { font-family: var(--mono); font-size: 15px; font-weight: 800; color: var(--teal); text-decoration: none; letter-spacing: -0.5px; }
+.logo-bracket { color: var(--text-dim); }
+.logo-dot { color: var(--orange); }
+.nav-links { display: flex; gap: 18px; margin-left: 8px; }
+.nav-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.5px; transition: color 0.2s; }
+.nav-links a:hover { color: var(--teal); }
+.theme-toggle { margin-left: auto; display: flex; align-items: center; gap: 9px; background: none; border: 1px solid var(--border); border-radius: 30px; padding: 5px 10px 5px 5px; cursor: pointer; transition: border-color 0.2s; }
+.theme-toggle:hover { border-color: rgba(0,212,170,0.4); }
+.toggle-track { width: 32px; height: 18px; background: var(--surface2); border-radius: 9px; position: relative; }
+.toggle-thumb { width: 14px; height: 14px; background: var(--teal); border-radius: 50%; position: absolute; top: 2px; left: 2px; display: flex; align-items: center; justify-content: center; transition: transform 0.3s; }
+[data-theme="light"] .toggle-thumb { transform: translateX(14px); }
+.toggle-icon { font-size: 9px; }
+[data-theme="light"] .toggle-icon::before { content: '☀️'; }
+.toggle-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+
+/* ── Page Layout ── */
+.algo-page { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; position: relative; z-index: 1; }
+.back-link { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-decoration: none; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; transition: color 0.2s; }
+.back-link:hover { color: var(--teal); }
+
+/* ── Complexity chips ── */
+.complexity { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.cplx-chip { padding: 4px 10px; border-radius: 6px; font-family: var(--mono); font-size: 10px; letter-spacing: 1px; background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); }
+.cplx-chip span { color: var(--teal); font-weight: 700; }
+
+/* ── Difficulty badge ── */
+.card-difficulty { padding: 4px 10px; border-radius: 6px; font-family: var(--mono); font-size: 10px; letter-spacing: 1px; font-weight: 700; }
+.intermediate { background: rgba(255,140,66,0.15); color: var(--orange); border: 1px solid rgba(255,140,66,0.3); }
+.advanced { background: rgba(255,107,107,0.15); color: var(--red); border: 1px solid rgba(255,107,107,0.3); }
+
+/* ── Narration ── */
+.narration { background: var(--surface); border: 1px solid rgba(0,212,170,0.15); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.teacher { font-size: 28px; flex-shrink: 0; }
+.narration-text { font-size: 13px; color: var(--text-dim); line-height: 1.7; flex: 1; }
+.speak-bars { display: flex; gap: 2px; align-items: center; height: 16px; flex-shrink: 0; }
+.speak-bars span { width: 3px; border-radius: 2px; background: var(--teal); transform: scaleY(0.2); transition: transform 0.15s; }
+.speak-bars.on span:nth-child(1){animation:bar 0.6s 0.0s infinite alternate;}
+.speak-bars.on span:nth-child(2){animation:bar 0.6s 0.1s infinite alternate;}
+.speak-bars.on span:nth-child(3){animation:bar 0.6s 0.2s infinite alternate;}
+.speak-bars.on span:nth-child(4){animation:bar 0.6s 0.15s infinite alternate;}
+.speak-bars.on span:nth-child(5){animation:bar 0.6s 0.05s infinite alternate;}
+@keyframes bar { from{transform:scaleY(0.2);height:6px;} to{transform:scaleY(1);height:16px;} }
+
+/* ── Status row ── */
+.status-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; }
+.si { display: flex; flex-direction: column; gap: 2px; }
+.sl { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+.sv { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--text); }
+.sv.yellow { color: var(--yellow); }
+.sv.orange { color: var(--orange); }
+.sv.teal { color: var(--teal); }
+.sv.purple { color: var(--purple); }
+.phase-badge { padding: 3px 8px; border-radius: 5px; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+.ph-idle { background: rgba(90,122,154,0.15); color: var(--text-dim); border: 1px solid rgba(90,122,154,0.2); }
+.ph-init { background: rgba(77,166,255,0.15); color: var(--blue); border: 1px solid rgba(77,166,255,0.3); }
+.ph-relax { background: rgba(255,140,66,0.15); color: var(--orange); border: 1px solid rgba(255,140,66,0.3); }
+.ph-update { background: rgba(0,212,170,0.15); color: var(--teal); border: 1px solid rgba(0,212,170,0.3); }
+.ph-done { background: rgba(6,214,160,0.15); color: var(--green); border: 1px solid rgba(6,214,160,0.3); }
+.ph-neg { background: rgba(255,107,107,0.15); color: var(--red); border: 1px solid rgba(255,107,107,0.3); }
+.divider-auto { flex: 1; }
+.prog-wrap { width: 100px; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--blue)); border-radius: 2px; transition: width 0.4s; }
+.step-ctr { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+
+/* ── Panel ── */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+.panel-hd { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--teal); text-transform: uppercase; margin-bottom: 12px; }
+
+/* ── Buttons ── */
+.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: var(--mono); font-size: 11px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.btn:hover { border-color: rgba(0,212,170,0.4); color: var(--teal); background: rgba(0,212,170,0.05); }
+.btn-primary { background: rgba(0,212,170,0.12); border-color: rgba(0,212,170,0.4); color: var(--teal); }
+.btn-primary:hover { background: rgba(0,212,170,0.2); }
+.btn-danger { border-color: rgba(255,107,107,0.3); color: var(--red); }
+.btn-danger:hover { background: rgba(255,107,107,0.08); border-color: var(--red); }
+.speed-ctrl { display: flex; align-items: center; gap: 8px; margin-left: 4px; }
+.speed-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+input[type=range] { width: 80px; accent-color: var(--teal); cursor: pointer; }
+.speed-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 20px; }
+
+/* ── Code block ── */
+.code-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-family: var(--mono); font-size: 11px; line-height: 2; counter-reset: line; overflow-x: auto; }
+.code-line { display: block; color: var(--text-dim); padding-left: 4px; border-left: 3px solid transparent; border-radius: 2px; white-space: pre; }
+.code-line.active { background: rgba(255,209,102,0.12); border-left: 3px solid var(--yellow); color: var(--yellow); padding-left: 7px; }
+.kw { color: #b06aff; }
+.fn { color: #4da6ff; }
+.cm { color: #3d6080; font-style: italic; }
+.num { color: #ff8c42; }
+
+/* ── Concepts ── */
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.cc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; transition: border-color .3s, transform .3s; position: relative; overflow: hidden; }
+.cc::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--purple), var(--blue)); opacity: 0; transition: opacity .3s; }
+.cc:hover { border-color: rgba(176,106,255,.3); transform: translateY(-2px); }
+.cc:hover::after { opacity: 1; }
+.cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
+.cc-title { font-family: var(--mono); font-size: 9px; color: var(--purple); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+.cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+/* ── Layout ── */
+.two-col { display: grid; grid-template-columns: 1fr 380px; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 960px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── Controls ── */
+.controls { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.ctrl-top { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; white-space: nowrap; }
+.target-input { width: 65px; background: var(--surface2); border: 1px solid rgba(255,209,102,.3); border-radius: 7px; padding: 7px 10px; color: var(--yellow); font-family: var(--mono); font-size: 12px; font-weight: 700; outline: none; text-align: center; }
+.target-input:focus { border-color: var(--yellow); box-shadow: 0 0 8px rgba(255,209,102,.2); }
+.preset-row { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.preset-lbl { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
+.preset-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-dim); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all .2s; }
+.preset-btn:hover { border-color: var(--purple); color: var(--purple); }
+.preset-btn.active { background: rgba(176,106,255,.1); border-color: var(--purple); color: var(--purple); }
+
+/* ── Legend ── */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; align-items: center; }
+.li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+.ld { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+/* ── Matrix ── */
+.matrix-wrap { overflow-x: auto; }
+.dist-matrix { border-collapse: collapse; font-family: var(--mono); font-size: 11px; }
+.dist-matrix th, .dist-matrix td { padding: 5px 8px; text-align: center; border: 1px solid var(--border); min-width: 38px; transition: background 0.3s, color 0.3s; }
+.dist-matrix th { background: var(--surface2); color: var(--text-dim); font-size: 10px; letter-spacing: 1px; }
+.dist-matrix td { background: var(--surface); color: var(--text-dim); }
+.dist-matrix td.cell-k { background: rgba(176,106,255,0.15); color: var(--purple); font-weight: 700; border-color: rgba(176,106,255,0.3); }
+.dist-matrix td.cell-i { background: rgba(255,140,66,0.12); color: var(--orange); font-weight: 700; border-color: rgba(255,140,66,0.3); }
+.dist-matrix td.cell-j { background: rgba(77,166,255,0.12); color: var(--blue); font-weight: 700; border-color: rgba(77,166,255,0.3); }
+.dist-matrix td.cell-active { background: rgba(255,209,102,0.2); color: var(--yellow); font-weight: 700; border-color: rgba(255,209,102,0.5); box-shadow: 0 0 8px rgba(255,209,102,0.25); }
+.dist-matrix td.cell-updated { background: rgba(6,214,160,0.2); color: var(--green); font-weight: 700; border-color: rgba(6,214,160,0.5); }
+.dist-matrix td.cell-inf { color: rgba(90,122,154,0.5); }
+.dist-matrix td.cell-diag { color: rgba(0,212,170,0.5); }
+.dist-matrix td.cell-neg { background: rgba(255,107,107,0.2); color: var(--red); font-weight: 700; border-color: rgba(255,107,107,0.5); }
+
+/* ── Path display ── */
+.path-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; min-height: 28px; }
+.path-node { padding: 3px 10px; border-radius: 4px; font-family: var(--mono); font-size: 11px; font-weight: 700; background: rgba(6,214,160,.12); border: 1px solid rgba(6,214,160,.3); color: var(--green); animation: qPop .3s cubic-bezier(.34,1.56,.64,1); }
+.path-arrow { color: var(--text-dim); font-size: 12px; }
+@keyframes qPop { from { transform: scale(0) rotate(-10deg); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* ── Voice ── */
+.voice-btn { margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 7px; padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--teal); letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap; }
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-icon { font-size: 14px; }
+.narration-text.intro-mode { color: var(--teal); font-weight: 600; animation: glowPulse 2s infinite; }
+@keyframes glowPulse { 0%,100%{text-shadow:0 0 5px rgba(0,212,170,0.2);} 50%{text-shadow:0 0 15px rgba(0,212,170,0.6);} }
+
+/* ── Iter display ── */
+.iter-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 6px; font-family: var(--mono); font-size: 11px; background: rgba(176,106,255,0.1); border: 1px solid rgba(176,106,255,0.3); color: var(--purple); }
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track"><div class="toggle-thumb"><span class="toggle-icon">🌙</span></div></div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
-  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
-
-  <div class="coming-soon">
-    <span class="cs-icon">🔄</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Floyd-Warshall</h1>
-    <p class="cs-sub">All-pairs shortest paths using dynamic programming.</p>
-
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>O(V³) DP approach</li>
-        <li>All-pairs shortest paths</li>
-        <li>Negative cycle detection</li>
-      </ul>
+<a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+<header style="margin-bottom:20px;">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+    <span style="font-size:40px;">🔮</span>
+    <div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Graph Algorithm · Dynamic Programming</div>
+      <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Floyd-Warshall</h1>
     </div>
+    <div style="margin-left:auto;"><span class="card-difficulty advanced">Advanced</span></div>
+  </div>
+  <p style="color:var(--text-dim);font-size:14px;max-width:620px;line-height:1.7;">Find shortest paths between <em>all pairs</em> of vertices simultaneously. Uses dynamic programming — progressively improving estimates by considering each vertex as an intermediate.</p>
+  <div class="complexity" style="margin-top:10px;">
+    <div class="cplx-chip">Time: <span>O(V³)</span></div>
+    <div class="cplx-chip">Space: <span>O(V²)</span></div>
+    <div class="cplx-chip">Negative edges: <span>✓ Supported</span></div>
+    <div class="cplx-chip">All-pairs: <span>✓ Yes</span></div>
+    <div class="cplx-chip">Neg. cycles: <span>✓ Detected</span></div>
+  </div>
+</header>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+<div class="concepts">
+  <div class="cc"><span class="cc-icon">🔮</span><div class="cc-title">All-Pairs Shortest Path</div><div class="cc-desc">Unlike BFS or Dijkstra, Floyd-Warshall finds shortest paths between every pair of vertices at once.</div></div>
+  <div class="cc"><span class="cc-icon">🔗</span><div class="cc-title">Intermediate Vertex</div><div class="cc-desc">For each k, we ask: "Is going through k a shorter route?" The key DP recurrence: dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]).</div></div>
+  <div class="cc"><span class="cc-icon">➖</span><div class="cc-title">Negative Edges OK</div><div class="cc-desc">Floyd-Warshall handles negative-weight edges correctly — unlike Dijkstra. Negative cycles are detected if any dist[i][i] &lt; 0.</div></div>
+  <div class="cc"><span class="cc-icon">📊</span><div class="cc-title">O(V³) Time</div><div class="cc-desc">Three nested loops over all vertices. The V×V distance matrix is updated in-place across V intermediate vertices.</div></div>
+</div>
+
+<div class="narration" id="narration">
+  <span class="teacher" id="teacher">🧑‍💻</span>
+  <div class="narration-text" id="narText">Welcome to Floyd-Warshall! Choose a graph preset, pick a source/target for path highlighting, then press ▶ Play.</div>
+  <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+</div>
+
+<div class="status-row">
+  <div class="si"><span class="sl">Intermediate (k)</span><span class="sv purple" id="sK">—</span></div>
+  <div class="si"><span class="sl">Source (i)</span><span class="sv orange" id="sI">—</span></div>
+  <div class="si"><span class="sl">Dest (j)</span><span class="sv" style="color:var(--blue)" id="sJ">—</span></div>
+  <div class="si"><span class="sl">Relaxations</span><span class="sv teal" id="sRelax">0</span></div>
+  <div class="si"><span class="sl">Updates</span><span class="sv yellow" id="sUpdates">0</span></div>
+  <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+  <div class="divider-auto"></div>
+  <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+  <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+</div>
+
+<div class="two-col">
+  <!-- LEFT: Graph + Controls -->
+  <div class="panel">
+    <div class="panel-hd">🕸️ Graph Visualization</div>
+    <div class="legend">
+      <div class="li"><div class="ld" style="background:rgba(176,106,255,0.3);border:1px solid var(--purple)"></div>k (intermediate)</div>
+      <div class="li"><div class="ld" style="background:rgba(255,140,66,0.3);border:1px solid var(--orange)"></div>i (source row)</div>
+      <div class="li"><div class="ld" style="background:rgba(77,166,255,0.3);border:1px solid var(--blue)"></div>j (dest col)</div>
+      <div class="li"><div class="ld" style="background:rgba(255,209,102,0.3);border:1px solid var(--yellow)"></div>Checking [i,j]</div>
+      <div class="li"><div class="ld" style="background:rgba(6,214,160,0.3);border:1px solid var(--green)"></div>Updated</div>
+      <div class="li"><div class="ld" style="background:rgba(255,107,107,0.3);border:1px solid var(--red)"></div>Neg. cycle</div>
+      <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+        <span class="voice-icon" id="voiceIcon">🔇</span>
+        <span id="voiceLabel">Voice Off</span>
+      </button>
+    </div>
+    <canvas id="graphCanvas" height="420" style="width:100%;display:block;border-radius:8px;"></canvas>
+
+    <div class="controls" style="margin-top:14px;">
+      <div class="ctrl-top">
+        <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">▶ Play</button>
+        <button class="btn" onclick="doNext()">⏭ Next Step</button>
+        <button class="btn btn-danger" onclick="resetAll()">⏮ Reset</button>
+        <div class="speed-ctrl">
+          <span class="speed-lbl">⚡ Speed</span>
+          <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="setSpeed(this.value)">
+          <span class="speed-val" id="speedVal">2×</span>
+        </div>
+      </div>
+      <div class="preset-row">
+        <span class="preset-lbl">Graph:</span>
+        <button class="preset-btn active" onclick="loadPreset('simple')" id="p-simple">Simple</button>
+        <button class="preset-btn" onclick="loadPreset('directed')" id="p-directed">Directed</button>
+        <button class="preset-btn" onclick="loadPreset('negative')" id="p-negative">Negative</button>
+        <button class="preset-btn" onclick="loadPreset('dense')" id="p-dense">Dense</button>
+        <button class="preset-btn" onclick="loadPreset('negcycle')" id="p-negcycle">Neg. Cycle</button>
+        <button class="preset-btn" onclick="loadPreset('random')" id="p-random">Random</button>
+      </div>
+      <div class="input-row">
+        <label>Highlight: From</label>
+        <input type="number" class="target-input" id="srcInput" value="0" min="0" style="border-color:rgba(255,140,66,.3);color:var(--orange);">
+        <label>To</label>
+        <input type="number" class="target-input" id="dstInput" value="3" min="0" style="border-color:rgba(77,166,255,.3);color:var(--blue);">
+        <button class="btn" onclick="applyInputs()">Apply</button>
+      </div>
     </div>
   </div>
+
+  <!-- RIGHT: Distance matrix + info panels -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <div class="panel">
+      <div class="panel-hd">📊 Distance Matrix (dist[i][j])</div>
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span class="iter-badge" id="iterBadge">k = — · i = — · j = —</span>
+      </div>
+      <div class="matrix-wrap">
+        <table class="dist-matrix" id="distMatrix"></table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">🗺️ Highlighted Path</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">
+        Shortest path: <span id="pathCost" style="font-family:var(--mono);color:var(--yellow)">—</span>
+      </div>
+      <div class="path-row" id="pathRow"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Path shown after init.</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">💻 Pseudocode</div>
+      <div class="code-block">
+<span id="cl1"  class="code-line"><span class="kw">function</span> <span class="fn">FloydWarshall</span>(graph, V):</span>
+<span id="cl2"  class="code-line">  dist = V×V matrix</span>
+<span id="cl3"  class="code-line">  <span class="kw">for</span> i <span class="kw">in</span> 0..V-<span class="num">1</span>:</span>
+<span id="cl4"  class="code-line">    <span class="kw">for</span> j <span class="kw">in</span> 0..V-<span class="num">1</span>:</span>
+<span id="cl5"  class="code-line">      dist[i][j] = edge(i,j) <span class="kw">or</span> ∞</span>
+<span id="cl6"  class="code-line">  <span class="kw">for</span> i: dist[i][i] = <span class="num">0</span>  <span class="cm"># self</span></span>
+<span id="cl7"  class="code-line">  <span class="kw">for</span> k <span class="kw">in</span> 0..V-<span class="num">1</span>:  <span class="cm"># intermediate</span></span>
+<span id="cl8"  class="code-line">    <span class="kw">for</span> i <span class="kw">in</span> 0..V-<span class="num">1</span>:  <span class="cm"># source row</span></span>
+<span id="cl9"  class="code-line">      <span class="kw">for</span> j <span class="kw">in</span> 0..V-<span class="num">1</span>:  <span class="cm"># dest col</span></span>
+<span id="cl10" class="code-line">        <span class="kw">if</span> dist[i][k] + dist[k][j]</span>
+<span id="cl11" class="code-line">           &lt; dist[i][j]:</span>
+<span id="cl12" class="code-line">          dist[i][j] = dist[i][k]</span>
+<span id="cl13" class="code-line">                      + dist[k][j]</span>
+<span id="cl14" class="code-line">  <span class="cm"># Detect negative cycles</span></span>
+<span id="cl15" class="code-line">  <span class="kw">for</span> i: <span class="kw">if</span> dist[i][i] &lt; <span class="num">0</span>: <span class="fn">negCycle</span></span>
+      </div>
+    </div>
+
+    <div class="panel" style="padding:14px 16px;">
+      <div class="panel-hd">📈 Algorithm Info</div>
+      <div id="algoInfo" style="font-size:12px;color:var(--text-dim);line-height:1.9;font-family:var(--mono);">Info appears during traversal.</div>
+    </div>
+
+  </div>
 </div>
+
+</div><!-- end algo-page -->
+
+<script>
+// ────────────────────────────────────────────────
+// Theme
+// ────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+(function(){ const s=localStorage.getItem('theme'); if(s==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('toggleLabel').textContent='Dark mode';} })();
+
+// ────────────────────────────────────────────────
+// Presets  (directed weighted graphs, INF = 1e9)
+// ────────────────────────────────────────────────
+const INF = 1e9;
+const PRESETS = {
+  simple: {
+    n: 5,
+    nodes: [{id:0,x:.15,y:.5},{id:1,x:.38,y:.15},{id:2,x:.38,y:.82},{id:3,x:.72,y:.15},{id:4,x:.72,y:.82},{id:5,x:.9,y:.5}],
+    // edges: [from, to, weight]
+    edges: [[0,1,2],[0,2,4],[1,3,3],[1,2,1],[2,4,5],[3,5,1],[4,5,2],[3,4,2]]
+  },
+  directed: {
+    n: 4,
+    nodes: [{id:0,x:.2,y:.2},{id:1,x:.8,y:.2},{id:2,x:.2,y:.8},{id:3,x:.8,y:.8}],
+    edges: [[0,1,3],[0,2,8],[0,3,INF],[1,0,INF],[1,3,2],[2,0,INF],[2,1,10],[3,2,1],[3,0,INF],[1,2,INF]]
+  },
+  negative: {
+    n: 4,
+    nodes: [{id:0,x:.15,y:.5},{id:1,x:.42,y:.18},{id:2,x:.42,y:.82},{id:3,x:.85,y:.5}],
+    edges: [[0,1,5],[0,2,10],[1,3,3],[2,1,-4],[2,3,8],[1,2,INF]]
+  },
+  dense: {
+    n: 5,
+    nodes: [{id:0,x:.5,y:.1},{id:1,x:.15,y:.42},{id:2,x:.3,y:.88},{id:3,x:.7,y:.88},{id:4,x:.85,y:.42}],
+    edges:[[0,1,2],[0,2,9],[0,3,10],[0,4,3],[1,2,4],[1,3,6],[1,4,7],[2,3,1],[2,4,8],[3,4,2],[1,0,2],[2,0,9],[3,0,10],[4,0,3],[2,1,4],[3,1,6],[4,1,7],[3,2,1],[4,2,8],[4,3,2]]
+  },
+  negcycle: {
+    n: 4,
+    nodes: [{id:0,x:.5,y:.1},{id:1,x:.15,y:.8},{id:2,x:.85,y:.8},{id:3,x:.5,y:.52}],
+    edges: [[0,1,1],[1,3,2],[3,2,3],[2,1,-7],[0,3,10]]
+  },
+  random: null
+};
+
+let graph = null;
+let steps = [], stepIdx = -1, isPlaying = false, playTimer = null;
+let highlightSrc = 0, highlightDst = 3;
+let speedMult = 2;
+const SPEEDS = [2400,1800,1200,800,450];
+
+// ────────────────────────────────────────────────
+// Voice
+// ────────────────────────────────────────────────
+let voiceEnabled = false;
+let introAborted = false;
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices(){ const v=synth.getVoices(); ttsVoice=v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null; }
+loadVoices(); if(synth.onvoiceschanged!==undefined) synth.onvoiceschanged=loadVoices;
+function speak(text){ return new Promise(r=>{ if(!voiceEnabled||!synth){r();return;} synth.cancel(); const u=new SpeechSynthesisUtterance(text); u.voice=ttsVoice;u.rate=0.88;u.pitch=1.05;u.volume=1; u.onstart=()=>document.getElementById('speakBars').classList.add('on'); u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');r();}; synth.speak(u); }); }
+function stopSpeech(){ synth&&synth.cancel(); document.getElementById('speakBars').classList.remove('on'); }
+function toggleVoice(){ voiceEnabled=!voiceEnabled; const b=document.getElementById('voiceToggle'),ic=document.getElementById('voiceIcon'),lb=document.getElementById('voiceLabel'); if(voiceEnabled){ic.textContent='🔊';lb.textContent='Voice On';b.classList.remove('off');}else{ic.textContent='🔇';lb.textContent='Voice Off';b.classList.add('off');stopSpeech();} if(isPlaying){pause();play();} }
+function clearIntroTimeouts(){introAborted=true;stopSpeech();}
+
+// ────────────────────────────────────────────────
+// Build graph data structure
+// ────────────────────────────────────────────────
+function buildGraph(p){
+  const n = p.nodes.length;
+  // adj matrix
+  const w = Array.from({length:n},()=>Array(n).fill(INF));
+  for(let i=0;i<n;i++) w[i][i]=0;
+  p.edges.forEach(([a,b,wt])=>{ if(wt<w[a][b]) w[a][b]=wt; });
+  return { nodes: p.nodes, edges: p.edges, n, w };
+}
+
+// ────────────────────────────────────────────────
+// Build Floyd-Warshall steps
+// ────────────────────────────────────────────────
+function buildFWSteps(g){
+  const n = g.n;
+  const steps = [];
+  const INF_LABEL = '∞';
+  function fmt(v){ return (v>=INF/2)?INF_LABEL:v; }
+  function copyDist(d){ return d.map(r=>[...r]); }
+
+  // Init step
+  const dist = copyDist(g.w);
+  const parent = Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>(g.w[i][j]<INF&&i!==j)?i:null));
+
+  steps.push({
+    dist: copyDist(dist), parent: parent.map(r=>[...r]),
+    k:null,i:null,j:null, updated:false, relaxCount:0, updateCount:0,
+    phase:'init', codeLine:5,
+    narration:`Initialize the ${n}×${n} distance matrix. Direct edges get their weights; missing edges get ∞; diagonal (self) = 0.`
+  });
+
+  let relaxCount=0, updateCount=0;
+
+  for(let k=0;k<n;k++){
+    steps.push({
+      dist:copyDist(dist),parent:parent.map(r=>[...r]),
+      k,i:null,j:null,updated:false,relaxCount,updateCount,
+      phase:'relax',codeLine:7,
+      narration:`Intermediate vertex k=${k}. Now we'll check if routing through node ${k} shortens any dist[i][j].`
+    });
+    for(let i=0;i<n;i++){
+      for(let j=0;j<n;j++){
+        if(i===j) continue;
+        const via = (dist[i][k]>=INF/2||dist[k][j]>=INF/2) ? INF : dist[i][k]+dist[k][j];
+        const old = dist[i][j];
+        relaxCount++;
+        const improved = via < old;
+        steps.push({
+          dist:copyDist(dist),parent:parent.map(r=>[...r]),
+          k,i,j,updated:improved,relaxCount,updateCount,
+          phase:'relax',codeLine:10,
+          narration: improved
+            ? `dist[${i}][${j}]: ${fmt(old)} → ${fmt(via)} via ${k}. ✅ Updated! (${fmt(dist[i][k])} + ${fmt(dist[k][j])} = ${fmt(via)})`
+            : `dist[${i}][${j}] via ${k}: ${fmt(dist[i][k])}+${fmt(dist[k][j])}=${fmt(via)} ≥ ${fmt(old)}. No update.`
+        });
+        if(improved){
+          dist[i][j]=via;
+          parent[i][j]=parent[k][j];
+          updateCount++;
+          steps.push({
+            dist:copyDist(dist),parent:parent.map(r=>[...r]),
+            k,i,j,updated:true,relaxCount,updateCount,
+            phase:'update',codeLine:12,
+            narration:`Updated dist[${i}][${j}] = ${fmt(via)}. Path goes through ${k}.`
+          });
+        }
+      }
+    }
+  }
+
+  // Detect negative cycles
+  let hasNegCycle = false;
+  for(let i=0;i<n;i++) if(dist[i][i]<0) hasNegCycle=true;
+  steps.push({
+    dist:copyDist(dist),parent:parent.map(r=>[...r]),
+    k:null,i:null,j:null,updated:false,relaxCount,updateCount,
+    phase: hasNegCycle?'neg':'done', codeLine:15,
+    narration: hasNegCycle
+      ? `⚠️ Negative cycle detected! dist[i][i] < 0 for some i. Shortest paths are undefined on cycles.`
+      : `✅ Floyd-Warshall complete! All-pairs shortest paths computed. ${updateCount} updates in ${relaxCount} relaxations.`
+  });
+
+  return steps;
+}
+
+// ────────────────────────────────────────────────
+// Path reconstruction
+// ────────────────────────────────────────────────
+function reconstructPath(parent, src, dst, n){
+  const path = [];
+  if(parent[src][dst] === null && src !== dst) return null;
+  let cur = dst;
+  const visited = new Set();
+  while(cur !== src){
+    if(visited.has(cur)) return null; // cycle
+    visited.add(cur);
+    path.unshift(cur);
+    cur = parent[src][cur];
+    if(cur === null) return null;
+  }
+  path.unshift(src);
+  return path;
+}
+
+// ────────────────────────────────────────────────
+// Canvas drawing
+// ────────────────────────────────────────────────
+const canvas = document.getElementById('graphCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){ canvas.width = canvas.parentElement.clientWidth; }
+
+function nodePos(n){ return {x: n.x*canvas.width, y: n.y*canvas.height}; }
+
+function drawArrow(x1,y1,x2,y2,col,lw,dashed){
+  const NODE_R=18, HEAD=9;
+  const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
+  if(len<1) return;
+  const ux=dx/len,uy=dy/len;
+  const sx=x1+ux*NODE_R, sy=y1+uy*NODE_R;
+  const ex=x2-ux*(NODE_R+HEAD*0.7), ey=y2-uy*(NODE_R+HEAD*0.7);
+  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey);
+  ctx.strokeStyle=col; ctx.lineWidth=lw;
+  if(dashed) ctx.setLineDash([5,3]); else ctx.setLineDash([]);
+  ctx.stroke(); ctx.setLineDash([]);
+  // arrowhead
+  const angle=Math.atan2(ey-sy,ex-sx);
+  ctx.beginPath();
+  ctx.moveTo(ex,ey);
+  ctx.lineTo(ex-HEAD*Math.cos(angle-0.4),ey-HEAD*Math.sin(angle-0.4));
+  ctx.lineTo(ex-HEAD*Math.cos(angle+0.4),ey-HEAD*Math.sin(angle+0.4));
+  ctx.closePath(); ctx.fillStyle=col; ctx.fill();
+}
+
+function drawGraph(step){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!graph) return;
+  const s = step || {k:null,i:null,j:null,updated:false,dist:null,parent:null};
+  const n = graph.nodes.length;
+  const path = (s.dist && s.parent) ? reconstructPath(s.parent, highlightSrc, highlightDst, n) : null;
+  const pathEdges = new Set();
+  if(path) for(let p=0;p<path.length-1;p++) pathEdges.add(`${path[p]}-${path[p+1]}`);
+
+  // Draw edges
+  graph.edges.forEach(([a,b,w])=>{
+    if(w>=INF/2) return;
+    const pa=nodePos(graph.nodes[a]), pb=nodePos(graph.nodes[b]);
+    const isPath=pathEdges.has(`${a}-${b}`);
+    const isKI=s.k!==null&&((a===s.i&&b===s.k)||(a===s.k&&b===s.i));
+    const isKJ=s.k!==null&&((a===s.k&&b===s.j)||(a===s.j&&b===s.k));
+    let col = 'rgba(30,60,90,0.7)', lw=1.2;
+    if(isPath){col='rgba(6,214,160,0.8)';lw=2.5;}
+    else if(isKI||isKJ){col='rgba(255,140,66,0.6)';lw=2;}
+    drawArrow(pa.x,pa.y,pb.x,pb.y,col,lw,false);
+    // weight label
+    const mx=(pa.x+pb.x)/2, my=(pa.y+pb.y)/2;
+    const off=10;
+    const dx=pb.x-pa.x, dy=pb.y-pa.y, len=Math.sqrt(dx*dx+dy*dy)||1;
+    const lx=mx-dy/len*off, ly=my+dx/len*off;
+    ctx.font="bold 10px 'JetBrains Mono'";
+    ctx.fillStyle=isPath?'#06d6a0':'rgba(100,140,180,0.85)';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(w, lx, ly);
+  });
+
+  // Draw nodes
+  graph.nodes.forEach(nd=>{
+    const p = nodePos(nd);
+    const isK=nd.id===s.k, isI=nd.id===s.i, isJ=nd.id===s.j;
+    const isPath=path&&path.includes(nd.id);
+    const isSrc=nd.id===highlightSrc, isDst=nd.id===highlightDst;
+
+    if(isK||isI||isJ||isPath){
+      ctx.beginPath(); ctx.arc(p.x,p.y,26,0,Math.PI*2);
+      ctx.fillStyle=isK?'rgba(176,106,255,0.2)':isI?'rgba(255,140,66,0.2)':isJ?'rgba(77,166,255,0.2)':'rgba(6,214,160,0.15)';
+      ctx.fill();
+    }
+
+    ctx.beginPath(); ctx.arc(p.x,p.y,18,0,Math.PI*2);
+    let fill='#1a2840', stroke='#2a4060', sw=2;
+    if(isK){ fill='#200a40'; stroke=isI?'#ffd166':'#b06aff'; sw=3; }
+    else if(isI){ fill='#3a1800'; stroke='#ff8c42'; sw=3; }
+    else if(isJ){ fill='#0a1840'; stroke='#4da6ff'; sw=3; }
+    else if(isPath){ fill='#0a2a18'; stroke='#06d6a0'; sw=2; }
+    ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke; ctx.lineWidth=sw; ctx.stroke();
+
+    if(isSrc){ ctx.beginPath();ctx.arc(p.x,p.y,22,0,Math.PI*2);ctx.strokeStyle='rgba(255,140,66,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]); }
+    if(isDst&&!isSrc){ ctx.beginPath();ctx.arc(p.x,p.y,22,0,Math.PI*2);ctx.strokeStyle='rgba(77,166,255,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]); }
+
+    ctx.fillStyle=isK?'#b06aff':isI?'#ff8c42':isJ?'#4da6ff':isPath?'#06d6a0':'#4a6a9a';
+    ctx.font="bold 12px 'JetBrains Mono'"; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(nd.id,p.x,p.y);
+
+    if(isSrc){ ctx.fillStyle='rgba(255,140,66,0.9)';ctx.font="bold 9px 'JetBrains Mono'";ctx.fillText('S',p.x+22,p.y-14); }
+    if(isDst){ ctx.fillStyle='rgba(77,166,255,0.9)';ctx.font="bold 9px 'JetBrains Mono'";ctx.fillText('D',p.x+22,p.y+14); }
+  });
+}
+
+// ────────────────────────────────────────────────
+// Matrix rendering
+// ────────────────────────────────────────────────
+function fmt(v){ return (v>=INF/2)?'∞':v; }
+
+function renderMatrix(step){
+  const s = step||{dist:null,k:null,i:null,j:null,updated:false};
+  const n = graph.n;
+  const dist = s.dist || graph.w;
+  const tbl = document.getElementById('distMatrix');
+  let html = '<tr><th>i\\j</th>';
+  for(let j=0;j<n;j++) html+=`<th>${j}</th>`;
+  html+='</tr>';
+  for(let i=0;i<n;i++){
+    html+=`<tr><th>${i}</th>`;
+    for(let j=0;j<n;j++){
+      let cls='';
+      if(dist[i][i]<0&&i===j) cls='cell-neg';
+      else if(i===j) cls='cell-diag';
+      else if(i===s.i&&j===s.j) cls= s.updated?'cell-updated':'cell-active';
+      else if(i===s.k||j===s.k) cls='cell-k';
+      else if(i===s.i) cls='cell-i';
+      else if(j===s.j) cls='cell-j';
+      const v=dist[i][j];
+      if(!cls&&v>=INF/2) cls='cell-inf';
+      html+=`<td class="${cls}">${fmt(v)}</td>`;
+    }
+    html+='</tr>';
+  }
+  tbl.innerHTML=html;
+}
+
+function renderPath(step){
+  const s=step||{dist:null,parent:null};
+  const el=document.getElementById('pathRow');
+  const ce=document.getElementById('pathCost');
+  if(!s.dist||!s.parent){
+    el.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Path shown after init.</span>';
+    ce.textContent='—'; return;
+  }
+  const dist=s.dist, n=graph.n;
+  const cost=dist[highlightSrc][highlightDst];
+  if(cost>=INF/2){
+    ce.textContent='∞ (unreachable)'; ce.style.color='var(--red)';
+    el.innerHTML='<span style="color:var(--red);font-size:12px;">No path exists</span>'; return;
+  }
+  ce.textContent=cost; ce.style.color='var(--yellow)';
+  const path=reconstructPath(s.parent,highlightSrc,highlightDst,n);
+  if(!path){el.innerHTML='<span style="color:var(--red);font-size:12px;">Negative cycle!</span>';return;}
+  el.innerHTML=path.map((nd,idx)=>`<div class="path-node">${nd}</div>${idx<path.length-1?'<span class="path-arrow">→</span>':''}`).join('');
+}
+
+// ────────────────────────────────────────────────
+// Render step
+// ────────────────────────────────────────────────
+function renderStep(idx){
+  if(idx<0||idx>=steps.length) return;
+  const s = steps[idx];
+
+  document.getElementById('narText').textContent = s.narration;
+  document.getElementById('sK').textContent = s.k!==null?s.k:'—';
+  document.getElementById('sI').textContent = s.i!==null?s.i:'—';
+  document.getElementById('sJ').textContent = s.j!==null?s.j:'—';
+  document.getElementById('sRelax').textContent = s.relaxCount;
+  document.getElementById('sUpdates').textContent = s.updateCount;
+
+  const pb=document.getElementById('phaseBadge');
+  const phCls={init:'ph-init',relax:'ph-relax',update:'ph-update',done:'ph-done',neg:'ph-neg'};
+  const phLbl={init:'Init',relax:'Relaxing',update:'Updated ✓',done:'Complete ✅',neg:'Neg. Cycle ⚠️'};
+  pb.className='phase-badge '+(phCls[s.phase]||'ph-idle');
+  pb.textContent=phLbl[s.phase]||'Idle';
+
+  document.getElementById('progFill').style.width=`${((idx+1)/steps.length)*100}%`;
+  document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
+
+  const kStr=s.k!==null?s.k:'—',iStr=s.i!==null?s.i:'—',jStr=s.j!==null?s.j:'—';
+  document.getElementById('iterBadge').textContent=`k = ${kStr}  ·  i = ${iStr}  ·  j = ${jStr}`;
+
+  // Code highlight
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  if(s.codeLine){const el=document.getElementById('cl'+s.codeLine);if(el)el.classList.add('active');}
+
+  renderMatrix(s);
+  renderPath(s);
+  drawGraph(s);
+
+  // Info panel
+  const info=document.getElementById('algoInfo');
+  if(s.k!==null&&s.i!==null&&s.j!==null){
+    const ik=s.dist[s.i][s.k], kj=s.dist[s.k][s.j], ij=s.dist[s.i][s.j];
+    info.innerHTML=`
+<div style="color:var(--purple)">k = ${s.k} (via node)</div>
+<div style="color:var(--orange)">dist[${s.i}][${s.k}] = ${fmt(ik)}</div>
+<div style="color:var(--blue)">dist[${s.k}][${s.j}] = ${fmt(kj)}</div>
+<div style="color:var(--yellow)">dist[${s.i}][${s.j}] = ${fmt(ij)}</div>
+<div style="color:${s.updated?'var(--green)':'var(--text-dim)'};margin-top:4px;">${s.updated?'✅ Path improved':'No improvement'}</div>
+    `;
+  } else if(s.phase==='done'){
+    info.innerHTML=`<div style="color:var(--green)">All-pairs done!<br>Relaxations: ${s.relaxCount}<br>Updates: ${s.updateCount}</div>`;
+  } else if(s.phase==='neg'){
+    info.innerHTML=`<div style="color:var(--red)">⚠️ Negative cycle detected!<br>Some dist[i][i] &lt; 0</div>`;
+  } else {
+    info.innerHTML=`<div style="color:var(--text-dim)">Initializing...</div>`;
+  }
+}
+
+// ────────────────────────────────────────────────
+// Playback
+// ────────────────────────────────────────────────
+function togglePlay(){ isPlaying ? pause() : play(); }
+function play(){
+  clearIntroTimeouts();
+  if(stepIdx>=steps.length-1) stepIdx=-1;
+  isPlaying=true;
+  document.getElementById('btnPlay').innerHTML='⏸ Pause';
+  advance();
+}
+function pause(){
+  isPlaying=false; stopSpeech(); clearTimeout(playTimer);
+  document.getElementById('btnPlay').innerHTML='▶ Play';
+}
+function advance(){
+  if(!isPlaying) return;
+  if(stepIdx>=steps.length-1){ pause(); return; }
+  stepIdx++;
+  renderStep(stepIdx);
+  if(voiceEnabled){
+    speak(steps[stepIdx].narration).then(()=>{ if(isPlaying) playTimer=setTimeout(advance,300); });
+  } else {
+    playTimer=setTimeout(advance, SPEEDS[speedMult-1]||1200);
+  }
+}
+function doNext(){
+  clearIntroTimeouts();
+  if(isPlaying) pause();
+  if(stepIdx>=steps.length-1) return;
+  stepIdx++;
+  renderStep(stepIdx);
+  if(voiceEnabled) speak(steps[stepIdx].narration);
+}
+function setSpeed(v){ speedMult=parseInt(v); document.getElementById('speedVal').textContent=`${v}×`; }
+
+// ────────────────────────────────────────────────
+// Reset
+// ────────────────────────────────────────────────
+function resetAll(){
+  pause(); stepIdx=-1;
+  steps = buildFWSteps(graph);
+  document.getElementById('narText').textContent='Press ▶ Play to begin Floyd-Warshall.';
+  document.getElementById('sK').textContent='—';
+  document.getElementById('sI').textContent='—';
+  document.getElementById('sJ').textContent='—';
+  document.getElementById('sRelax').textContent='0';
+  document.getElementById('sUpdates').textContent='0';
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('btnPlay').innerHTML='▶ Play';
+  document.getElementById('iterBadge').textContent='k = —  ·  i = —  ·  j = —';
+  document.getElementById('algoInfo').textContent='Info appears during traversal.';
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  renderMatrix(null);
+  renderPath(null);
+  drawGraph(null);
+}
+
+// ────────────────────────────────────────────────
+// Presets & inputs
+// ────────────────────────────────────────────────
+function generateRandom(){
+  const n = Math.floor(Math.random()*3)+4; // 4-6
+  const nodes=[];
+  for(let i=0;i<n;i++){
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    nodes.push({id:i,x:.5+.38*Math.cos(a),y:.5+.42*Math.sin(a)});
+  }
+  const edges=[];
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++){
+    if(i!==j&&Math.random()<0.45){
+      const w=Math.floor(Math.random()*9)+1;
+      edges.push([i,j,w]);
+    }
+  }
+  return {n,nodes,edges};
+}
+
+function loadPreset(name){
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('p-'+name); if(btn) btn.classList.add('active');
+  let p = (name==='random') ? generateRandom() : (PRESETS[name]||PRESETS['simple']);
+  p.n = p.nodes.length;
+  graph = buildGraph(p);
+  // Choose sensible highlight nodes
+  highlightSrc = 0;
+  highlightDst = Math.max(1, graph.n-1);
+  document.getElementById('srcInput').value = highlightSrc;
+  document.getElementById('dstInput').value = highlightDst;
+  resizeCanvas();
+  resetAll();
+}
+
+function applyInputs(){
+  const s=parseInt(document.getElementById('srcInput').value);
+  const d=parseInt(document.getElementById('dstInput').value);
+  const ids=graph.nodes.map(n=>n.id);
+  highlightSrc=ids.includes(s)?s:0;
+  highlightDst=ids.includes(d)?d:ids[ids.length-1];
+  document.getElementById('srcInput').value=highlightSrc;
+  document.getElementById('dstInput').value=highlightDst;
+  if(stepIdx>=0) renderStep(stepIdx); else drawGraph(null);
+}
+
+window.addEventListener('resize',()=>{resizeCanvas();drawGraph(stepIdx>=0?steps[stepIdx]:null);});
+loadPreset('simple');
+</script>
 </body>
 </html>

@@ -3,77 +3,617 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prim's MST — AlgoClassroom</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
+<title>Prim's MST | AlgoClassroom</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+:root {
+  --bg:#080e1a;--surface:#0d1525;--surface2:#111c30;--border:rgba(255,255,255,0.07);
+  --text:#e2eaf5;--text-dim:#5a7a9a;
+  --teal:#00d4aa;--blue:#4da6ff;--orange:#ff8c42;--yellow:#ffd166;
+  --green:#06d6a0;--red:#ff6b6b;--purple:#b06aff;--pink:#ff6b9d;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
-}
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
-}
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+[data-theme="light"]{--bg:#f0f4fa;--surface:#ffffff;--surface2:#eef2f8;--border:rgba(0,0,0,0.1);--text:#1a2540;--text-dim:#6a80a0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,212,170,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,.03) 1px,transparent 1px);background-size:40px 40px;}
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 50% 60% at 20% 30%,rgba(255,140,66,.04) 0%,transparent 70%),radial-gradient(ellipse 40% 50% at 80% 70%,rgba(0,212,170,.04) 0%,transparent 70%);}
+.navbar{position:sticky;top:0;z-index:100;background:rgba(8,14,26,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:54px;display:flex;align-items:center;gap:28px;}
+.nav-logo{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--teal);text-decoration:none;letter-spacing:-.5px;}
+.logo-bracket{color:var(--text-dim);}.logo-dot{color:var(--orange);}
+.nav-links{display:flex;gap:18px;margin-left:8px;}
+.nav-links a{font-size:12px;color:var(--text-dim);text-decoration:none;letter-spacing:.5px;transition:color .2s;}
+.nav-links a:hover{color:var(--teal);}
+.theme-toggle{margin-left:auto;display:flex;align-items:center;gap:9px;background:none;border:1px solid var(--border);border-radius:30px;padding:5px 10px 5px 5px;cursor:pointer;transition:border-color .2s;}
+.theme-toggle:hover{border-color:rgba(0,212,170,.4);}
+.toggle-track{width:32px;height:18px;background:var(--surface2);border-radius:9px;position:relative;}
+.toggle-thumb{width:14px;height:14px;background:var(--teal);border-radius:50%;position:absolute;top:2px;left:2px;display:flex;align-items:center;justify-content:center;transition:transform .3s;}
+[data-theme="light"] .toggle-thumb{transform:translateX(14px);}
+.toggle-icon{font-size:9px;}
+[data-theme="light"] .toggle-icon::before{content:'☀️';}
+.toggle-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+.algo-page{max-width:1200px;margin:0 auto;padding:28px 24px 60px;position:relative;z-index:1;}
+.back-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;transition:color .2s;}
+.back-link:hover{color:var(--teal);}
+.complexity{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.cplx-chip{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);}
+.cplx-chip span{color:var(--orange);font-weight:700;}
+.card-difficulty{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;font-weight:700;}
+.intermediate{background:rgba(255,140,66,.15);color:var(--orange);border:1px solid rgba(255,140,66,.3);}
+.narration{background:var(--surface);border:1px solid rgba(255,140,66,.15);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.teacher{font-size:28px;flex-shrink:0;}
+.narration-text{font-size:13px;color:var(--text-dim);line-height:1.7;flex:1;}
+.speak-bars{display:flex;gap:2px;align-items:center;height:16px;flex-shrink:0;}
+.speak-bars span{width:3px;border-radius:2px;background:var(--orange);transform:scaleY(.2);transition:transform .15s;}
+.speak-bars.on span:nth-child(1){animation:bar .6s 0s infinite alternate;}
+.speak-bars.on span:nth-child(2){animation:bar .6s .1s infinite alternate;}
+.speak-bars.on span:nth-child(3){animation:bar .6s .2s infinite alternate;}
+.speak-bars.on span:nth-child(4){animation:bar .6s .15s infinite alternate;}
+.speak-bars.on span:nth-child(5){animation:bar .6s .05s infinite alternate;}
+@keyframes bar{from{transform:scaleY(.2);height:6px;}to{transform:scaleY(1);height:16px;}}
+.status-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;}
+.si{display:flex;flex-direction:column;gap:2px;}
+.sl{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+.sv{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);}
+.phase-badge{padding:3px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;}
+.ph-idle{background:rgba(90,122,154,.15);color:var(--text-dim);border:1px solid rgba(90,122,154,.2);}
+.ph-start{background:rgba(0,212,170,.15);color:var(--teal);border:1px solid rgba(0,212,170,.3);}
+.ph-pick{background:rgba(255,140,66,.15);color:var(--orange);border:1px solid rgba(255,140,66,.3);}
+.ph-add{background:rgba(6,214,160,.15);color:var(--green);border:1px solid rgba(6,214,160,.3);}
+.ph-done{background:rgba(255,209,102,.15);color:var(--yellow);border:1px solid rgba(255,209,102,.3);}
+.divider-auto{flex:1;}
+.prog-wrap{width:100px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--yellow));border-radius:2px;transition:width .4s;}
+.step-ctr{font-family:var(--mono);font-size:10px;color:var(--text-dim);white-space:nowrap;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.panel-hd{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--orange);text-transform:uppercase;margin-bottom:12px;}
+.btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn:hover{border-color:rgba(255,140,66,.4);color:var(--orange);background:rgba(255,140,66,.05);}
+.btn-primary{background:rgba(255,140,66,.12);border-color:rgba(255,140,66,.4);color:var(--orange);}
+.btn-primary:hover{background:rgba(255,140,66,.2);}
+.btn-danger{border-color:rgba(255,107,107,.3);color:var(--red);}
+.btn-danger:hover{background:rgba(255,107,107,.08);border-color:var(--red);}
+.speed-ctrl{display:flex;align-items:center;gap:8px;margin-left:4px;}
+.speed-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+input[type=range]{width:80px;accent-color:var(--orange);cursor:pointer;}
+.speed-val{font-family:var(--mono);font-size:10px;color:var(--orange);min-width:20px;}
+.code-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11px;line-height:2;overflow-x:auto;}
+.code-line{display:block;color:var(--text-dim);padding-left:4px;border-left:3px solid transparent;border-radius:2px;white-space:pre;}
+.code-line.active{background:rgba(255,140,66,.12);border-left:3px solid var(--orange);color:var(--orange);padding-left:7px;}
+.kw{color:#b06aff;}.fn{color:#4da6ff;}.cm{color:#3d6080;font-style:italic;}.num{color:#ff8c42;}
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px;}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;transition:border-color .3s,transform .3s;position:relative;overflow:hidden;}
+.cc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),var(--yellow));opacity:0;transition:opacity .3s;}
+.cc:hover{border-color:rgba(255,140,66,.3);transform:translateY(-2px);}
+.cc:hover::after{opacity:1;}
+.cc-icon{font-size:22px;margin-bottom:7px;display:block;}
+.cc-title{font-family:var(--mono);font-size:9px;color:var(--orange);margin-bottom:5px;text-transform:uppercase;letter-spacing:2px;}
+.cc-desc{font-size:12px;color:var(--text-dim);line-height:1.5;}
+.two-col{display:grid;grid-template-columns:1fr 380px;gap:16px;margin-bottom:16px;}
+@media(max-width:960px){.two-col{grid-template-columns:1fr;}}
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;}
+.ctrl-top{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+.input-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+.input-row label{font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:1px;white-space:nowrap;}
+.node-input{width:65px;background:var(--surface2);border:1px solid rgba(255,140,66,.3);border-radius:7px;padding:7px 10px;color:var(--orange);font-family:var(--mono);font-size:12px;font-weight:700;outline:none;text-align:center;}
+.node-input:focus{border-color:var(--orange);box-shadow:0 0 8px rgba(255,140,66,.2);}
+.preset-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.preset-lbl{font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:1px;}
+.preset-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-family:var(--mono);font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.preset-btn:hover{border-color:var(--orange);color:var(--orange);}
+.preset-btn.active{background:rgba(255,140,66,.1);border-color:var(--orange);color:var(--orange);}
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;align-items:center;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);}
+.ld{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.voice-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--orange);letter-spacing:1px;transition:background .2s,border-color .2s;white-space:nowrap;}
+.voice-btn:hover{background:rgba(255,140,66,.08);border-color:rgba(255,140,66,.4);}
+.voice-btn.off{color:var(--text-dim);border-color:var(--border);}
+.narration-text.intro-mode{color:var(--orange);font-weight:600;animation:glowPulse 2s infinite;}
+@keyframes glowPulse{0%,100%{text-shadow:0 0 5px rgba(255,140,66,.2);}50%{text-shadow:0 0 15px rgba(255,140,66,.6);}}
+@keyframes qPop{from{transform:scale(0) rotate(-10deg);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+/* Priority Queue */
+.pq-wrap{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto;}
+.pq-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:11px;transition:all .3s;animation:qPop .3s cubic-bezier(.34,1.56,.64,1);}
+.pq-item.pq-top{border-color:rgba(255,140,66,.5);background:rgba(255,140,66,.08);}
+.pq-item .pq-cost{font-weight:700;min-width:28px;color:var(--yellow);}
+.pq-item .pq-edge{color:var(--text-dim);}
+.pq-item .pq-from{color:var(--teal);}
+.pq-item .pq-arrow{color:var(--text-dim);}
+.pq-item .pq-to{color:var(--orange);}
+.pq-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;margin-left:auto;letter-spacing:1px;}
+.pq-badge.top{background:rgba(255,140,66,.15);color:var(--orange);border:1px solid rgba(255,140,66,.3);}
+
+/* MST Edges list */
+.mst-list{display:flex;flex-direction:column;gap:5px;}
+.mst-edge{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;border:1px solid rgba(6,214,160,.25);background:rgba(6,214,160,.07);font-family:var(--mono);font-size:11px;animation:qPop .3s cubic-bezier(.34,1.56,.64,1);}
+.mst-edge .me-cost{font-weight:700;color:var(--yellow);}
+.mst-edge .me-nodes{color:var(--green);}
+.mst-total{margin-top:10px;padding:8px 12px;border-radius:7px;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.25);font-family:var(--mono);font-size:12px;font-weight:700;color:var(--yellow);display:flex;justify-content:space-between;}
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track"><div class="toggle-thumb"><span class="toggle-icon">🌙</span></div></div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
-  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+<a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">🌱</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Prim's MST</h1>
-    <p class="cs-sub">Grow MST one vertex at a time using a priority queue.</p>
-
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Vertex-based growth</li>
-        <li>Priority queue for minimum edge</li>
-        <li>Dense graph performance</li>
-      </ul>
+<header style="margin-bottom:20px;">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+    <span style="font-size:40px;">🌲</span>
+    <div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Graph Algorithm · Greedy</div>
+      <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Prim's Algorithm</h1>
     </div>
+    <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+  </div>
+  <p style="color:var(--text-dim);font-size:14px;max-width:620px;line-height:1.7;">Grow a Minimum Spanning Tree one edge at a time — always greedily picking the cheapest edge that connects the MST to an unvisited vertex. Uses a min-priority queue for efficiency.</p>
+  <div class="complexity" style="margin-top:10px;">
+    <div class="cplx-chip">Time: <span>O(E log V)</span></div>
+    <div class="cplx-chip">Space: <span>O(V + E)</span></div>
+    <div class="cplx-chip">Structure: <span>Min-Heap</span></div>
+    <div class="cplx-chip">Result: <span>MST</span></div>
+    <div class="cplx-chip">Strategy: <span>Greedy</span></div>
+  </div>
+</header>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+<div class="concepts">
+  <div class="cc"><span class="cc-icon">🌲</span><div class="cc-title">Minimum Spanning Tree</div><div class="cc-desc">A spanning tree that connects all V vertices with V−1 edges and the minimum possible total edge weight.</div></div>
+  <div class="cc"><span class="cc-icon">🏆</span><div class="cc-title">Greedy — Always Cheapest</div><div class="cc-desc">At each step, Prim's picks the minimum-weight edge that crosses the cut between MST and non-MST vertices.</div></div>
+  <div class="cc"><span class="cc-icon">📉</span><div class="cc-title">Min-Priority Queue</div><div class="cc-desc">A min-heap tracks the cheapest crossing edge for each candidate vertex. Extract-min drives the algorithm.</div></div>
+  <div class="cc"><span class="cc-icon">✂️</span><div class="cc-title">Cut Property</div><div class="cc-desc">The lightest edge crossing any cut of the graph is always safe to include in an MST — the theoretical guarantee behind Prim's.</div></div>
+</div>
+
+<div class="narration" id="narration">
+  <span class="teacher" id="teacher">🧑‍💻</span>
+  <div class="narration-text" id="narText">Welcome to Prim's Algorithm! Choose a graph preset and a start node, then press ▶ Play to watch the MST grow greedily.</div>
+  <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+</div>
+
+<div class="status-row">
+  <div class="si"><span class="sl">Current Node</span><span class="sv" style="color:var(--teal)" id="sCurrent">—</span></div>
+  <div class="si"><span class="sl">Edge Added</span><span class="sv" style="color:var(--green)" id="sEdge">—</span></div>
+  <div class="si"><span class="sl">MST Edges</span><span class="sv" style="color:var(--orange)" id="sMSTCount">0</span></div>
+  <div class="si"><span class="sl">MST Weight</span><span class="sv" style="color:var(--yellow)" id="sMSTWeight">0</span></div>
+  <div class="si"><span class="sl">In MST</span><span class="sv" id="sInMST">0</span></div>
+  <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+  <div class="divider-auto"></div>
+  <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+  <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+</div>
+
+<div class="two-col">
+  <!-- LEFT: canvas + controls -->
+  <div class="panel">
+    <div class="panel-hd">🕸️ Graph Visualization</div>
+    <div class="legend">
+      <div class="li"><div class="ld" style="background:#1a2840;border:2px solid #2a4060"></div>Unvisited</div>
+      <div class="li"><div class="ld" style="background:var(--teal);box-shadow:0 0 6px rgba(0,212,170,.5)"></div>Current</div>
+      <div class="li"><div class="ld" style="background:#1e3a5a;border:2px solid #2a6a4a"></div>In MST</div>
+      <div class="li"><div class="ld" style="background:var(--orange)"></div>Candidate</div>
+      <div class="li"><div class="ld" style="background:var(--yellow);border-radius:2px;"></div>MST Edge</div>
+      <div class="li"><div class="ld" style="background:var(--green);border-radius:2px;"></div>Newly Added</div>
+      <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+        <span id="voiceIcon">🔇</span>
+        <span id="voiceLabel">Voice Off</span>
+      </button>
+    </div>
+    <canvas id="graphCanvas" height="430" style="width:100%;display:block;border-radius:8px;"></canvas>
+
+    <div class="controls" style="margin-top:14px;">
+      <div class="ctrl-top">
+        <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">▶ Play</button>
+        <button class="btn" onclick="doNext()">⏭ Next Step</button>
+        <button class="btn btn-danger" onclick="resetAll()">⏮ Reset</button>
+        <div class="speed-ctrl">
+          <span class="speed-lbl">⚡ Speed</span>
+          <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="setSpeed(this.value)">
+          <span class="speed-val" id="speedVal">2×</span>
+        </div>
+      </div>
+      <div class="preset-row">
+        <span class="preset-lbl">Graph:</span>
+        <button class="preset-btn active" onclick="loadPreset('simple')" id="p-simple">Simple</button>
+        <button class="preset-btn" onclick="loadPreset('tree')" id="p-tree">Tree-like</button>
+        <button class="preset-btn" onclick="loadPreset('grid')" id="p-grid">Grid</button>
+        <button class="preset-btn" onclick="loadPreset('dense')" id="p-dense">Dense</button>
+        <button class="preset-btn" onclick="loadPreset('clique')" id="p-clique">Clique</button>
+        <button class="preset-btn" onclick="loadPreset('random')" id="p-random">Random</button>
+      </div>
+      <div class="input-row">
+        <label>Start Node:</label>
+        <input type="number" class="node-input" id="startInput" value="0" min="0">
+        <button class="btn" onclick="applyInputs()">Apply</button>
+      </div>
     </div>
   </div>
+
+  <!-- RIGHT panels -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <div class="panel">
+      <div class="panel-hd">📉 Priority Queue (min-heap)</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;">COST · FROM → TO</div>
+      <div class="pq-wrap" id="pqWrap">
+        <span style="color:var(--text-dim);font-size:12px;font-style:italic;">Priority queue is empty</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">🌲 MST Edges</div>
+      <div class="mst-list" id="mstList">
+        <span style="color:var(--text-dim);font-size:12px;font-style:italic;">No edges added yet</span>
+      </div>
+      <div class="mst-total" id="mstTotal" style="display:none;">
+        <span>Total MST Weight</span><span id="mstTotalVal">0</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">💻 Pseudocode</div>
+      <div class="code-block">
+<span id="cl1"  class="code-line"><span class="kw">function</span> <span class="fn">Prim</span>(graph, start):</span>
+<span id="cl2"  class="code-line">  pq = <span class="kw">new</span> <span class="fn">MinHeap</span>()  <span class="cm"># (cost, from, to)</span></span>
+<span id="cl3"  class="code-line">  inMST = <span class="kw">new</span> <span class="fn">Set</span>()</span>
+<span id="cl4"  class="code-line">  mstEdges = []</span>
+<span id="cl5"  class="code-line">  pq.<span class="fn">push</span>((<span class="num">0</span>, <span class="kw">null</span>, start))</span>
+<span id="cl6"  class="code-line">  <span class="kw">while</span> pq <span class="kw">not empty</span>:</span>
+<span id="cl7"  class="code-line">    (cost, from, u) = pq.<span class="fn">popMin</span>()</span>
+<span id="cl8"  class="code-line">    <span class="kw">if</span> u <span class="kw">in</span> inMST: <span class="kw">continue</span></span>
+<span id="cl9"  class="code-line">    inMST.<span class="fn">add</span>(u)</span>
+<span id="cl10" class="code-line">    <span class="kw">if</span> from <span class="kw">is not null</span>:</span>
+<span id="cl11" class="code-line">      mstEdges.<span class="fn">append</span>((from, u, cost))</span>
+<span id="cl12" class="code-line">    <span class="kw">for</span> (v, w) <span class="kw">in</span> graph.adj[u]:</span>
+<span id="cl13" class="code-line">      <span class="kw">if</span> v <span class="kw">not in</span> inMST:</span>
+<span id="cl14" class="code-line">        pq.<span class="fn">push</span>((w, u, v))</span>
+<span id="cl15" class="code-line">  <span class="kw">return</span> mstEdges</span>
+      </div>
+    </div>
+
+    <div class="panel" style="padding:14px 16px;">
+      <div class="panel-hd">📊 Key Properties</div>
+      <div id="algoInfo" style="font-size:12px;color:var(--text-dim);line-height:1.9;font-family:var(--mono);">Properties appear during traversal.</div>
+    </div>
+
+  </div>
 </div>
+
+</div>
+
+<script>
+// ── Theme ──────────────────────────────────────────
+function toggleTheme(){const h=document.documentElement,l=h.getAttribute('data-theme')!=='light';h.setAttribute('data-theme',l?'light':'dark');document.getElementById('toggleLabel').textContent=l?'Dark mode':'Light mode';localStorage.setItem('theme',l?'light':'dark');}
+(function(){const s=localStorage.getItem('theme');if(s==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('toggleLabel').textContent='Dark mode';}})();
+
+// ── Presets ───────────────────────────────────────
+const PRESETS = {
+  simple:{
+    nodes:[{id:0,x:.15,y:.5},{id:1,x:.35,y:.18},{id:2,x:.35,y:.82},{id:3,x:.55,y:.18},{id:4,x:.55,y:.5},{id:5,x:.55,y:.82},{id:6,x:.78,y:.3},{id:7,x:.78,y:.72},{id:8,x:.92,y:.5}],
+    edges:[[0,1,4],[0,2,3],[1,3,2],[1,4,6],[2,4,3],[2,5,5],[3,6,2],[4,6,4],[4,7,5],[5,7,2],[6,8,3],[7,8,4]]
+  },
+  tree:{
+    nodes:[{id:0,x:.5,y:.08},{id:1,x:.25,y:.3},{id:2,x:.75,y:.3},{id:3,x:.1,y:.58},{id:4,x:.38,y:.58},{id:5,x:.62,y:.58},{id:6,x:.9,y:.58},{id:7,x:.05,y:.85},{id:8,x:.2,y:.85},{id:9,x:.58,y:.85},{id:10,x:.72,y:.85}],
+    edges:[[0,1,5],[0,2,3],[1,3,4],[1,4,6],[2,5,2],[2,6,7],[3,7,3],[3,8,5],[5,9,4],[6,10,2],[4,9,8],[5,6,1]]
+  },
+  grid:{
+    nodes:[{id:0,x:.12,y:.18},{id:1,x:.38,y:.18},{id:2,x:.65,y:.18},{id:3,x:.9,y:.18},{id:4,x:.12,y:.5},{id:5,x:.38,y:.5},{id:6,x:.65,y:.5},{id:7,x:.9,y:.5},{id:8,x:.12,y:.82},{id:9,x:.38,y:.82},{id:10,x:.65,y:.82},{id:11,x:.9,y:.82}],
+    edges:[[0,1,3],[1,2,5],[2,3,2],[4,5,6],[5,6,1],[6,7,4],[8,9,3],[9,10,2],[10,11,5],[0,4,4],[4,8,3],[1,5,2],[5,9,6],[2,6,5],[6,10,1],[3,7,4],[7,11,3]]
+  },
+  dense:{
+    nodes:[{id:0,x:.5,y:.1},{id:1,x:.18,y:.35},{id:2,x:.82,y:.35},{id:3,x:.1,y:.72},{id:4,x:.5,y:.88},{id:5,x:.9,y:.72},{id:6,x:.5,y:.48}],
+    edges:[[0,1,2],[0,2,4],[0,6,3],[1,2,8],[1,3,5],[1,6,1],[2,5,3],[2,6,6],[3,4,4],[3,6,7],[4,5,2],[4,6,5],[5,6,3],[0,4,9],[1,5,10]]
+  },
+  clique:{
+    nodes:(()=>{const ns=[];for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2-Math.PI/2;ns.push({id:i,x:.5+.38*Math.cos(a),y:.5+.42*Math.sin(a)});}return ns;})(),
+    edges:(()=>{const es=[];const W=[1,3,6,2,5,4,7,2,8,3,6,4,9,1,5];let wi=0;for(let i=0;i<6;i++)for(let j=i+1;j<6;j++)es.push([i,j,W[wi++%W.length]]);return es;})()
+  },
+  random:null
+};
+
+let graph=null,steps=[],stepIdx=-1,isPlaying=false,playTimer=null,startNode=0,speedMult=2;
+const SPEEDS=[2400,1800,1200,800,450];
+
+// ── Voice ─────────────────────────────────────────
+let voiceEnabled=false;
+const synth=window.speechSynthesis;let ttsVoice=null;
+function loadVoices(){const v=synth.getVoices();ttsVoice=v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;}
+loadVoices();if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=loadVoices;
+function speak(t){return new Promise(r=>{if(!voiceEnabled||!synth){r();return;}synth.cancel();const u=new SpeechSynthesisUtterance(t);u.voice=ttsVoice;u.rate=.88;u.pitch=1.05;u.volume=1;u.onstart=()=>document.getElementById('speakBars').classList.add('on');u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');r();};synth.speak(u);});}
+function stopSpeech(){synth&&synth.cancel();document.getElementById('speakBars').classList.remove('on');}
+function toggleVoice(){voiceEnabled=!voiceEnabled;const b=document.getElementById('voiceToggle'),ic=document.getElementById('voiceIcon'),lb=document.getElementById('voiceLabel');if(voiceEnabled){ic.textContent='🔊';lb.textContent='Voice On';b.classList.remove('off');}else{ic.textContent='🔇';lb.textContent='Voice Off';b.classList.add('off');stopSpeech();}if(isPlaying){pause();play();}}
+
+// ── Graph build ───────────────────────────────────
+function buildGraph(p){
+  const adj={};
+  p.nodes.forEach(n=>adj[n.id]=[]);
+  p.edges.forEach(([a,b,w])=>{adj[a].push({node:b,w});adj[b].push({node:a,w});});
+  return{nodes:p.nodes,edges:p.edges,adj,n:p.nodes.length};
+}
+
+// ── Prim steps ────────────────────────────────────
+function buildPrimSteps(g,start){
+  const steps=[];
+  const inMST=new Set(),mstEdges=[],pq=[];
+  let totalW=0;
+
+  function pqPush(cost,from,to){
+    pq.push({cost,from,to});
+    pq.sort((a,b)=>a.cost-b.cost);
+  }
+  function pqCopy(){return pq.map(x=>({...x}));}
+  function mstCopy(){return mstEdges.map(x=>({...x}));}
+
+  steps.push({inMST:new Set(),pq:[],mstEdges:[],current:null,addedEdge:null,totalW:0,phase:'idle',codeLine:5,
+    narration:`Starting Prim's from node ${start}. Push (cost=0, from=null, to=${start}) onto the min-heap.`});
+
+  pqPush(0,null,start);
+
+  steps.push({inMST:new Set([...inMST]),pq:pqCopy(),mstEdges:mstCopy(),current:null,addedEdge:null,totalW,phase:'start',codeLine:5,
+    narration:`Priority queue initialized with start node ${start}. The MST is empty. We'll grow it greedily.`});
+
+  let safety=0;
+  while(pq.length>0&&safety++<500){
+    const top=pq[0];
+
+    steps.push({inMST:new Set([...inMST]),pq:pqCopy(),mstEdges:mstCopy(),current:top.to,addedEdge:null,totalW,phase:'pick',codeLine:7,
+      narration:`Pop minimum from heap: cost=${top.cost}, edge ${top.from}→${top.to}. Check if ${top.to} is already in MST.`});
+
+    if(inMST.has(top.to)){
+      pq.shift();
+      steps.push({inMST:new Set([...inMST]),pq:pqCopy(),mstEdges:mstCopy(),current:top.to,addedEdge:null,totalW,phase:'pick',codeLine:8,
+        narration:`Node ${top.to} already in MST — skip. Discard this entry and continue.`});
+      continue;
+    }
+
+    pq.shift();
+    inMST.add(top.to);
+
+    if(top.from!==null){
+      mstEdges.push({from:top.from,to:top.to,w:top.cost});
+      totalW+=top.cost;
+      steps.push({inMST:new Set([...inMST]),pq:pqCopy(),mstEdges:mstCopy(),current:top.to,addedEdge:{from:top.from,to:top.to,w:top.cost},totalW,phase:'add',codeLine:11,
+        narration:`✅ Add node ${top.to} to MST via edge ${top.from}–${top.to} (weight ${top.cost}). MST total = ${totalW}.`});
+    } else {
+      steps.push({inMST:new Set([...inMST]),pq:pqCopy(),mstEdges:mstCopy(),current:top.to,addedEdge:null,totalW,phase:'add',codeLine:9,
+        narration:`Add start node ${top.to} to MST. Now explore its neighbors and push edges onto the heap.`});
+    }
+
+    // explore neighbors
+    const neighbors=g.adj[top.to].slice().sort((a,b)=>a.w-b.w);
+    for(const nb of neighbors){
+      if(!inMST.has(nb.node)){
+        pqPush(nb.w,top.to,nb.node);
+        steps.push({inMST:new Set([...inMST]),pq:pqCopy(),mstEdges:mstCopy(),current:top.to,addedEdge:null,totalW,phase:'pick',codeLine:14,
+          narration:`Push neighbor ${nb.node} (edge ${top.to}–${nb.node}, w=${nb.w}) onto priority queue.`});
+      }
+    }
+  }
+
+  const complete=inMST.size===g.n;
+  steps.push({inMST:new Set([...inMST]),pq:[],mstEdges:mstCopy(),current:null,addedEdge:null,totalW,phase:'done',codeLine:15,
+    narration:complete
+      ?`🌲 MST complete! ${mstEdges.length} edges, total weight = ${totalW}. All ${g.n} nodes connected.`
+      :`BFS complete. ${inMST.size} of ${g.n} nodes reached. Graph may be disconnected.`});
+
+  return steps;
+}
+
+// ── Canvas ────────────────────────────────────────
+const canvas=document.getElementById('graphCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=canvas.parentElement.clientWidth;}
+function nodePos(n){return{x:n.x*canvas.width,y:n.y*canvas.height};}
+
+function drawGraph(step){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!graph)return;
+  const s=step||{inMST:new Set(),pq:[],mstEdges:[],current:null,addedEdge:null};
+  const inMST=s.inMST||new Set();
+  const mstSet=new Set();
+  (s.mstEdges||[]).forEach(e=>mstSet.add(`${Math.min(e.from,e.to)}-${Math.max(e.from,e.to)}`));
+  const newEdge=s.addedEdge?`${Math.min(s.addedEdge.from,s.addedEdge.to)}-${Math.max(s.addedEdge.from,s.addedEdge.to)}`:null;
+  const pqNodes=new Set((s.pq||[]).map(x=>x.to));
+
+  // Draw edges
+  graph.edges.forEach(([a,b,w])=>{
+    const pa=nodePos(graph.nodes[a]),pb=nodePos(graph.nodes[b]);
+    const key=`${Math.min(a,b)}-${Math.max(a,b)}`;
+    const isMST=mstSet.has(key),isNew=newEdge===key;
+    ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);
+    if(isNew){ctx.strokeStyle='rgba(6,214,160,0.9)';ctx.lineWidth=3.5;ctx.setLineDash([]);}
+    else if(isMST){ctx.strokeStyle='rgba(255,209,102,0.65)';ctx.lineWidth=2.5;ctx.setLineDash([]);}
+    else{ctx.strokeStyle='rgba(28,45,69,0.55)';ctx.lineWidth=1;ctx.setLineDash([]);}
+    ctx.stroke();ctx.setLineDash([]);
+    // weight label
+    const mx=(pa.x+pb.x)/2,my=(pa.y+pb.y)/2;
+    const dx=pb.x-pa.x,dy=pb.y-pa.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+    const lx=mx-dy/len*10,ly=my+dx/len*10;
+    ctx.font="bold 10px 'JetBrains Mono'";
+    ctx.fillStyle=isNew?'#06d6a0':isMST?'rgba(255,209,102,.85)':'rgba(90,140,180,.7)';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(w,lx,ly);
+  });
+
+  // Draw nodes
+  graph.nodes.forEach(nd=>{
+    const p=nodePos(nd);
+    const isCurr=nd.id===s.current,isInMST=inMST.has(nd.id),isCand=pqNodes.has(nd.id)&&!isInMST;
+    const isStart=nd.id===startNode;
+
+    if(isCurr||isCand){
+      ctx.beginPath();ctx.arc(p.x,p.y,26,0,Math.PI*2);
+      ctx.fillStyle=isCurr?'rgba(0,212,170,.22)':'rgba(255,140,66,.18)';ctx.fill();
+    }
+
+    ctx.beginPath();ctx.arc(p.x,p.y,18,0,Math.PI*2);
+    let fill='#1a2840',stroke='#2a4060',sw=2;
+    if(isCurr){fill='#003a2a';stroke='#00d4aa';sw=3;}
+    else if(isInMST){fill='#1e3a2a';stroke='#06d6a0';sw=2;}
+    else if(isCand){fill='#3a1800';stroke='#ff8c42';sw=2;}
+    ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=sw;ctx.stroke();
+
+    if(isStart){ctx.beginPath();ctx.arc(p.x,p.y,22,0,Math.PI*2);ctx.strokeStyle='rgba(255,140,66,.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);}
+
+    ctx.fillStyle=isCurr?'#00d4aa':isInMST?'#06d6a0':isCand?'#ff8c42':'#4a6a9a';
+    ctx.font="bold 12px 'JetBrains Mono'";ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(nd.id,p.x,p.y);
+    if(isStart){ctx.fillStyle='rgba(255,140,66,.9)';ctx.font="bold 9px 'JetBrains Mono'";ctx.fillText('S',p.x+22,p.y-14);}
+  });
+}
+
+// ── Render step ───────────────────────────────────
+function hexToRgb(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`${r},${g},${b}`;}
+const NODE_COLS=['#ff8c42','#ff6b9d','#b06aff','#4da6ff','#00d4aa','#ffd166','#06d6a0','#ff6b6b','#a0e0ff'];
+
+function renderStep(idx){
+  if(idx<0||idx>=steps.length)return;
+  const s=steps[idx];
+
+  document.getElementById('narText').textContent=s.narration;
+  document.getElementById('sCurrent').textContent=s.current!==null?s.current:'—';
+  document.getElementById('sEdge').textContent=s.addedEdge?`${s.addedEdge.from}–${s.addedEdge.to} (${s.addedEdge.w})`:'—';
+  document.getElementById('sMSTCount').textContent=s.mstEdges.length;
+  document.getElementById('sMSTWeight').textContent=s.totalW;
+  document.getElementById('sInMST').textContent=s.inMST.size;
+
+  const pb=document.getElementById('phaseBadge');
+  const pcls={idle:'ph-idle',start:'ph-start',pick:'ph-pick',add:'ph-add',done:'ph-done'};
+  const plbl={idle:'Idle',start:'Starting',pick:'Checking',add:'Added ✓',done:'Complete 🌲'};
+  pb.className='phase-badge '+(pcls[s.phase]||'ph-idle');pb.textContent=plbl[s.phase]||'Idle';
+
+  document.getElementById('progFill').style.width=`${((idx+1)/steps.length)*100}%`;
+  document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
+
+  // Code highlight
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  if(s.codeLine){const el=document.getElementById('cl'+s.codeLine);if(el)el.classList.add('active');}
+
+  // Priority queue
+  const pqEl=document.getElementById('pqWrap');
+  if(!s.pq||s.pq.length===0){
+    pqEl.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Priority queue is empty</span>';
+  } else {
+    pqEl.innerHTML=s.pq.map((e,i)=>{
+      const tc=NODE_COLS[e.to%NODE_COLS.length];
+      const fc=e.from!==null?NODE_COLS[e.from%NODE_COLS.length]:'#5a7a9a';
+      return `<div class="pq-item${i===0?' pq-top':''}">
+        <span class="pq-cost">${e.cost}</span>
+        <span class="pq-edge"><span class="pq-from" style="color:${fc}">${e.from!==null?e.from:'—'}</span><span class="pq-arrow"> → </span><span class="pq-to" style="color:${tc}">${e.to}</span></span>
+        ${i===0?'<span class="pq-badge top">MIN</span>':''}
+      </div>`;
+    }).join('');
+  }
+
+  // MST edges
+  const mstEl=document.getElementById('mstList');
+  if(!s.mstEdges||s.mstEdges.length===0){
+    mstEl.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">No edges added yet</span>';
+  } else {
+    mstEl.innerHTML=s.mstEdges.map(e=>`
+      <div class="mst-edge">
+        <span class="me-cost">${e.w}</span>
+        <span class="me-nodes">${e.from} — ${e.to}</span>
+      </div>`).join('');
+  }
+  const tot=document.getElementById('mstTotal');
+  tot.style.display=s.mstEdges.length>0?'flex':'none';
+  document.getElementById('mstTotalVal').textContent=s.totalW;
+
+  // Info
+  const info=document.getElementById('algoInfo');
+  const n=graph.n;
+  const pct=s.inMST.size?Math.round((s.inMST.size/n)*100):0;
+  info.innerHTML=`
+<div style="color:var(--teal)">Nodes in MST: ${s.inMST.size} / ${n} (${pct}%)</div>
+<div style="color:var(--orange)">Queue size: ${s.pq.length}</div>
+<div style="color:var(--yellow)">MST weight so far: ${s.totalW}</div>
+<div style="color:var(--text-dim);margin-top:4px;">V−1 edges needed: ${n-1}</div>
+<div style="color:${s.mstEdges.length===n-1?'var(--green)':'var(--text-dim)'}">Edges added: ${s.mstEdges.length}${s.mstEdges.length===n-1?' ✅':''}</div>
+  `;
+
+  drawGraph(s);
+}
+
+// ── Playback ──────────────────────────────────────
+function togglePlay(){isPlaying?pause():play();}
+function play(){if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').innerHTML='⏸ Pause';advance();}
+function pause(){isPlaying=false;stopSpeech();clearTimeout(playTimer);document.getElementById('btnPlay').innerHTML='▶ Play';}
+function advance(){if(!isPlaying)return;if(stepIdx>=steps.length-1){pause();return;}stepIdx++;renderStep(stepIdx);if(voiceEnabled){speak(steps[stepIdx].narration).then(()=>{if(isPlaying)playTimer=setTimeout(advance,300);});}else{playTimer=setTimeout(advance,SPEEDS[speedMult-1]||1200);}}
+function doNext(){if(isPlaying)pause();if(stepIdx>=steps.length-1)return;stepIdx++;renderStep(stepIdx);if(voiceEnabled)speak(steps[stepIdx].narration);}
+function setSpeed(v){speedMult=parseInt(v);document.getElementById('speedVal').textContent=`${v}×`;}
+
+// ── Reset ─────────────────────────────────────────
+function resetAll(){
+  pause();stepIdx=-1;
+  steps=buildPrimSteps(graph,startNode);
+  document.getElementById('narText').textContent='Press ▶ Play to begin Prim\'s algorithm.';
+  document.getElementById('sCurrent').textContent='—';
+  document.getElementById('sEdge').textContent='—';
+  document.getElementById('sMSTCount').textContent='0';
+  document.getElementById('sMSTWeight').textContent='0';
+  document.getElementById('sInMST').textContent='0';
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('btnPlay').innerHTML='▶ Play';
+  document.getElementById('pqWrap').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Priority queue is empty</span>';
+  document.getElementById('mstList').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">No edges added yet</span>';
+  document.getElementById('mstTotal').style.display='none';
+  document.getElementById('algoInfo').textContent='Properties appear during traversal.';
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  drawGraph(null);
+}
+
+// ── Presets & inputs ──────────────────────────────
+function generateRandom(){
+  const n=Math.floor(Math.random()*4)+5;
+  const nodes=[];
+  for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2-Math.PI/2;nodes.push({id:i,x:.5+.38*Math.cos(a),y:.5+.42*Math.sin(a)});}
+  const edges=[];
+  // Guarantee connected
+  for(let i=1;i<n;i++){const w=Math.floor(Math.random()*9)+1;edges.push([i-1,i,w]);}
+  for(let i=0;i<n;i++)for(let j=i+2;j<n;j++){if(Math.random()<0.4){const w=Math.floor(Math.random()*9)+1;edges.push([i,j,w]);}}
+  return{nodes,edges};
+}
+
+function loadPreset(name){
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('p-'+name);if(btn)btn.classList.add('active');
+  const p=(name==='random')?generateRandom():(PRESETS[name]||PRESETS['simple']);
+  graph=buildGraph(p);
+  startNode=0;
+  document.getElementById('startInput').value=0;
+  resizeCanvas();
+  resetAll();
+}
+
+function applyInputs(){
+  const s=parseInt(document.getElementById('startInput').value);
+  const ids=graph.nodes.map(n=>n.id);
+  startNode=ids.includes(s)?s:0;
+  document.getElementById('startInput').value=startNode;
+  resetAll();
+}
+
+window.addEventListener('resize',()=>{resizeCanvas();drawGraph(stepIdx>=0?steps[stepIdx]:null);});
+loadPreset('simple');
+</script>
 </body>
 </html>

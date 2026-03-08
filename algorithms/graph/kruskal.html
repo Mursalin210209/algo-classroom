@@ -3,77 +3,662 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kruskal's MST — AlgoClassroom</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
+<title>Kruskal's MST | AlgoClassroom</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-.coming-soon {
-  text-align: center;
-  padding: 80px 24px;
-  max-width: 600px;
-  margin: 0 auto;
+:root{
+  --bg:#08101e;--surface:#0c1526;--surface2:#101d30;--border:rgba(255,255,255,0.07);
+  --text:#e2eaf5;--text-dim:#5a7a9a;
+  --teal:#00d4aa;--blue:#4da6ff;--orange:#ff8c42;--yellow:#ffd166;
+  --green:#06d6a0;--red:#ff6b6b;--purple:#b06aff;--pink:#ff6b9d;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
 }
-.cs-icon { font-size: 64px; margin-bottom: 24px; display: block; }
-.cs-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
-.cs-sub { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
-.cs-badge {
-  display: inline-block;
-  background: rgba(255,140,66,0.1);
-  border: 1px solid rgba(255,140,66,0.3);
-  color: var(--orange);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  margin-bottom: 24px;
-}
-.preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  text-align: left;
-}
-.preview-box h3 { margin-bottom: 12px; font-size: 14px; color: var(--teal); font-family: var(--mono); }
-.preview-box ul { list-style: none; padding: 0; }
-.preview-box li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.preview-box li:last-child { border-bottom: none; }
-.preview-box li::before { content: '→'; color: var(--teal); font-family: var(--mono); }
+[data-theme="light"]{--bg:#f0f4fa;--surface:#fff;--surface2:#eef2f8;--border:rgba(0,0,0,.1);--text:#1a2540;--text-dim:#6a80a0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(6,214,160,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(6,214,160,.03) 1px,transparent 1px);background-size:40px 40px;}
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 50% 60% at 15% 25%,rgba(6,214,160,.05) 0%,transparent 70%),radial-gradient(ellipse 40% 50% at 85% 75%,rgba(255,209,102,.04) 0%,transparent 70%);}
+.navbar{position:sticky;top:0;z-index:100;background:rgba(8,16,30,.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:54px;display:flex;align-items:center;gap:28px;}
+.nav-logo{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--teal);text-decoration:none;letter-spacing:-.5px;}
+.logo-bracket{color:var(--text-dim);}.logo-dot{color:var(--green);}
+.nav-links{display:flex;gap:18px;margin-left:8px;}
+.nav-links a{font-size:12px;color:var(--text-dim);text-decoration:none;letter-spacing:.5px;transition:color .2s;}
+.nav-links a:hover{color:var(--teal);}
+.theme-toggle{margin-left:auto;display:flex;align-items:center;gap:9px;background:none;border:1px solid var(--border);border-radius:30px;padding:5px 10px 5px 5px;cursor:pointer;transition:border-color .2s;}
+.theme-toggle:hover{border-color:rgba(6,214,160,.4);}
+.toggle-track{width:32px;height:18px;background:var(--surface2);border-radius:9px;position:relative;}
+.toggle-thumb{width:14px;height:14px;background:var(--green);border-radius:50%;position:absolute;top:2px;left:2px;display:flex;align-items:center;justify-content:center;transition:transform .3s;}
+[data-theme="light"] .toggle-thumb{transform:translateX(14px);}
+.toggle-icon{font-size:9px;}
+[data-theme="light"] .toggle-icon::before{content:'☀️';}
+.toggle-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+.algo-page{max-width:1200px;margin:0 auto;padding:28px 24px 60px;position:relative;z-index:1;}
+.back-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;transition:color .2s;}
+.back-link:hover{color:var(--teal);}
+.complexity{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.cplx-chip{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);}
+.cplx-chip span{color:var(--green);font-weight:700;}
+.card-difficulty{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;font-weight:700;}
+.intermediate{background:rgba(6,214,160,.15);color:var(--green);border:1px solid rgba(6,214,160,.3);}
+/* Narration */
+.narration{background:var(--surface);border:1px solid rgba(6,214,160,.15);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.teacher{font-size:28px;flex-shrink:0;}
+.narration-text{font-size:13px;color:var(--text-dim);line-height:1.7;flex:1;}
+.speak-bars{display:flex;gap:2px;align-items:center;height:16px;flex-shrink:0;}
+.speak-bars span{width:3px;border-radius:2px;background:var(--green);transform:scaleY(.2);}
+.speak-bars.on span:nth-child(1){animation:bar .6s 0s infinite alternate;}
+.speak-bars.on span:nth-child(2){animation:bar .6s .1s infinite alternate;}
+.speak-bars.on span:nth-child(3){animation:bar .6s .2s infinite alternate;}
+.speak-bars.on span:nth-child(4){animation:bar .6s .15s infinite alternate;}
+.speak-bars.on span:nth-child(5){animation:bar .6s .05s infinite alternate;}
+@keyframes bar{from{transform:scaleY(.2);height:6px;}to{transform:scaleY(1);height:16px;}}
+/* Status row */
+.status-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;}
+.si{display:flex;flex-direction:column;gap:2px;}
+.sl{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+.sv{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);}
+.phase-badge{padding:3px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;}
+.ph-idle{background:rgba(90,122,154,.15);color:var(--text-dim);border:1px solid rgba(90,122,154,.2);}
+.ph-sort{background:rgba(255,209,102,.15);color:var(--yellow);border:1px solid rgba(255,209,102,.3);}
+.ph-check{background:rgba(77,166,255,.15);color:var(--blue);border:1px solid rgba(77,166,255,.3);}
+.ph-accept{background:rgba(6,214,160,.15);color:var(--green);border:1px solid rgba(6,214,160,.3);}
+.ph-reject{background:rgba(255,107,107,.15);color:var(--red);border:1px solid rgba(255,107,107,.3);}
+.ph-done{background:rgba(255,209,102,.15);color:var(--yellow);border:1px solid rgba(255,209,102,.3);}
+.divider-auto{flex:1;}
+.prog-wrap{width:100px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--teal));border-radius:2px;transition:width .4s;}
+.step-ctr{font-family:var(--mono);font-size:10px;color:var(--text-dim);white-space:nowrap;}
+/* Panel */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.panel-hd{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--green);text-transform:uppercase;margin-bottom:12px;}
+/* Buttons */
+.btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn:hover{border-color:rgba(6,214,160,.4);color:var(--green);background:rgba(6,214,160,.05);}
+.btn-primary{background:rgba(6,214,160,.12);border-color:rgba(6,214,160,.4);color:var(--green);}
+.btn-primary:hover{background:rgba(6,214,160,.2);}
+.btn-danger{border-color:rgba(255,107,107,.3);color:var(--red);}
+.btn-danger:hover{background:rgba(255,107,107,.08);border-color:var(--red);}
+.speed-ctrl{display:flex;align-items:center;gap:8px;margin-left:4px;}
+.speed-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+input[type=range]{width:80px;accent-color:var(--green);cursor:pointer;}
+.speed-val{font-family:var(--mono);font-size:10px;color:var(--green);min-width:20px;}
+/* Code */
+.code-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11px;line-height:2;overflow-x:auto;}
+.code-line{display:block;color:var(--text-dim);padding-left:4px;border-left:3px solid transparent;border-radius:2px;white-space:pre;}
+.code-line.active{background:rgba(6,214,160,.12);border-left:3px solid var(--green);color:var(--green);padding-left:7px;}
+.kw{color:#b06aff;}.fn{color:#4da6ff;}.cm{color:#3d6080;font-style:italic;}.num{color:#06d6a0;}
+/* Concepts */
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px;}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;transition:border-color .3s,transform .3s;position:relative;overflow:hidden;}
+.cc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),var(--teal));opacity:0;transition:opacity .3s;}
+.cc:hover{border-color:rgba(6,214,160,.3);transform:translateY(-2px);}
+.cc:hover::after{opacity:1;}
+.cc-icon{font-size:22px;margin-bottom:7px;display:block;}
+.cc-title{font-family:var(--mono);font-size:9px;color:var(--teal);margin-bottom:5px;text-transform:uppercase;letter-spacing:2px;}
+.cc-desc{font-size:12px;color:var(--text-dim);line-height:1.5;}
+/* Layout */
+.two-col{display:grid;grid-template-columns:1fr 390px;gap:16px;margin-bottom:16px;}
+@media(max-width:960px){.two-col{grid-template-columns:1fr;}}
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;}
+.ctrl-top{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+.preset-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.preset-lbl{font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:1px;}
+.preset-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-family:var(--mono);font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.preset-btn:hover{border-color:var(--green);color:var(--green);}
+.preset-btn.active{background:rgba(6,214,160,.1);border-color:var(--green);color:var(--green);}
+/* Legend */
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;align-items:center;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);}
+.ld{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.lde{width:18px;height:4px;border-radius:2px;flex-shrink:0;}
+/* Voice */
+.voice-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:1px;transition:background .2s,border-color .2s;white-space:nowrap;}
+.voice-btn:hover{background:rgba(6,214,160,.08);border-color:rgba(6,214,160,.4);}
+.voice-btn.off{color:var(--text-dim);border-color:var(--border);}
+@keyframes qPop{from{transform:scale(0) rotate(-8deg);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+/* Sorted edge list */
+.edge-list{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto;}
+.edge-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:11px;transition:all .25s;position:relative;overflow:hidden;}
+.edge-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px 0 0 2px;}
+.edge-item.ei-current::before{background:var(--blue);}
+.edge-item.ei-current{border-color:rgba(77,166,255,.4);background:rgba(77,166,255,.07);}
+.edge-item.ei-accepted::before{background:var(--green);}
+.edge-item.ei-accepted{border-color:rgba(6,214,160,.35);background:rgba(6,214,160,.07);}
+.edge-item.ei-rejected::before{background:var(--red);}
+.edge-item.ei-rejected{border-color:rgba(255,107,107,.25);background:rgba(255,107,107,.05);opacity:.55;}
+.ei-idx{color:var(--text-dim);min-width:20px;font-size:10px;}
+.ei-w{font-weight:700;min-width:22px;color:var(--yellow);}
+.ei-nodes{color:var(--text-dim);}
+.ei-a{color:var(--teal);}
+.ei-b{color:var(--blue);}
+.ei-status{margin-left:auto;font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:4px;}
+.ei-status.acc{background:rgba(6,214,160,.15);color:var(--green);border:1px solid rgba(6,214,160,.3);}
+.ei-status.rej{background:rgba(255,107,107,.12);color:var(--red);border:1px solid rgba(255,107,107,.2);}
+.ei-status.cur{background:rgba(77,166,255,.15);color:var(--blue);border:1px solid rgba(77,166,255,.3);}
+
+/* Union-Find visualizer */
+.uf-grid{display:flex;gap:6px;flex-wrap:wrap;}
+.uf-node{display:flex;flex-direction:column;align-items:center;gap:3px;animation:qPop .3s cubic-bezier(.34,1.56,.64,1);}
+.uf-circle{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;border:2px solid;transition:all .3s;}
+.uf-root{font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;}
+
+/* MST list */
+.mst-list{display:flex;flex-direction:column;gap:5px;}
+.mst-edge{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;border:1px solid rgba(6,214,160,.25);background:rgba(6,214,160,.07);font-family:var(--mono);font-size:11px;animation:qPop .3s cubic-bezier(.34,1.56,.64,1);}
+.mst-edge .me-w{font-weight:700;color:var(--yellow);}
+.mst-edge .me-n{color:var(--green);}
+.mst-total{margin-top:10px;padding:8px 12px;border-radius:7px;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.25);font-family:var(--mono);font-size:12px;font-weight:700;color:var(--yellow);display:flex;justify-content:space-between;}
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#graph">Graph</a>
+      <a href="../../index.html#sorting">Sorting</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <div class="toggle-track"><div class="toggle-thumb"><span class="toggle-icon">🌙</span></div></div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
 
 <div class="algo-page">
-  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
+<a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <div class="coming-soon">
-    <span class="cs-icon">🌿</span>
-    <div class="cs-badge">COMING SOON</div>
-    <h1 class="cs-title">Kruskal's MST</h1>
-    <p class="cs-sub">Build minimum spanning tree by greedily adding cheapest non-cycle edges.</p>
-
-    <div class="preview-box">
-      <h3>What you'll learn:</h3>
-      <ul>
-        <li>Sort edges by weight</li>
-        <li>Union-Find for cycle detection</li>
-        <li>O(E log E) time</li>
-      </ul>
+<header style="margin-bottom:20px;">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+    <span style="font-size:40px;">🔗</span>
+    <div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Graph Algorithm · Greedy · Union-Find</div>
+      <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Kruskal's Algorithm</h1>
     </div>
+    <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
+  </div>
+  <p style="color:var(--text-dim);font-size:14px;max-width:640px;line-height:1.7;">Build a Minimum Spanning Tree by sorting all edges by weight and greedily adding the cheapest one that doesn't create a cycle — detected instantly via Union-Find (Disjoint Set Union).</p>
+  <div class="complexity" style="margin-top:10px;">
+    <div class="cplx-chip">Time: <span>O(E log E)</span></div>
+    <div class="cplx-chip">Space: <span>O(V)</span></div>
+    <div class="cplx-chip">Structure: <span>Union-Find</span></div>
+    <div class="cplx-chip">Cycle detect: <span>O(α(V))</span></div>
+    <div class="cplx-chip">Result: <span>MST</span></div>
+  </div>
+</header>
 
-    <div style="margin-top:24px;">
-      <a href="../../index.html" class="btn btn-primary" style="display:inline-flex;">← Explore Other Algorithms</a>
+<div class="concepts">
+  <div class="cc"><span class="cc-icon">📦</span><div class="cc-title">Sort Edges First</div><div class="cc-desc">Kruskal's pre-sorts all edges by weight ascending. Then scans them in order — the key difference from Prim's vertex-centric approach.</div></div>
+  <div class="cc"><span class="cc-icon">🔗</span><div class="cc-title">Union-Find (DSU)</div><div class="cc-desc">Tracks connected components. Find(u) returns the root; Union(u,v) merges components. Path compression + rank makes it nearly O(1).</div></div>
+  <div class="cc"><span class="cc-icon">🚫</span><div class="cc-title">Cycle Detection</div><div class="cc-desc">An edge (u,v) creates a cycle iff Find(u) == Find(v) — they're already in the same component. Reject it immediately.</div></div>
+  <div class="cc"><span class="cc-icon">✂️</span><div class="cc-title">Cut Property</div><div class="cc-desc">Like Prim's, Kruskal's is correct by the cut property: the minimum-weight crossing edge of any cut is always safe to include in the MST.</div></div>
+</div>
+
+<div class="narration">
+  <span class="teacher" id="teacher">🧑‍💻</span>
+  <div class="narration-text" id="narText">Welcome to Kruskal's Algorithm! Pick a graph preset and press ▶ Play to watch edges get sorted, checked, accepted or rejected as the MST grows.</div>
+  <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+</div>
+
+<div class="status-row">
+  <div class="si"><span class="sl">Edge</span><span class="sv" style="color:var(--blue)" id="sEdge">—</span></div>
+  <div class="si"><span class="sl">Weight</span><span class="sv" style="color:var(--yellow)" id="sWeight">—</span></div>
+  <div class="si"><span class="sl">Cycle?</span><span class="sv" id="sCycle">—</span></div>
+  <div class="si"><span class="sl">MST Edges</span><span class="sv" style="color:var(--green)" id="sMSTCount">0</span></div>
+  <div class="si"><span class="sl">MST Weight</span><span class="sv" style="color:var(--yellow)" id="sMSTWeight">0</span></div>
+  <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+  <div class="divider-auto"></div>
+  <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+  <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+</div>
+
+<div class="two-col">
+  <!-- LEFT -->
+  <div class="panel">
+    <div class="panel-hd">🕸️ Graph Visualization</div>
+    <div class="legend">
+      <div class="li"><div class="ld" style="background:#1a2840;border:2px solid #2a4060"></div>Unvisited</div>
+      <div class="li"><div class="lde" style="background:var(--blue)"></div>Checking</div>
+      <div class="li"><div class="lde" style="background:var(--green)"></div>MST edge</div>
+      <div class="li"><div class="lde" style="background:rgba(255,107,107,.5);border:1px dashed var(--red)"></div>Rejected</div>
+      <div class="li"><div class="ld" style="background:var(--green);opacity:.7"></div>In MST</div>
+      <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+        <span id="voiceIcon">🔇</span>
+        <span id="voiceLabel">Voice Off</span>
+      </button>
+    </div>
+    <canvas id="graphCanvas" height="430" style="width:100%;display:block;border-radius:8px;"></canvas>
+    <div class="controls" style="margin-top:14px;">
+      <div class="ctrl-top">
+        <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">▶ Play</button>
+        <button class="btn" onclick="doNext()">⏭ Next Step</button>
+        <button class="btn btn-danger" onclick="resetAll()">⏮ Reset</button>
+        <div class="speed-ctrl">
+          <span class="speed-lbl">⚡ Speed</span>
+          <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="setSpeed(this.value)">
+          <span class="speed-val" id="speedVal">2×</span>
+        </div>
+      </div>
+      <div class="preset-row">
+        <span class="preset-lbl">Graph:</span>
+        <button class="preset-btn active" onclick="loadPreset('simple')" id="p-simple">Simple</button>
+        <button class="preset-btn" onclick="loadPreset('tree')" id="p-tree">Tree-like</button>
+        <button class="preset-btn" onclick="loadPreset('grid')" id="p-grid">Grid</button>
+        <button class="preset-btn" onclick="loadPreset('dense')" id="p-dense">Dense</button>
+        <button class="preset-btn" onclick="loadPreset('clique')" id="p-clique">Clique</button>
+        <button class="preset-btn" onclick="loadPreset('random')" id="p-random">Random</button>
+      </div>
     </div>
   </div>
+
+  <!-- RIGHT -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <div class="panel">
+      <div class="panel-hd">📋 Sorted Edge List</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;">WEIGHT · U — V</div>
+      <div class="edge-list" id="edgeList">
+        <span style="color:var(--text-dim);font-size:12px;font-style:italic;">Edges appear after sorting.</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">🔗 Union-Find Components</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:10px;">Each group = one connected component</div>
+      <div class="uf-grid" id="ufGrid">
+        <span style="color:var(--text-dim);font-size:12px;font-style:italic;">Components shown during traversal.</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">🌲 MST Edges</div>
+      <div class="mst-list" id="mstList">
+        <span style="color:var(--text-dim);font-size:12px;font-style:italic;">No edges accepted yet.</span>
+      </div>
+      <div class="mst-total" id="mstTotal" style="display:none;">
+        <span>Total MST Weight</span><span id="mstTotalVal">0</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">💻 Pseudocode</div>
+      <div class="code-block">
+<span id="cl1"  class="code-line"><span class="kw">function</span> <span class="fn">Kruskal</span>(graph):</span>
+<span id="cl2"  class="code-line">  edges.<span class="fn">sortBy</span>(weight)  <span class="cm"># ascending</span></span>
+<span id="cl3"  class="code-line">  dsu = <span class="fn">DSU</span>(V)  <span class="cm"># each node = own set</span></span>
+<span id="cl4"  class="code-line">  mst = []</span>
+<span id="cl5"  class="code-line">  <span class="kw">for</span> (u, v, w) <span class="kw">in</span> edges:</span>
+<span id="cl6"  class="code-line">    ru = dsu.<span class="fn">find</span>(u)</span>
+<span id="cl7"  class="code-line">    rv = dsu.<span class="fn">find</span>(v)</span>
+<span id="cl8"  class="code-line">    <span class="kw">if</span> ru == rv:  <span class="cm"># same component</span></span>
+<span id="cl9"  class="code-line">      <span class="kw">continue</span>  <span class="cm"># would form cycle</span></span>
+<span id="cl10" class="code-line">    dsu.<span class="fn">union</span>(ru, rv)</span>
+<span id="cl11" class="code-line">    mst.<span class="fn">append</span>((u, v, w))</span>
+<span id="cl12" class="code-line">    <span class="kw">if</span> mst.length == V-<span class="num">1</span>: <span class="kw">break</span></span>
+<span id="cl13" class="code-line">  <span class="kw">return</span> mst</span>
+      </div>
+    </div>
+
+  </div>
 </div>
+
+</div><!-- end algo-page -->
+
+<script>
+// ── Theme ──────────────────────────────────────────────
+function toggleTheme(){const h=document.documentElement,l=h.getAttribute('data-theme')!=='light';h.setAttribute('data-theme',l?'light':'dark');document.getElementById('toggleLabel').textContent=l?'Dark mode':'Light mode';localStorage.setItem('theme',l?'light':'dark');}
+(function(){const s=localStorage.getItem('theme');if(s==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('toggleLabel').textContent='Dark mode';}})();
+
+// ── Presets ────────────────────────────────────────────
+const PRESETS = {
+  simple:{
+    nodes:[{id:0,x:.12,y:.5},{id:1,x:.32,y:.18},{id:2,x:.32,y:.82},{id:3,x:.54,y:.18},{id:4,x:.54,y:.5},{id:5,x:.54,y:.82},{id:6,x:.76,y:.3},{id:7,x:.76,y:.72},{id:8,x:.92,y:.5}],
+    edges:[[0,1,4],[0,2,3],[1,3,2],[1,4,6],[2,4,3],[2,5,5],[3,6,2],[4,6,4],[4,7,5],[5,7,2],[6,8,3],[7,8,4]]
+  },
+  tree:{
+    nodes:[{id:0,x:.5,y:.08},{id:1,x:.25,y:.3},{id:2,x:.75,y:.3},{id:3,x:.1,y:.58},{id:4,x:.38,y:.58},{id:5,x:.62,y:.58},{id:6,x:.9,y:.58},{id:7,x:.05,y:.85},{id:8,x:.2,y:.85},{id:9,x:.58,y:.85},{id:10,x:.72,y:.85}],
+    edges:[[0,1,5],[0,2,3],[1,3,4],[1,4,6],[2,5,2],[2,6,7],[3,7,3],[3,8,5],[5,9,4],[6,10,2],[4,9,8],[5,6,1]]
+  },
+  grid:{
+    nodes:[{id:0,x:.12,y:.18},{id:1,x:.38,y:.18},{id:2,x:.65,y:.18},{id:3,x:.9,y:.18},{id:4,x:.12,y:.5},{id:5,x:.38,y:.5},{id:6,x:.65,y:.5},{id:7,x:.9,y:.5},{id:8,x:.12,y:.82},{id:9,x:.38,y:.82},{id:10,x:.65,y:.82},{id:11,x:.9,y:.82}],
+    edges:[[0,1,3],[1,2,5],[2,3,2],[4,5,6],[5,6,1],[6,7,4],[8,9,3],[9,10,2],[10,11,5],[0,4,4],[4,8,3],[1,5,2],[5,9,6],[2,6,5],[6,10,1],[3,7,4],[7,11,3]]
+  },
+  dense:{
+    nodes:[{id:0,x:.5,y:.1},{id:1,x:.18,y:.35},{id:2,x:.82,y:.35},{id:3,x:.1,y:.72},{id:4,x:.5,y:.88},{id:5,x:.9,y:.72},{id:6,x:.5,y:.48}],
+    edges:[[0,1,2],[0,2,4],[0,6,3],[1,2,8],[1,3,5],[1,6,1],[2,5,3],[2,6,6],[3,4,4],[3,6,7],[4,5,2],[4,6,5],[5,6,3],[0,4,9],[1,5,10]]
+  },
+  clique:{
+    nodes:(()=>{const ns=[];for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2-Math.PI/2;ns.push({id:i,x:.5+.38*Math.cos(a),y:.5+.42*Math.sin(a)});}return ns;})(),
+    edges:(()=>{const es=[],W=[1,3,6,2,5,4,7,2,8,3,6,4,9,1,5];let wi=0;for(let i=0;i<6;i++)for(let j=i+1;j<6;j++)es.push([i,j,W[wi++%W.length]]);return es;})()
+  },
+  random:null
+};
+
+let graph=null, steps=[], stepIdx=-1, isPlaying=false, playTimer=null, speedMult=2;
+const SPEEDS=[2400,1800,1200,800,450];
+
+// ── Voice ──────────────────────────────────────────────
+let voiceEnabled=false;
+const synth=window.speechSynthesis; let ttsVoice=null;
+function loadVoices(){const v=synth.getVoices();ttsVoice=v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;}
+loadVoices(); if(synth.onvoiceschanged!==undefined) synth.onvoiceschanged=loadVoices;
+function speak(t){return new Promise(r=>{if(!voiceEnabled||!synth){r();return;} synth.cancel(); const u=new SpeechSynthesisUtterance(t); u.voice=ttsVoice; u.rate=.88; u.pitch=1.05; u.volume=1; u.onstart=()=>document.getElementById('speakBars').classList.add('on'); u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');r();}; synth.speak(u);});}
+function stopSpeech(){synth&&synth.cancel(); document.getElementById('speakBars').classList.remove('on');}
+function toggleVoice(){voiceEnabled=!voiceEnabled; const b=document.getElementById('voiceToggle'),ic=document.getElementById('voiceIcon'),lb=document.getElementById('voiceLabel'); if(voiceEnabled){ic.textContent='🔊';lb.textContent='Voice On';b.classList.remove('off');}else{ic.textContent='🔇';lb.textContent='Voice Off';b.classList.add('off');stopSpeech();} if(isPlaying){pause();play();}}
+
+// ── Union-Find ─────────────────────────────────────────
+function makeDSU(n){
+  const parent=Array.from({length:n},(_,i)=>i);
+  const rank=Array(n).fill(0);
+  function find(x){if(parent[x]!==x)parent[x]=find(parent[x]);return parent[x];}
+  function union(x,y){const rx=find(x),ry=find(y);if(rx===ry)return false;if(rank[rx]<rank[ry])parent[rx]=ry;else if(rank[rx]>rank[ry])parent[ry]=rx;else{parent[ry]=rx;rank[rx]++;}return true;}
+  function copy(){return{parent:[...parent],rank:[...rank]};}
+  function components(n){const map={};for(let i=0;i<n;i++){const r=find(i);if(!map[r])map[r]=[];map[r].push(i);}return Object.values(map);}
+  return{find,union,copy,components,parent,rank};
+}
+
+// ── Build graph ────────────────────────────────────────
+function buildGraph(p){
+  return{nodes:p.nodes,edges:p.edges,n:p.nodes.length};
+}
+
+// ── Build Kruskal steps ────────────────────────────────
+function buildKruskalSteps(g){
+  const steps=[];
+  const sorted=[...g.edges].sort((a,b)=>a[2]-b[2]);
+  const n=g.n;
+  const dsu=makeDSU(n);
+  const mstEdges=[];
+  // accepted/rejected status per sorted-edge index
+  const status=Array(sorted.length).fill('pending'); // 'pending','current','accepted','rejected'
+  let totalW=0;
+
+  function snap(extra={}){
+    return Object.assign({
+      sorted,
+      status:[...status],
+      dsuComps:dsu.components(n),
+      mstEdges:mstEdges.map(x=>({...x})),
+      totalW,
+      currentEdgeIdx:null,
+      phase:'idle',codeLine:null,narration:'',
+      cycleDetected:null
+    },extra);
+  }
+
+  // Step 0: show sorted list
+  steps.push(snap({phase:'sort',codeLine:2,narration:`Sort all ${sorted.length} edges by weight ascending. Kruskal's will consider them in this order.`}));
+
+  // DSU init
+  steps.push(snap({phase:'sort',codeLine:3,narration:`Initialize Union-Find: each of the ${n} nodes starts in its own component.`}));
+
+  for(let ei=0;ei<sorted.length;ei++){
+    const [u,v,w]=sorted[ei];
+    status[ei]='current';
+
+    const ru=dsu.find(u), rv=dsu.find(v);
+    const isCycle=ru===rv;
+
+    steps.push(snap({currentEdgeIdx:ei,phase:'check',codeLine:6,cycleDetected:isCycle,
+      narration:`Consider edge ${u}–${v} (weight ${w}). Find(${u})=${ru}, Find(${v})=${rv}. ${isCycle?'Same component — would form a cycle!':'Different components — safe to add.'}`}));
+
+    if(isCycle){
+      status[ei]='rejected';
+      steps.push(snap({currentEdgeIdx:ei,phase:'reject',codeLine:9,cycleDetected:true,
+        narration:`❌ Reject edge ${u}–${v}: Find(${u}) == Find(${v}) == ${ru}. Adding it would create a cycle.`}));
+    } else {
+      dsu.union(u,v);
+      mstEdges.push({u,v,w});
+      totalW+=w;
+      status[ei]='accepted';
+      steps.push(snap({currentEdgeIdx:ei,phase:'accept',codeLine:10,cycleDetected:false,
+        narration:`✅ Accept edge ${u}–${v} (weight ${w}). Union the two components. MST weight = ${totalW}.`}));
+      if(mstEdges.length===n-1) break;
+    }
+  }
+
+  const complete=mstEdges.length===n-1;
+  steps.push(snap({phase:'done',codeLine:13,
+    narration:complete
+      ?`🌲 Kruskal's complete! MST has ${mstEdges.length} edges, total weight = ${totalW}. All ${n} nodes are connected.`
+      :`Done. ${mstEdges.length} edges added. Graph may be disconnected — could not form a full spanning tree.`}));
+
+  return steps;
+}
+
+// ── Canvas ─────────────────────────────────────────────
+const canvas=document.getElementById('graphCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=canvas.parentElement.clientWidth;}
+function nodePos(n){return{x:n.x*canvas.width,y:n.y*canvas.height};}
+
+const NODE_COLS=['#ff8c42','#ff6b9d','#b06aff','#4da6ff','#00d4aa','#ffd166','#06d6a0','#ff6b6b','#a0e0ff','#ffb347','#7ec8e3'];
+
+function compColor(compIdx){
+  const palette=['#00d4aa','#4da6ff','#ff8c42','#b06aff','#ffd166','#ff6b9d','#06d6a0','#ff6b6b'];
+  return palette[compIdx%palette.length];
+}
+
+function drawGraph(step){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!graph)return;
+  const s=step||{status:[],sorted:[],mstEdges:[],dsuComps:[],currentEdgeIdx:null};
+
+  const mstSet=new Set((s.mstEdges||[]).map(e=>`${Math.min(e.u,e.v)}-${Math.max(e.u,e.v)}`));
+  const curEdge=s.currentEdgeIdx!==null?s.sorted[s.currentEdgeIdx]:null;
+  const curKey=curEdge?`${Math.min(curEdge[0],curEdge[1])}-${Math.max(curEdge[0],curEdge[1])}`:null;
+
+  // Build node→component index map
+  const compMap={};
+  (s.dsuComps||[]).forEach((comp,ci)=>comp.forEach(nd=>compMap[nd]=ci));
+
+  // Draw edges
+  graph.edges.forEach(([a,b,w])=>{
+    const pa=nodePos(graph.nodes[a]), pb=nodePos(graph.nodes[b]);
+    const key=`${Math.min(a,b)}-${Math.max(a,b)}`;
+    const isMST=mstSet.has(key);
+    const isCur=curKey===key;
+
+    // find status
+    let eiStatus='pending';
+    if(s.sorted){
+      for(let i=0;i<s.sorted.length;i++){
+        const [ea,eb]=s.sorted[i];
+        if(Math.min(ea,eb)===Math.min(a,b)&&Math.max(ea,eb)===Math.max(a,b)){eiStatus=(s.status||[])[i]||'pending';break;}
+      }
+    }
+
+    ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y);
+    if(isCur&&eiStatus==='current'){
+      ctx.strokeStyle='rgba(77,166,255,0.9)'; ctx.lineWidth=3; ctx.setLineDash([]);
+    } else if(isMST){
+      ctx.strokeStyle='rgba(6,214,160,0.75)'; ctx.lineWidth=3; ctx.setLineDash([]);
+    } else if(eiStatus==='rejected'){
+      ctx.strokeStyle='rgba(255,107,107,0.3)'; ctx.lineWidth=1; ctx.setLineDash([5,3]);
+    } else {
+      ctx.strokeStyle='rgba(28,45,69,0.55)'; ctx.lineWidth=1; ctx.setLineDash([]);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+
+    // weight label
+    const mx=(pa.x+pb.x)/2, my=(pa.y+pb.y)/2;
+    const dx=pb.x-pa.x, dy=pb.y-pa.y, len=Math.sqrt(dx*dx+dy*dy)||1;
+    const lx=mx-dy/len*10, ly=my+dx/len*10;
+    ctx.font="bold 10px 'JetBrains Mono'";
+    ctx.fillStyle=isCur?'#4da6ff':isMST?'rgba(6,214,160,.9)':'rgba(90,140,180,.7)';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(w,lx,ly);
+  });
+
+  // Draw nodes — colored by component
+  graph.nodes.forEach(nd=>{
+    const p=nodePos(nd);
+    const ci=compMap[nd.id]??0;
+    const col=compColor(ci);
+    const isCurNode=curEdge&&(curEdge[0]===nd.id||curEdge[1]===nd.id);
+    const isInMST=(s.mstEdges||[]).some(e=>e.u===nd.id||e.v===nd.id);
+
+    if(isCurNode){ctx.beginPath();ctx.arc(p.x,p.y,26,0,Math.PI*2);ctx.fillStyle='rgba(77,166,255,.2)';ctx.fill();}
+
+    ctx.beginPath(); ctx.arc(p.x,p.y,18,0,Math.PI*2);
+    ctx.fillStyle=isInMST?`rgba(${hexToRgb(col)},.18)`:'#1a2840';
+    ctx.fill();
+    ctx.strokeStyle=isInMST?col:isCurNode?'#4da6ff':'#2a4060';
+    ctx.lineWidth=isInMST?2.5:isCurNode?2.5:1.5;
+    ctx.stroke();
+
+    ctx.fillStyle=isInMST?col:'#4a6a9a';
+    ctx.font="bold 12px 'JetBrains Mono'";
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(nd.id,p.x,p.y);
+  });
+}
+
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return`${r},${g},${b}`;
+}
+
+// ── Render step ────────────────────────────────────────
+function renderStep(idx){
+  if(idx<0||idx>=steps.length)return;
+  const s=steps[idx];
+
+  document.getElementById('narText').textContent=s.narration;
+
+  const curEdge=s.currentEdgeIdx!==null?s.sorted[s.currentEdgeIdx]:null;
+  document.getElementById('sEdge').textContent=curEdge?`${curEdge[0]}–${curEdge[1]}`:'—';
+  document.getElementById('sWeight').textContent=curEdge?curEdge[2]:'—';
+  const cycleEl=document.getElementById('sCycle');
+  if(s.cycleDetected===null){cycleEl.textContent='—';cycleEl.style.color='';}
+  else if(s.cycleDetected){cycleEl.textContent='Yes ❌';cycleEl.style.color='var(--red)';}
+  else{cycleEl.textContent='No ✓';cycleEl.style.color='var(--green)';}
+  document.getElementById('sMSTCount').textContent=s.mstEdges.length;
+  document.getElementById('sMSTWeight').textContent=s.totalW;
+
+  const pb=document.getElementById('phaseBadge');
+  const pcls={idle:'ph-idle',sort:'ph-sort',check:'ph-check',accept:'ph-accept',reject:'ph-reject',done:'ph-done'};
+  const plbl={idle:'Idle',sort:'Sorting',check:'Checking',accept:'Accepted ✓',reject:'Rejected ✗',done:'Complete 🌲'};
+  pb.className='phase-badge '+(pcls[s.phase]||'ph-idle');
+  pb.textContent=plbl[s.phase]||'Idle';
+
+  document.getElementById('progFill').style.width=`${((idx+1)/steps.length)*100}%`;
+  document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
+
+  // Pseudocode highlight
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  if(s.codeLine){const el=document.getElementById('cl'+s.codeLine);if(el)el.classList.add('active');}
+
+  // Sorted edge list
+  const elEl=document.getElementById('edgeList');
+  if(!s.sorted||s.sorted.length===0){
+    elEl.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Edges appear after sorting.</span>';
+  } else {
+    elEl.innerHTML=s.sorted.map(([a,b,w],i)=>{
+      const st=(s.status||[])[i]||'pending';
+      const cls=st==='current'?'ei-current':st==='accepted'?'ei-accepted':st==='rejected'?'ei-rejected':'';
+      const badge=st==='accepted'?'<span class="ei-status acc">ACCEPT</span>':st==='rejected'?'<span class="ei-status rej">REJECT</span>':st==='current'?'<span class="ei-status cur">CURRENT</span>':'';
+      return`<div class="edge-item ${cls}">
+        <span class="ei-idx">${i+1}.</span>
+        <span class="ei-w">${w}</span>
+        <span class="ei-nodes"><span class="ei-a">${a}</span><span style="color:var(--text-dim)"> — </span><span class="ei-b">${b}</span></span>
+        ${badge}
+      </div>`;
+    }).join('');
+    // scroll current into view
+    const cur=elEl.querySelector('.ei-current');
+    if(cur)cur.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
+
+  // Union-Find components
+  const ufEl=document.getElementById('ufGrid');
+  if(!s.dsuComps||s.dsuComps.length===0){
+    ufEl.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Components shown during traversal.</span>';
+  } else {
+    const curNodes=curEdge?new Set([curEdge[0],curEdge[1]]):new Set();
+    ufEl.innerHTML=s.dsuComps.map((comp,ci)=>{
+      const col=compColor(ci);
+      return`<div style="display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:7px;border:1px solid rgba(${hexToRgb(col)},.3);background:rgba(${hexToRgb(col)},.07);flex-wrap:wrap;">
+        ${comp.map(nd=>`<span style="width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;border:2px solid ${curNodes.has(nd)?'#4da6ff':col};color:${curNodes.has(nd)?'#4da6ff':col};background:rgba(${hexToRgb(curNodes.has(nd)?'#4da6ff':col)},.13);">${nd}</span>`).join('')}
+      </div>`;
+    }).join('');
+  }
+
+  // MST edges
+  const mstEl=document.getElementById('mstList');
+  if(!s.mstEdges||s.mstEdges.length===0){
+    mstEl.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">No edges accepted yet.</span>';
+  } else {
+    mstEl.innerHTML=s.mstEdges.map(e=>`
+      <div class="mst-edge">
+        <span class="me-w">${e.w}</span>
+        <span class="me-n">${e.u} — ${e.v}</span>
+      </div>`).join('');
+  }
+  const tot=document.getElementById('mstTotal');
+  tot.style.display=s.mstEdges.length>0?'flex':'none';
+  document.getElementById('mstTotalVal').textContent=s.totalW;
+
+  drawGraph(s);
+}
+
+// ── Playback ───────────────────────────────────────────
+function togglePlay(){isPlaying?pause():play();}
+function play(){if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').innerHTML='⏸ Pause';advance();}
+function pause(){isPlaying=false;stopSpeech();clearTimeout(playTimer);document.getElementById('btnPlay').innerHTML='▶ Play';}
+function advance(){if(!isPlaying)return;if(stepIdx>=steps.length-1){pause();return;}stepIdx++;renderStep(stepIdx);if(voiceEnabled){speak(steps[stepIdx].narration).then(()=>{if(isPlaying)playTimer=setTimeout(advance,300);});}else{playTimer=setTimeout(advance,SPEEDS[speedMult-1]||1200);}}
+function doNext(){if(isPlaying)pause();if(stepIdx>=steps.length-1)return;stepIdx++;renderStep(stepIdx);if(voiceEnabled)speak(steps[stepIdx].narration);}
+function setSpeed(v){speedMult=parseInt(v);document.getElementById('speedVal').textContent=`${v}×`;}
+
+// ── Reset ──────────────────────────────────────────────
+function resetAll(){
+  pause(); stepIdx=-1;
+  steps=buildKruskalSteps(graph);
+  document.getElementById('narText').textContent="Press ▶ Play to begin Kruskal's algorithm.";
+  ['sEdge','sWeight','sCycle'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('sCycle').style.color='';
+  document.getElementById('sMSTCount').textContent='0';
+  document.getElementById('sMSTWeight').textContent='0';
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('btnPlay').innerHTML='▶ Play';
+  document.getElementById('edgeList').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Edges appear after sorting.</span>';
+  document.getElementById('ufGrid').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Components shown during traversal.</span>';
+  document.getElementById('mstList').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">No edges accepted yet.</span>';
+  document.getElementById('mstTotal').style.display='none';
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  drawGraph(null);
+}
+
+// ── Presets ────────────────────────────────────────────
+function generateRandom(){
+  const n=Math.floor(Math.random()*4)+5;
+  const nodes=[];
+  for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2-Math.PI/2;nodes.push({id:i,x:.5+.38*Math.cos(a),y:.5+.42*Math.sin(a)});}
+  const edges=[];
+  for(let i=1;i<n;i++){const w=Math.floor(Math.random()*9)+1;edges.push([i-1,i,w]);}
+  for(let i=0;i<n;i++)for(let j=i+2;j<n;j++){if(Math.random()<0.45){const w=Math.floor(Math.random()*9)+1;edges.push([i,j,w]);}}
+  return{nodes,edges};
+}
+
+function loadPreset(name){
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('p-'+name);if(btn)btn.classList.add('active');
+  const p=(name==='random')?generateRandom():(PRESETS[name]||PRESETS['simple']);
+  graph=buildGraph(p);
+  resizeCanvas();
+  resetAll();
+}
+
+window.addEventListener('resize',()=>{resizeCanvas();drawGraph(stepIdx>=0?steps[stepIdx]:null);});
+loadPreset('simple');
+</script>
 </body>
 </html>

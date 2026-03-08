@@ -14,7 +14,6 @@
   margin-bottom: 16px;
 }
 @media (max-width: 960px) { .two-col { grid-template-columns: 1fr; } }
-
 .queue-visual {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   min-height: 44px; padding: 6px 0;
@@ -29,18 +28,14 @@
 @keyframes qPop { from { transform: scale(0) rotate(-20deg); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .q-front { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 8px; color: var(--orange); letter-spacing: 1px; white-space: nowrap; }
 .q-arrow { color: var(--text-dim); font-size: 14px; flex-shrink: 0; }
-
 .visited-list { display: flex; gap: 6px; flex-wrap: wrap; min-height: 32px; padding: 4px 0; }
 .v-chip { padding: 3px 10px; border-radius: 4px; font-family: var(--mono); font-size: 12px; font-weight: 700; animation: qPop .3s cubic-bezier(.34,1.56,.64,1); }
-
 .path-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; min-height: 28px; }
 .path-node { padding: 3px 10px; border-radius: 4px; font-family: var(--mono); font-size: 11px; font-weight: 700; background: rgba(6,214,160,.12); border: 1px solid rgba(6,214,160,.3); color: var(--green); animation: qPop .3s cubic-bezier(.34,1.56,.64,1); }
 .path-arrow { color: var(--text-dim); font-size: 12px; }
-
 .legend { display: flex; gap: 14px; flex-wrap: wrap; padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
 .li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
 .ld { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
-
 .concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
 .cc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; transition: border-color .3s, transform .3s; position: relative; overflow: hidden; }
 .cc::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--teal), var(--blue)); opacity: 0; transition: opacity .3s; }
@@ -49,25 +44,45 @@
 .cc-icon { font-size: 22px; margin-bottom: 7px; display: block; }
 .cc-title { font-family: var(--mono); font-size: 9px; color: var(--teal); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
 .cc-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
-
 .preset-row { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
 .preset-lbl { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
 .preset-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-dim); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all .2s; }
 .preset-btn:hover { border-color: var(--teal); color: var(--teal); }
 .preset-btn.active { background: rgba(0,212,170,.1); border-color: var(--teal); color: var(--teal); }
-
 .controls { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
 .ctrl-top { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
 .input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
 .input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; white-space: nowrap; }
 .target-input { width: 65px; background: var(--surface2); border: 1px solid rgba(255,209,102,.3); border-radius: 7px; padding: 7px 10px; color: var(--yellow); font-family: var(--mono); font-size: 12px; font-weight: 700; outline: none; text-align: center; }
 .target-input:focus { border-color: var(--yellow); box-shadow: 0 0 8px rgba(255,209,102,.2); }
+/* Voice toggle */
+.voice-btn {
+  margin-left: auto; background: none;
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 4px 10px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--teal);
+  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
+.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
+.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
+.voice-icon { font-size: 14px; }
+.narration-text.intro-mode {
+  color: var(--teal); font-weight: 600;
+  animation: glowPulse 2s infinite;
+}
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
+}
+.code-line.active { background: rgba(255,209,102,.12); border-left: 3px solid var(--yellow); color: var(--yellow); padding-left: 7px; }
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
@@ -76,55 +91,55 @@
       <a href="../../index.html#sorting">Sorting</a>
       <a href="../../index.html#dp">Dynamic Programming</a>
     </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <span class="toggle-icon">🌙</span>
+        </div>
+      </div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
   </div>
 </nav>
-
 <div class="algo-page">
-
 <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
-
 <header style="margin-bottom:20px;">
   <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
-    <span style="font-size:40px;">🕳️</span>
+    <span style="font-size:40px;">🌲</span>
     <div>
       <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Graph Algorithm</div>
       <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Depth-First Search</h1>
     </div>
     <div style="margin-left:auto;"><span class="card-difficulty intermediate">Intermediate</span></div>
   </div>
-  <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">Dive deep into graph branches before backtracking. Uses a stack to explore paths, but no shortest path guarantee in unweighted graphs.</p>
+  <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">Explore a graph by diving as deep as possible along each branch before backtracking. Uses a stack to explore paths fully.</p>
   <div class="complexity" style="margin-top:10px;">
     <div class="cplx-chip">Time: <span>O(V + E)</span></div>
     <div class="cplx-chip">Space: <span>O(V)</span></div>
-    <div class="cplx-chip">Shortest path: <span>✗ Not Guaranteed</span></div>
+    <div class="cplx-chip">Shortest path: <span>✗ Not guaranteed</span></div>
     <div class="cplx-chip">Structure: <span>Stack (LIFO)</span></div>
   </div>
 </header>
-
 <div class="concepts">
-  <div class="cc"><span class="cc-icon">🕳️</span><div class="cc-title">Depth Dive</div><div class="cc-desc">DFS goes as deep as possible along a branch before backtracking to explore others.</div></div>
-  <div class="cc"><span class="cc-icon">📚</span><div class="cc-title">Stack — LIFO</div><div class="cc-desc">A stack (Last-In, First-Out) ensures we process the most recently discovered nodes first.</div></div>
-  <div class="cc"><span class="cc-icon">📍</span><div class="cc-title">Path Finding</div><div class="cc-desc">DFS finds a path to the target, but it may not be the shortest one due to deep exploration.</div></div>
+  <div class="cc"><span class="cc-icon">🌲</span><div class="cc-title">Path Diving</div><div class="cc-desc">DFS goes deep into one path before exploring siblings — like traversing a maze by always turning left.</div></div>
+  <div class="cc"><span class="cc-icon">📚</span><div class="cc-title">Stack — LIFO</div><div class="cc-desc">A stack (Last-In, First-Out) ensures we backtrack after reaching a dead end.</div></div>
+  <div class="cc"><span class="cc-icon">🛤️</span><div class="cc-title">Path Finding</div><div class="cc-desc">DFS finds a path if one exists, but it may not be the shortest — useful for connectivity or cycles.</div></div>
   <div class="cc"><span class="cc-icon">⏱️</span><div class="cc-title">O(V + E) Time</div><div class="cc-desc">Each vertex and edge is visited once. Space complexity is also O(V) for the stack and visited set.</div></div>
 </div>
-
 <div class="narration" id="narration">
   <span class="teacher" id="teacher">🧑‍💻</span>
-  <div class="narration-text" id="narText">Welcome to DFS! Choose a graph preset, set your start and target nodes, then press ▶ Play to watch the depth dive.</div>
+  <div class="narration-text" id="narText">Welcome to DFS! Choose a graph preset, set your start and target nodes, then press ▶ Play to watch the depth exploration.</div>
   <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
 </div>
-
 <div class="status-row">
   <div class="si"><span class="sl">Current</span><span class="sv" id="sCurrent">—</span></div>
   <div class="si"><span class="sl">Target</span><span class="sv yellow" id="sTarget">—</span></div>
-  <div class="si"><span class="sl">Depth</span><span class="sv orange" id="sLevel">0</span></div>
   <div class="si"><span class="sl">Visited</span><span class="sv" id="sVisited">0</span></div>
   <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
   <div class="divider-auto"></div>
   <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
   <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
 </div>
-
 <div class="two-col">
   <div class="panel">
     <div class="panel-hd">🕸️ Graph Visualization</div>
@@ -135,36 +150,13 @@
       <div class="li"><div class="ld" style="background:#1e3a5a"></div>Visited</div>
       <div class="li"><div class="ld" style="background:var(--yellow);box-shadow:0 0 8px rgba(255,209,102,.6)"></div>Target Found</div>
       <div class="li"><div class="ld" style="background:var(--green)"></div>Path</div>
+      <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
+        <span class="voice-icon" id="voiceIcon">🔇</span>
+        <span id="voiceLabel">Voice Off</span>
+      </button>
     </div>
     <canvas id="graphCanvas" height="420" style="width:100%;display:block;border-radius:8px;"></canvas>
-  </div>
-
-  <div style="display:flex;flex-direction:column;gap:14px;">
-    <div class="panel">
-      <div class="panel-hd">📚 Stack (LIFO)</div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;">BOTTOM → TOP</div>
-      <div class="queue-visual" id="queueVisual"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack is empty</span></div>
-    </div>
-    <div class="panel">
-      <div class="panel-hd">✅ Visited Order</div>
-      <div class="visited-list" id="visitedList"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Nothing visited yet</span></div>
-    </div>
-    <div class="panel">
-      <div class="panel-hd">🗺️ Path</div>
-      <div class="path-row" id="pathRow"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Path shown when target is found</span></div>
-      <div class="complexity">
-        <div class="cplx-chip">Time: <span>O(V + E)</span></div>
-        <div class="cplx-chip">Space: <span>O(V)</span></div>
-      </div>
-    </div>
-    <div class="panel" style="padding:14px 16px;">
-      <div class="panel-hd">📊 DFS Depths</div>
-      <div id="levelInfo" style="font-size:12px;color:var(--text-dim);line-height:1.8;font-family:var(--mono);">Depths appear as DFS explores.</div>
-    </div>
-  </div>
-</div>
-
-<div class="controls">
+    <div class="controls">
   <div class="ctrl-top">
     <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">▶ Play</button>
     <button class="btn" onclick="doNext()">⏭ Next Step</button>
@@ -192,11 +184,74 @@
     <button class="btn" onclick="applyInputs()">Apply</button>
   </div>
 </div>
-
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div class="panel">
+      <div class="panel-hd">📚 Stack (LIFO)</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;">BOTTOM ← TOP</div>
+      <div class="queue-visual" id="stackVisual"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack is empty</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd">✅ Visited Order</div>
+      <div class="visited-list" id="visitedList"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Nothing visited yet</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd">🗺️ Path Found</div>
+      <div class="path-row" id="pathRow"><span style="color:var(--text-dim);font-size:12px;font-style:italic;">Path shown when target is found</span></div>
+      <div class="complexity">
+        <div class="cplx-chip">Time: <span>O(V + E)</span></div>
+        <div class="cplx-chip">Space: <span>O(V)</span></div>
+      </div>
+    </div>
+          <div class="panel">
+        <div class="panel-hd">💻 Pseudocode</div>
+        <div class="code-block">
+<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">DFS</span>(graph, start, target):</span>
+<span id="cl2" class="code-line">  stack = <span class="kw">new</span> <span class="fn">Stack</span>()</span>
+<span id="cl3" class="code-line">  visited = <span class="kw">new</span> <span class="fn">Set</span>()</span>
+<span id="cl4" class="code-line">  parent = {}</span>
+<span id="cl5" class="code-line">  stack.<span class="fn">push</span>(start)</span>
+<span id="cl6" class="code-line">  visited.<span class="fn">add</span>(start)</span>
+<span id="cl7" class="code-line">  parent[start] = <span class="kw">null</span></span>
+<span id="cl8" class="code-line">  <span class="kw">while</span> stack <span class="kw">not empty</span>:</span>
+<span id="cl9" class="code-line">    current = stack.<span class="fn">pop</span>()</span>
+<span id="cl10" class="code-line">    <span class="kw">if</span> current == target:</span>
+<span id="cl11" class="code-line">      path = <span class="fn">reconstructPath</span>(parent, target)</span>
+<span id="cl12" class="code-line">      <span class="kw">return</span> path</span>
+<span id="cl13" class="code-line">    <span class="kw">for</span> neighbor <span class="kw">in</span> graph.adj[current]:</span>
+<span id="cl14" class="code-line">      <span class="kw">if</span> neighbor <span class="kw">not in</span> visited:</span>
+<span id="cl15" class="code-line">        visited.<span class="fn">add</span>(neighbor)</span>
+<span id="cl16" class="code-line">        parent[neighbor] = current</span>
+<span id="cl17" class="code-line">        stack.<span class="fn">push</span>(neighbor)</span>
+<span id="cl18" class="code-line">  <span class="kw">return</span> <span class="kw">null</span>  # Not found</span>
+        </div>
+      </div>
+  </div>
 </div>
 
-<script src="../../assets/js/main.js"></script>
+</div>
 <script>
+// ════════════════════════════════════════════════
+// THEME TOGGLE
+// ════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const isNowLight = html.getAttribute('data-theme') !== 'light';
+  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+}
+// Restore saved theme on load
+(function () {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+// Sync theme toggle label on load
+const saved = localStorage.getItem('theme');
+if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
+
 const PRESETS = {
   simple: {
     nodes: [{id:0,x:.15,y:.5},{id:1,x:.3,y:.2},{id:2,x:.3,y:.78},{id:3,x:.5,y:.2},{id:4,x:.5,y:.55},{id:5,x:.5,y:.85},{id:6,x:.72,y:.35},{id:7,x:.72,y:.72},{id:8,x:.88,y:.5}],
@@ -220,49 +275,124 @@ const PRESETS = {
   },
   random: null
 };
-
 let currentPreset='simple',graph=null,steps=[],stepIdx=-1,isPlaying=false,playTimer=null,startNode=0,targetNode=6;
-const SPEEDS=[2400,1800,1300,900,500];
-
+let voiceEnabled = false;
+let introAborted = false;
+let speedMult = 2;
+const SPEEDS = [2400,1800,1300,900,500];
+const synth = window.speechSynthesis;
+let ttsVoice = null;
+function loadVoices() {
+  const voices = synth.getVoices();
+  ttsVoice =
+    voices.find(v => v.name.includes('Google UK English Female')) ||
+    voices.find(v => v.name.includes('Google US English')) ||
+    voices.find(v => v.lang === 'en-US' && v.localService) ||
+    voices.find(v => v.lang.startsWith('en')) ||
+    voices[0] || null;
+}
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+function speak(text) {
+  return new Promise(resolve => {
+    if (!voiceEnabled || !synth) { resolve(); return; }
+    synth.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.voice = ttsVoice;
+    utt.rate = 0.88;
+    utt.pitch = 1.05;
+    utt.volume = 1;
+    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
+    utt.onend = utt.onerror = () => {
+      document.getElementById('speakBars').classList.remove('on');
+      resolve();
+    };
+    synth.speak(utt);
+  });
+}
+function stopSpeech() {
+  synth && synth.cancel();
+  document.getElementById('speakBars').classList.remove('on');
+}
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('voiceToggle');
+  const icon = document.getElementById('voiceIcon');
+  const lbl = document.getElementById('voiceLabel');
+  if (voiceEnabled) {
+    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
+    btn.classList.remove('off');
+    document.querySelector('.speed-ctrl').style.display = 'none';
+    if (isPlaying) { pause(); play(); }
+  } else {
+    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
+    btn.classList.add('off');
+    stopSpeech();
+    document.querySelector('.speed-ctrl').style.display = '';
+    if (isPlaying) { pause(); play(); }
+  }
+}
+function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
+async function playIntroSpeech() {
+  introAborted = false;
+  stopSpeech();
+  const introLines = [
+    "Hello! I am your algorithm teacher. Today we are learning Depth-First Search — a fundamental graph traversal algorithm.",
+    "DFS explores the graph by going as deep as possible along each branch before backtracking. It uses a stack to explore paths fully.",
+    "It's useful for finding paths, detecting cycles, or topological sorting, but does not guarantee the shortest path.",
+    "In the visualization, orange nodes are in the stack, teal is the current node being processed, and yellow is the target when found.",
+    "The green path highlights a route once the target is reached.",
+    "An important property: DFS visits nodes in a depth-priority order.",
+    "Now, turn on Voice Mode and press Play. I will guide you through every step of the DFS traversal."
+  ];
+  const narText = document.getElementById('narText');
+  narText.classList.add('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍🏫';
+  for (let i = 0; i < introLines.length; i++) {
+    if (introAborted) break;
+    narText.textContent = introLines[i];
+    await speak(introLines[i]);
+    if (introAborted) break;
+    await new Promise(r => setTimeout(r, 280));
+  }
+  narText.classList.remove('intro-mode');
+  document.getElementById('teacher').textContent = '🧑‍💻';
+  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+}
 function buildGraph(p){const adj={};p.nodes.forEach(n=>adj[n.id]=[]);p.edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});return{nodes:p.nodes,edges:p.edges,adj};}
-
 function buildDFSSteps(g,start,target){
   const steps=[],validIds=g.nodes.map(n=>n.id);
   const s=validIds.includes(start)?start:validIds[0];
   const t=validIds.includes(target)?target:validIds[validIds.length-1];
-  const visited=new Set(),stack=[],parent={},depth={},depthMap={};
-  steps.push({stack:[],visited:[],current:null,found:null,path:[],highlightEdge:null,depthMap:{},narration:`Run DFS from node ${s} to find node ${t}. We use a stack and explore as deep as possible.`,phase:'idle'});
-  stack.push(s);visited.add(s);depth[s]=0;depthMap[0]=[s];parent[s]=null;
-  steps.push({stack:[...stack],visited:[...visited],current:null,found:null,path:[],highlightEdge:null,depthMap:{...depthMap},narration:`Push start node ${s}, mark visited. Depth 0: [${s}].`,phase:'push'});
+  const visited=new Set(),stack=[],parent={};
+  steps.push({stack:[],visited:[],current:null,found:null,path:[],highlightEdge:null,narration:`Run DFS from node ${s} to find node ${t}. We use a stack and explore depth-first.`,phase:'idle', codeLine: null});
+  stack.push(s);visited.add(s);parent[s]=null;
+  steps.push({stack:[...stack],visited:[...visited],current:null,found:null,path:[],highlightEdge:null,narration:`Push start node ${s}, mark visited.`,phase:'push', codeLine: 5});
   let foundTarget=false;
   while(stack.length>0){
-    const curr=stack.pop(),currDepth=depth[curr];
-    steps.push({stack:[...stack],visited:[...visited],current:curr,found:null,path:[],highlightEdge:null,depthMap:{...depthMap},narration:`Pop node ${curr} (depth ${currDepth}). Process its unvisited neighbors.`,phase:'pop'});
+    const curr=stack.pop();
+    steps.push({stack:[...stack],visited:[...visited],current:curr,found:null,path:[],highlightEdge:null,narration:`Pop node ${curr}. Process its unvisited neighbors.`,phase:'pop', codeLine: 9});
     if(curr===t){
       const path=[];let node=curr;while(node!==null){path.unshift(node);node=parent[node];}
-      steps.push({stack:[...stack],visited:[...visited],current:curr,found:curr,path,highlightEdge:null,depthMap:{...depthMap},narration:`🎯 Found node ${t} at depth ${currDepth}! A path has ${currDepth} edges: ${path.join(' → ')}.`,phase:'found'});
+      steps.push({stack:[...stack],visited:[...visited],current:curr,found:curr,path,highlightEdge:null,narration:`🎯 Found node ${t}! Path has ${path.length-1} edges: ${path.join(' → ')}.`,phase:'found', codeLine: 10});
       foundTarget=true;break;
     }
-    const neighbors=g.adj[curr].slice().sort((a,b)=>b-a); // Reverse sort to simulate recursion order
+    const neighbors=g.adj[curr].slice().sort((a,b)=>a-b);
     for(const nb of neighbors){
       if(!visited.has(nb)){
-        visited.add(nb);parent[nb]=curr;depth[nb]=currDepth+1;
-        if(!depthMap[currDepth+1])depthMap[currDepth+1]=[];
-        depthMap[currDepth+1].push(nb);stack.push(nb);
-        steps.push({stack:[...stack],visited:[...visited],current:curr,found:null,path:[],highlightEdge:[curr,nb],depthMap:{...depthMap},narration:`Push neighbor ${nb} (depth ${currDepth+1}). Stack: [${stack.join(', ')}].`,phase:'push'});
+        visited.add(nb);parent[nb]=curr;
+        stack.push(nb);
+        steps.push({stack:[...stack],visited:[...visited],current:curr,found:null,path:[],highlightEdge:[curr,nb],narration:`Push neighbor ${nb}. Stack: [${stack.join(', ')}].`,phase:'push', codeLine: 17});
       }
     }
   }
-  if(!foundTarget){steps.push({stack:[],visited:[...visited],current:null,found:-1,path:[],highlightEdge:null,depthMap:{...depthMap},narration:`DFS complete. ${visited.size} nodes visited. Node ${t} not reachable from ${s}.`,phase:'done'});}
+  if(!foundTarget){steps.push({stack:[],visited:[...visited],current:null,found:-1,path:[],highlightEdge:null,narration:`DFS complete. ${visited.size} nodes visited. Node ${t} not reachable from ${s}.`,phase:'done', codeLine: 18});}
   return steps;
 }
-
 const canvas=document.getElementById('graphCanvas');
 const ctx=canvas.getContext('2d');
 function resizeCanvas(){canvas.width=canvas.parentElement.clientWidth;}
-
 function nodePos(n){return{x:n.x*canvas.width,y:n.y*canvas.height};}
-
 function drawGraph(step){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   if(!graph)return;
@@ -295,17 +425,13 @@ function drawGraph(step){
     if(isTarget){ctx.fillStyle='rgba(255,209,102,0.9)';ctx.font="bold 9px 'JetBrains Mono'";ctx.fillText('T',p.x+22,p.y+14);}
   });
 }
-
 function hexToRgb(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`${r},${g},${b}`;}
-function findDepth(dm,node){for(const[dp,nodes]of Object.entries(dm)){if(nodes.includes(node))return parseInt(dp);}return null;}
-
 function renderStep(idx){
   if(idx<0||idx>=steps.length)return;
   const s=steps[idx];
   document.getElementById('narText').textContent=s.narration;
   document.getElementById('sCurrent').textContent=s.current!==null?s.current:'—';
   document.getElementById('sTarget').textContent=targetNode;
-  document.getElementById('sLevel').textContent=s.current!==null&&s.depthMap?(findDepth(s.depthMap,s.current)??'—'):'—';
   document.getElementById('sVisited').textContent=s.visited.length;
   const pb=document.getElementById('phaseBadge');
   const phases={idle:'ph-idle',push:'ph-enqueue',pop:'ph-dequeue',found:'ph-found',done:'ph-done'};
@@ -315,9 +441,9 @@ function renderStep(idx){
   document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
   drawGraph(s);
   // Stack
-  const qel=document.getElementById('queueVisual');
+  const qel=document.getElementById('stackVisual');
   if(!s.stack||s.stack.length===0){qel.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack is empty</span>';}
-  else{const cols=['#ff8c42','#ff6b9d','#b06aff','#4da6ff','#00d4aa','#ffd166'];qel.innerHTML=s.stack.map((n,i)=>`<div class="q-item" style="background:rgba(${hexToRgb(cols[n%cols.length])},0.15);border-color:${cols[n%cols.length]};color:${cols[n%cols.length]};">${n}${i===s.stack.length-1?'<div class="q-front">TOP</div>':''}</div>${i<s.stack.length-1?'<span class="q-arrow">→</span>':''}`).join('');}
+  else{const cols=['#ff8c42','#ff6b9d','#b06aff','#4da6ff','#00d4aa','#ffd166'];qel.innerHTML=s.stack.map((n,i)=>`<div class="q-item" style="background:rgba(${hexToRgb(cols[n%cols.length])},0.15);border-color:${cols[n%cols.length]};color:${cols[n%cols.length]};">${n}${i===s.stack.length-1?'<div class="q-front">TOP</div>':''}</div>${i<s.stack.length-1?'<span class="q-arrow">←</span>':''}`).join('');}
   // Visited
   const vel=document.getElementById('visitedList');
   if(!s.visited||s.visited.length===0){vel.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Nothing visited yet</span>';}
@@ -326,43 +452,42 @@ function renderStep(idx){
   const pel=document.getElementById('pathRow');
   if(!s.path||s.path.length===0){pel.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Path shown when target is found</span>';}
   else{pel.innerHTML=s.path.map((n,i)=>`<div class="path-node">${n}</div>${i<s.path.length-1?'<span class="path-arrow">→</span>':''}`).join('');}
-  // Depths
-  const lel=document.getElementById('levelInfo');
-  if(!s.depthMap||Object.keys(s.depthMap).length===0){lel.textContent='Depths appear as DFS explores.';}
-  else{lel.innerHTML=Object.entries(s.depthMap).map(([dp,ns])=>`<div style="margin-bottom:3px;"><span style="color:var(--orange);margin-right:8px;">D${dp}:</span><span style="color:var(--text);">[${ns.join(', ')}]</span></div>`).join('');}
+  // Highlight pseudocode
+  document.querySelectorAll('.code-line').forEach(el => el.classList.remove('active'));
+  if (s.codeLine) {
+    const el = document.getElementById('cl' + s.codeLine);
+    if (el) el.classList.add('active');
+  }
 }
-
 function togglePlay(){isPlaying?pause():play();}
-function play(){if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').innerHTML='⏸ Pause';advance();}
-function pause(){isPlaying=false;AlgoUtils.stopSpeech();clearTimeout(playTimer);document.getElementById('btnPlay').innerHTML='▶ Play';}
-function advance(){if(!isPlaying)return;if(stepIdx>=steps.length-1){pause();return;}stepIdx++;renderStep(stepIdx);AlgoUtils.speak(steps[stepIdx].narration,()=>{if(isPlaying)playTimer=setTimeout(advance,300);});}
-function doNext(){if(isPlaying)pause();if(stepIdx>=steps.length-1)return;stepIdx++;renderStep(stepIdx);AlgoUtils.speak(steps[stepIdx].narration,null);}
-
+function play(){clearIntroTimeouts();if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').innerHTML='⏸ Pause';advance();}
+function pause(){isPlaying=false;stopSpeech();clearTimeout(playTimer);document.getElementById('btnPlay').innerHTML='▶ Play';}
+function advance(){if(!isPlaying)return;if(stepIdx>=steps.length-1){pause();return;}stepIdx++;renderStep(stepIdx);if(voiceEnabled){speak(steps[stepIdx].narration).then(()=>{if(isPlaying)playTimer=setTimeout(advance,300);});}else{playTimer=setTimeout(advance,SPEEDS[speedMult-1]||1300);}}
+function doNext(){clearIntroTimeouts();if(isPlaying)pause();if(stepIdx>=steps.length-1)return;stepIdx++;renderStep(stepIdx);if(voiceEnabled)speak(steps[stepIdx].narration);}
 function resetAll(){
   pause();stepIdx=-1;
   steps=buildDFSSteps(graph,startNode,targetNode);
   document.getElementById('narText').textContent='Press ▶ Play to begin DFS traversal.';
-  document.getElementById('sCurrent').textContent='—';document.getElementById('sLevel').textContent='—';document.getElementById('sVisited').textContent='0';
+  document.getElementById('sCurrent').textContent='—';document.getElementById('sVisited').textContent='0';
   document.getElementById('progFill').style.width='0%';document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
   document.getElementById('phaseBadge').className='phase-badge ph-idle';document.getElementById('phaseBadge').textContent='Idle';
   document.getElementById('btnPlay').innerHTML='▶ Play';
-  document.getElementById('queueVisual').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack is empty</span>';
+  document.getElementById('stackVisual').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack is empty</span>';
   document.getElementById('visitedList').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Nothing visited yet</span>';
   document.getElementById('pathRow').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Path shown when target is found</span>';
-  document.getElementById('levelInfo').textContent='Depths appear as DFS explores.';
   drawGraph(null);
+  introAborted = true;
+  if (voiceEnabled) playIntroSpeech();
 }
-
-function setSpeed(v){document.getElementById('speedVal').textContent=`${v}×`;}
-
+function setSpeed(v){speedMult = parseInt(v);document.getElementById('speedVal').textContent=`${v}×`;}
 function generateRandomGraph() {
   // Configurable parameters
-  const nodeCount = Math.floor(Math.random() * 6) + 7;     // 7–12 nodes
-  const edgeProbability = 0.20 + Math.random() * 0.25;      // 20–45% chance per pair
-  
+  const nodeCount = Math.floor(Math.random() * 6) + 7; // 7–12 nodes
+  const edgeProbability = 0.20 + Math.random() * 0.25; // 20–45% chance per pair
+ 
   const nodes = [];
   const edges = [];
-  
+ 
   // Place nodes in a slightly noisy circle + some in center
   for (let i = 0; i < nodeCount; i++) {
     let x, y;
@@ -379,7 +504,6 @@ function generateRandomGraph() {
     }
     nodes.push({ id: i, x, y });
   }
-
   // Create undirected edges
   for (let i = 0; i < nodeCount; i++) {
     for (let j = i + 1; j < nodeCount; j++) {
@@ -388,7 +512,6 @@ function generateRandomGraph() {
       }
     }
   }
-
   // Guarantee connected graph (very simple union-find + connect components)
   const parent = Array.from({length: nodeCount}, (_, i) => i);
   function find(x) {
@@ -399,9 +522,7 @@ function generateRandomGraph() {
     const px = find(x), py = find(y);
     if (px !== py) parent[px] = py;
   }
-
   edges.forEach(([a, b]) => union(a, b));
-
   // Find components
   const components = {};
   for (let i = 0; i < nodeCount; i++) {
@@ -409,7 +530,6 @@ function generateRandomGraph() {
     if (!components[p]) components[p] = [];
     components[p].push(i);
   }
-
   const compKeys = Object.keys(components);
   if (compKeys.length > 1) {
     // connect components in chain
@@ -419,20 +539,16 @@ function generateRandomGraph() {
       edges.push([a, b]);
     }
   }
-
   return { nodes, edges };
 }
-
 function loadPreset(name) {
   currentPreset = name;
-  
+ 
   // Visual feedback
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('p-' + name);
   if (btn) btn.classList.add('active');
-
   let presetData;
-
   if (name === 'random') {
     presetData = generateRandomGraph();
   } else if (PRESETS[name]) {
@@ -443,25 +559,21 @@ function loadPreset(name) {
     currentPreset = 'simple';
     document.getElementById('p-simple').classList.add('active');
   }
-
   graph = buildGraph(presetData);
-  
+ 
   // Choose sensible start & target
   const allIds = graph.nodes.map(n => n.id);
   const maxId = Math.max(...allIds);
   startNode = 0;
   // Try to pick something far-ish from start
   targetNode = maxId >= 6 ? Math.floor(maxId * 0.7) : maxId;
-
   // Update inputs
   document.getElementById('startInput').value = startNode;
   document.getElementById('targetInputEl').value = targetNode;
   document.getElementById('sTarget').textContent = targetNode;
-
   resizeCanvas();
   resetAll();
 }
-
 function applyInputs(){
   const s=parseInt(document.getElementById('startInput').value),t=parseInt(document.getElementById('targetInputEl').value);
   const ids=graph.nodes.map(n=>n.id);
