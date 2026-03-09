@@ -3,679 +3,674 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Preorder Traversal — AlgoClassroom</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/main.css">
+<title>Preorder Traversal | AlgoClassroom</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --node-default: #1a2840;
-  --node-default-stroke: #2a4060;
-  --node-visit: #ff8c42;
-  --node-visited: #06d6a0;
+  --bg:#080e1a;--surface:#0d1525;--surface2:#111c30;--border:rgba(255,255,255,0.07);
+  --text:#e2eaf5;--text-dim:#5a7a9a;
+  --teal:#00d4aa;--blue:#4da6ff;--orange:#ff8c42;--yellow:#ffd166;
+  --green:#06d6a0;--red:#ff6b6b;--purple:#b06aff;--pink:#ff6b9d;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
 }
+[data-theme="light"]{--bg:#f0f4fa;--surface:#ffffff;--surface2:#eef2f8;--border:rgba(0,0,0,0.1);--text:#1a2540;--text-dim:#6a80a0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,212,170,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,.03) 1px,transparent 1px);background-size:40px 40px;}
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 50% 60% at 20% 30%,rgba(77,166,255,.04) 0%,transparent 70%),radial-gradient(ellipse 40% 50% at 80% 70%,rgba(0,212,170,.04) 0%,transparent 70%);}
+.navbar{position:sticky;top:0;z-index:100;background:rgba(8,14,26,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:54px;display:flex;align-items:center;gap:28px;}
+.nav-logo{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--teal);text-decoration:none;letter-spacing:-.5px;}
+.logo-bracket{color:var(--text-dim);}.logo-dot{color:var(--blue);}
+.nav-links{display:flex;gap:18px;margin-left:8px;}
+.nav-links a{font-size:12px;color:var(--text-dim);text-decoration:none;letter-spacing:.5px;transition:color .2s;}
+.nav-links a:hover{color:var(--teal);}
+.theme-toggle{margin-left:auto;display:flex;align-items:center;gap:9px;background:none;border:1px solid var(--border);border-radius:30px;padding:5px 10px 5px 5px;cursor:pointer;transition:border-color .2s;}
+.theme-toggle:hover{border-color:rgba(77,166,255,.4);}
+.toggle-track{width:32px;height:18px;background:var(--surface2);border-radius:9px;position:relative;}
+.toggle-thumb{width:14px;height:14px;background:var(--blue);border-radius:50%;position:absolute;top:2px;left:2px;display:flex;align-items:center;justify-content:center;transition:transform .3s;}
+[data-theme="light"] .toggle-thumb{transform:translateX(14px);}
+.toggle-icon{font-size:9px;}
+[data-theme="light"] .toggle-icon::before{content:'☀️';}
+.toggle-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+.algo-page{max-width:1200px;margin:0 auto;padding:28px 24px 60px;position:relative;z-index:1;}
+.back-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;transition:color .2s;}
+.back-link:hover{color:var(--teal);}
+.complexity{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.cplx-chip{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);}
+.cplx-chip span{color:var(--blue);font-weight:700;}
+.card-difficulty{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;font-weight:700;}
+.beginner{background:rgba(77,166,255,.15);color:var(--blue);border:1px solid rgba(77,166,255,.3);}
+.narration{background:var(--surface);border:1px solid rgba(77,166,255,.15);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.teacher{font-size:28px;flex-shrink:0;}
+.narration-text{font-size:13px;color:var(--text-dim);line-height:1.7;flex:1;}
+.speak-bars{display:flex;gap:2px;align-items:center;height:16px;flex-shrink:0;}
+.speak-bars span{width:3px;border-radius:2px;background:var(--blue);transform:scaleY(.2);transition:transform .15s;}
+.speak-bars.on span:nth-child(1){animation:bar .6s 0s infinite alternate;}
+.speak-bars.on span:nth-child(2){animation:bar .6s .1s infinite alternate;}
+.speak-bars.on span:nth-child(3){animation:bar .6s .2s infinite alternate;}
+.speak-bars.on span:nth-child(4){animation:bar .6s .15s infinite alternate;}
+.speak-bars.on span:nth-child(5){animation:bar .6s .05s infinite alternate;}
+@keyframes bar{from{transform:scaleY(.2);height:6px;}to{transform:scaleY(1);height:16px;}}
+.status-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;}
+.si{display:flex;flex-direction:column;gap:2px;}
+.sl{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+.sv{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);}
+.phase-badge{padding:3px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;}
+.ph-idle{background:rgba(90,122,154,.15);color:var(--text-dim);border:1px solid rgba(90,122,154,.2);}
+.ph-visit{background:rgba(77,166,255,.15);color:var(--blue);border:1px solid rgba(77,166,255,.3);}
+.ph-left{background:rgba(0,212,170,.15);color:var(--teal);border:1px solid rgba(0,212,170,.3);}
+.ph-right{background:rgba(176,106,255,.15);color:var(--purple);border:1px solid rgba(176,106,255,.3);}
+.ph-done{background:rgba(255,209,102,.15);color:var(--yellow);border:1px solid rgba(255,209,102,.3);}
+.divider-auto{flex:1;}
+.prog-wrap{width:100px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));border-radius:2px;transition:width .4s;}
+.step-ctr{font-family:var(--mono);font-size:10px;color:var(--text-dim);white-space:nowrap;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.panel-hd{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--blue);text-transform:uppercase;margin-bottom:12px;}
+.btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn:hover{border-color:rgba(77,166,255,.4);color:var(--blue);background:rgba(77,166,255,.05);}
+.btn-primary{background:rgba(77,166,255,.12);border-color:rgba(77,166,255,.4);color:var(--blue);}
+.btn-primary:hover{background:rgba(77,166,255,.2);}
+.btn-danger{border-color:rgba(255,107,107,.3);color:var(--red);}
+.btn-danger:hover{background:rgba(255,107,107,.08);border-color:var(--red);}
+.speed-ctrl{display:flex;align-items:center;gap:8px;margin-left:4px;}
+.speed-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+input[type=range]{width:80px;accent-color:var(--blue);cursor:pointer;}
+.speed-val{font-family:var(--mono);font-size:10px;color:var(--blue);min-width:20px;}
+.code-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11px;line-height:2;overflow-x:auto;}
+.code-line{display:block;color:var(--text-dim);padding-left:4px;border-left:3px solid transparent;border-radius:2px;white-space:pre;}
+.code-line.active{background:rgba(77,166,255,.12);border-left:3px solid var(--blue);color:var(--blue);padding-left:7px;}
+.kw{color:#b06aff;}.fn{color:#4da6ff;}.cm{color:#3d6080;font-style:italic;}.num{color:#ff8c42;}.str{color:#06d6a0;}
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px;}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;transition:border-color .3s,transform .3s;position:relative;overflow:hidden;}
+.cc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--teal));opacity:0;transition:opacity .3s;}
+.cc:hover{border-color:rgba(77,166,255,.3);transform:translateY(-2px);}
+.cc:hover::after{opacity:1;}
+.cc-icon{font-size:22px;margin-bottom:7px;display:block;}
+.cc-title{font-family:var(--mono);font-size:9px;color:var(--blue);margin-bottom:5px;text-transform:uppercase;letter-spacing:2px;}
+.cc-desc{font-size:12px;color:var(--text-dim);line-height:1.5;}
+.two-col{display:grid;grid-template-columns:1fr 380px;gap:16px;margin-bottom:16px;}
+@media(max-width:960px){.two-col{grid-template-columns:1fr;}}
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;}
+.ctrl-top{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+.preset-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.preset-lbl{font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:1px;}
+.preset-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-family:var(--mono);font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.preset-btn:hover{border-color:var(--blue);color:var(--blue);}
+.preset-btn.active{background:rgba(77,166,255,.1);border-color:var(--blue);color:var(--blue);}
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;align-items:center;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);}
+.ld{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.voice-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;transition:background .2s,border-color .2s;white-space:nowrap;}
+.voice-btn:hover{background:rgba(77,166,255,.08);border-color:rgba(77,166,255,.4);}
+.voice-btn.off{color:var(--text-dim);border-color:var(--border);}
 
-.two-col { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
-@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+/* Call Stack */
+@keyframes qPop{from{transform:scale(0) rotate(-10deg);opacity:0;}to{transform:scale(1);opacity:1;}}
+.stack-wrap{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;}
+.stack-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:11px;transition:all .3s;animation:qPop .3s cubic-bezier(.34,1.56,.64,1);}
+.stack-item.stack-top{border-color:rgba(77,166,255,.5);background:rgba(77,166,255,.08);}
+.stack-item .sk-depth{color:var(--text-dim);min-width:22px;font-size:9px;}
+.stack-item .sk-node{font-weight:700;color:var(--blue);}
+.stack-item .sk-label{color:var(--text-dim);font-size:10px;margin-left:auto;}
+.stack-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;margin-left:auto;letter-spacing:1px;}
+.stack-badge.top{background:rgba(77,166,255,.15);color:var(--blue);border:1px solid rgba(77,166,255,.3);}
 
-#vizCanvas {
-  width: 100%; border-radius: 8px;
-  background: transparent; display: block;
-}
-
-.controls {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 16px 18px;
-  display: flex; flex-direction: column; gap: 12px;
-}
-.ctrl-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-.input-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-.input-row label { font-size: 10px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; }
-
-.arr-input {
-  flex: 1; min-width: 200px;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 7px; padding: 7px 11px;
-  color: var(--text); font-family: var(--mono); font-size: 11px;
-  outline: none; transition: border-color .2s;
-}
-.arr-input:focus { border-color: var(--teal); }
-
-
-.legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
-.li { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
-.ld { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
-
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stat-box {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 9px; padding: 12px 14px; text-align: center;
-}
-.stat-box-n { font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--teal); }
-.stat-box-l { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
-
-/* Voice toggle */
-.voice-btn {
-  margin-left: auto; background: none;
-  border: 1px solid var(--border); border-radius: 7px;
-  padding: 4px 10px; cursor: pointer;
-  display: flex; align-items: center; gap: 6px;
-  font-family: var(--mono); font-size: 10px; color: var(--teal);
-  letter-spacing: 1px; transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
-}
-.voice-btn:hover { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.4); }
-.voice-btn.off { color: var(--text-dim); border-color: var(--border); }
-.voice-btn.off:hover { background: rgba(74,106,154,0.1); }
-.voice-icon { font-size: 14px; }
-
-.narration-text.intro-mode {
-  color: var(--teal); font-weight: 600;
-  animation: glowPulse 2s infinite;
-}
-@keyframes glowPulse {
-  0% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
-  50% { text-shadow: 0 0 15px rgba(0,212,170,0.6); }
-  100% { text-shadow: 0 0 5px rgba(0,212,170,0.2); }
-}
+/* Traversal result */
+.result-list{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.result-node{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6px;border:1px solid rgba(0,212,170,.25);background:rgba(0,212,170,.07);font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal);animation:qPop .3s cubic-bezier(.34,1.56,.64,1);}
+.result-arrow{color:var(--text-dim);font-family:var(--mono);font-size:12px;}
+.result-summary{margin-top:10px;padding:8px 12px;border-radius:7px;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.25);font-family:var(--mono);font-size:11px;font-weight:700;color:var(--yellow);display:flex;justify-content:space-between;}
 </style>
 </head>
 <body>
-
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
-<!-- NAVBAR — identical to Insertion Sort, includes theme toggle -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
     <div class="nav-links">
+      <a href="../../index.html#tree">Tree</a>
       <a href="../../index.html#sorting">Sorting</a>
-      <a href="../../index.html#searching">Searching</a>
-      <a href="../../index.html#graph">Graph</a>
       <a href="../../index.html#dp">Dynamic Programming</a>
     </div>
     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
-      <div class="toggle-track">
-        <div class="toggle-thumb">
-          <span class="toggle-icon">🌙</span>
-        </div>
-      </div>
+      <div class="toggle-track"><div class="toggle-thumb"><span class="toggle-icon">🌙</span></div></div>
       <span class="toggle-label" id="toggleLabel">Light mode</span>
     </button>
   </div>
 </nav>
 
 <div class="algo-page">
+<a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-  <a href="../../index.html" class="back-link">← Back to All Algorithms</a>
-
-  <header style="margin-bottom:20px;">
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
-      <span style="font-size:40px;">🌳</span>
-      <div>
-        <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Tree Traversal</div>
-        <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Preorder Traversal</h1>
-      </div>
-      <div style="margin-left:auto;"><span class="card-difficulty beginner">Beginner</span></div>
-    </div>
-    <p style="color:var(--text-dim);font-size:14px;max-width:600px;line-height:1.7;">
-      Preorder traversal visits the root node first, then recursively traverses the left subtree, followed by the right subtree. It's useful for creating a copy of the tree or getting prefix notation.
-    </p>
-    <div class="complexity" style="margin-top:10px;">
-      <div class="cplx-chip">Time: <span>O(n)</span></div>
-      <div class="cplx-chip">Space: <span>O(h)</span></div>
-    </div>
-  </header>
-
-  <!-- Concept cards -->
-  <div class="concepts">
-    <div class="cc"><span class="cc-icon">🔝</span><div class="cc-title">Root First</div><div class="cc-desc">Always visit the current node before its children.</div></div>
-    <div class="cc"><span class="cc-icon">↙️</span><div class="cc-title">Left Before Right</div><div class="cc-desc">Traverse the left subtree completely before the right one.</div></div>
-    <div class="cc"><span class="cc-icon">🔄</span><div class="cc-title">Recursive</div><div class="cc-desc">Uses recursion to dive into subtrees, making it simple to implement.</div></div>
-    <div class="cc"><span class="cc-icon">📚</span><div class="cc-title">Applications</div><div class="cc-desc">Used in prefix expressions, tree copying, and serialization.</div></div>
-  </div>
-
-  <!-- Narration -->
-  <div class="narration" id="narration">
-    <span class="teacher" id="teacher">🧑‍🏫</span>
-    <div class="narration-text" id="narText">Welcome to Preorder Traversal! Let me explain how this algorithm works before we begin...</div>
-    <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
-  </div>
-
-  <!-- Main layout -->
-  <div class="two-col">
-
-    <!-- LEFT: Canvas -->
+<header style="margin-bottom:20px;">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+    <span style="font-size:40px;">🌳</span>
     <div>
-      <div class="panel">
-        <div class="panel-hd">📊 Visualization</div>
-        <div class="legend">
-          <div class="li"><div class="ld" style="background:#1a2840;border:1px solid #2a4060;"></div>Default</div>
-          <div class="li"><div class="ld" style="background:var(--node-visit);"></div>Visiting</div>
-          <div class="li"><div class="ld" style="background:var(--node-visited);"></div>Visited</div>
-          <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice narration">
-            <span class="voice-icon" id="voiceIcon">🔇</span>
-            <span id="voiceLabel">Voice Off</span>
-          </button>
-        </div>
-        <canvas id="vizCanvas" height="340"></canvas>
-      </div>
-
-      <div class="controls">
-        <div class="ctrl-row">
-          <button class="btn btn-primary" id="btnPlay">▶ Play</button>
-          <button class="btn" id="btnNext">⏭ Next Step</button>
-          <button class="btn btn-danger" id="btnReset">⏮ Reset</button>
-          <button class="btn" onclick="randomize()">🎲 Random Tree</button>
-          <div class="speed-ctrl" id="speedWrap">
-            <span class="speed-lbl">⚡ Speed</span>
-            <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="onSpeedChange(this.value)">
-            <span class="speed-val" id="speedVal">2×</span>
-          </div>
-        </div>
-        <div class="input-row">
-          <label>Tree (level-order, comma-separated, null for empty):</label>
-          <input type="text" class="arr-input" id="arrInput" value="1,2,3,4,5,6,7">
-          <button class="btn" onclick="applyTree()">Apply</button>
-        </div>
-      </div>
-
-      <div class="status-row">
-        <div class="si"><span class="sl">Visited</span><span class="sv orange" id="sVisited">0</span></div>
-        <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
-        <div class="divider-auto"></div>
-        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
-        <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
-      </div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Tree Algorithm · DFS · Recursive</div>
+      <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Preorder Traversal</h1>
     </div>
+    <div style="margin-left:auto;"><span class="card-difficulty beginner">Beginner</span></div>
+  </div>
+  <p style="color:var(--text-dim);font-size:14px;max-width:620px;line-height:1.7;">Visit every node in <strong style="color:var(--blue)">Root → Left → Right</strong> order. Preorder is a depth-first traversal that processes each node before its children — essential for copying trees, generating prefix expressions, and serialization.</p>
+  <div class="complexity" style="margin-top:10px;">
+    <div class="cplx-chip">Time: <span>O(N)</span></div>
+    <div class="cplx-chip">Space: <span>O(H)</span></div>
+    <div class="cplx-chip">Structure: <span>Call Stack</span></div>
+    <div class="cplx-chip">Order: <span>Root → L → R</span></div>
+    <div class="cplx-chip">Strategy: <span>DFS</span></div>
+  </div>
+</header>
 
-    <!-- RIGHT: Info panels -->
-    <div style="display:flex;flex-direction:column;gap:14px;">
+<div class="concepts">
+  <div class="cc"><span class="cc-icon">📋</span><div class="cc-title">Root First</div><div class="cc-desc">Visit (record) the current node before recursing into its left or right subtrees. Hence "pre" — before children.</div></div>
+  <div class="cc"><span class="cc-icon">↙️</span><div class="cc-title">Go Left Deep</div><div class="cc-desc">After visiting the root, recurse fully into the left subtree, exploring every left branch to completion.</div></div>
+  <div class="cc"><span class="cc-icon">↘️</span><div class="cc-title">Then Right</div><div class="cc-desc">Once the entire left subtree is exhausted, recurse into the right subtree with the same Root→L→R rule.</div></div>
+  <div class="cc"><span class="cc-icon">📦</span><div class="cc-title">Call Stack</div><div class="cc-desc">Each recursive call is pushed onto the call stack. The stack unwinds as we backtrack, driving the left-then-right order.</div></div>
+</div>
 
-      <div class="panel">
-        <div class="panel-hd">📈 Statistics</div>
-        <div class="stats-grid">
-          <div class="stat-box"><div class="stat-box-n" id="statVisited">0</div><div class="stat-box-l">Nodes Visited</div></div>
-          <div class="stat-box"><div class="stat-box-n" id="statN">0</div><div class="stat-box-l">Total Nodes</div></div>
+<div class="narration" id="narration">
+  <span class="teacher" id="teacher">🧑‍💻</span>
+  <div class="narration-text" id="narText">Welcome to Preorder Traversal! Choose a tree preset, then press ▶ Play to watch Root → Left → Right unfold.</div>
+  <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+</div>
+
+<div class="status-row">
+  <div class="si"><span class="sl">Current Node</span><span class="sv" style="color:var(--blue)" id="sCurrent">—</span></div>
+  <div class="si"><span class="sl">Action</span><span class="sv" style="color:var(--teal)" id="sAction">—</span></div>
+  <div class="si"><span class="sl">Visited</span><span class="sv" style="color:var(--blue)" id="sVisited">0</span></div>
+  <div class="si"><span class="sl">Stack Depth</span><span class="sv" style="color:var(--purple)" id="sDepth">0</span></div>
+  <div class="si"><span class="sl">Remaining</span><span class="sv" id="sRemaining">0</span></div>
+  <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+  <div class="divider-auto"></div>
+  <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+  <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+</div>
+
+<div class="two-col">
+  <!-- LEFT: canvas + controls -->
+  <div class="panel">
+    <div class="panel-hd">🌳 Tree Visualization</div>
+    <div class="legend">
+      <div class="li"><div class="ld" style="background:#1a2840;border:2px solid #2a4060"></div>Unvisited</div>
+      <div class="li"><div class="ld" style="background:var(--blue);box-shadow:0 0 6px rgba(77,166,255,.5)"></div>Current</div>
+      <div class="li"><div class="ld" style="background:#1a2a40;border:2px solid #06d6a0"></div>Visited</div>
+      <div class="li"><div class="ld" style="background:rgba(176,106,255,.3);border:2px solid var(--purple)"></div>Backtrack</div>
+      <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+        <span id="voiceIcon">🔇</span>
+        <span id="voiceLabel">Voice Off</span>
+      </button>
+    </div>
+    <canvas id="graphCanvas" height="430" style="width:100%;display:block;border-radius:8px;"></canvas>
+
+    <div class="controls" style="margin-top:14px;">
+      <div class="ctrl-top">
+        <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">▶ Play</button>
+        <button class="btn" onclick="doNext()">⏭ Next Step</button>
+        <button class="btn btn-danger" onclick="resetAll()">⏮ Reset</button>
+        <div class="speed-ctrl">
+          <span class="speed-lbl">⚡ Speed</span>
+          <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="setSpeed(this.value)">
+          <span class="speed-val" id="speedVal">2×</span>
         </div>
       </div>
-
-      <div class="panel">
-        <div class="panel-hd">💻 Pseudocode</div>
-        <div class="code-block">
-<span id="cl1" class="code-line"><span class="kw">function</span> <span class="fn">preorderTraversal</span>(node):</span>
-<span id="cl2" class="code-line">  <span class="kw">if</span> node <span class="kw">is null</span>:</span>
-<span id="cl3" class="code-line">    <span class="kw">return</span></span>
-<span id="cl4" class="code-line">  <span class="fn">visit</span>(node)</span>
-<span id="cl5" class="code-line">  <span class="fn">preorderTraversal</span>(node.left)</span>
-<span id="cl6" class="code-line">  <span class="fn">preorderTraversal</span>(node.right)</span>
-        </div>
+      <div class="preset-row">
+        <span class="preset-lbl">Tree:</span>
+        <button class="preset-btn active" onclick="loadPreset('balanced')" id="p-balanced">Balanced</button>
+        <button class="preset-btn" onclick="loadPreset('left-skewed')" id="p-left-skewed">Left Skewed</button>
+        <button class="preset-btn" onclick="loadPreset('right-skewed')" id="p-right-skewed">Right Skewed</button>
+        <button class="preset-btn" onclick="loadPreset('perfect')" id="p-perfect">Perfect</button>
+        <button class="preset-btn" onclick="loadPreset('zigzag')" id="p-zigzag">Zigzag</button>
+        <button class="preset-btn" onclick="loadPreset('random')" id="p-random">Random</button>
       </div>
-
-      <div class="panel">
-        <div class="panel-hd">📋 Traversal Order</div>
-        <div id="arrDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text);line-height:2;letter-spacing:1px;word-break:break-all;">—</div>
-      </div>
-
     </div>
   </div>
 
-</div><!-- .algo-page -->
+  <!-- RIGHT panels -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <div class="panel">
+      <div class="panel-hd">📦 Call Stack (recursion depth)</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;">DEPTH · NODE · STAGE</div>
+      <div class="stack-wrap" id="stackWrap">
+        <span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack is empty</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">🌳 Traversal Result (Root → L → R)</div>
+      <div class="result-list" id="resultList">
+        <span style="color:var(--text-dim);font-size:12px;font-style:italic;">No nodes visited yet</span>
+      </div>
+      <div class="result-summary" id="resultSummary" style="display:none;">
+        <span>Nodes visited</span><span id="resultTotal">0</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">💻 Pseudocode</div>
+      <div class="code-block">
+<span id="cl1"  class="code-line"><span class="kw">function</span> <span class="fn">preorder</span>(node):</span>
+<span id="cl2"  class="code-line">  <span class="kw">if</span> node <span class="kw">is null</span>: <span class="kw">return</span>  <span class="cm"># base case</span></span>
+<span id="cl3"  class="code-line">  result.<span class="fn">append</span>(node.val)      <span class="cm"># 1. VISIT root</span></span>
+<span id="cl4"  class="code-line">  <span class="fn">preorder</span>(node.left)          <span class="cm"># 2. Recurse LEFT</span></span>
+<span id="cl5"  class="code-line">  <span class="fn">preorder</span>(node.right)         <span class="cm"># 3. Recurse RIGHT</span></span>
+<span id="cl6"  class="code-line">  <span class="cm"># --- backtrack (return) ---</span></span>
+<span id="cl7"  class="code-line"><span class="kw">return</span> result</span>
+      </div>
+    </div>
+
+    <div class="panel" style="padding:14px 16px;">
+      <div class="panel-hd">📊 Key Properties</div>
+      <div id="algoInfo" style="font-size:12px;color:var(--text-dim);line-height:1.9;font-family:var(--mono);">Properties appear during traversal.</div>
+    </div>
+
+  </div>
+</div>
+
+</div>
 
 <script>
-// ════════════════════════════════════════════════
-// THEME TOGGLE
-// ════════════════════════════════════════════════
-function toggleTheme() {
-  const html = document.documentElement;
-  const isNowLight = html.getAttribute('data-theme') !== 'light';
-  html.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
-  document.getElementById('toggleLabel').textContent = isNowLight ? 'Dark mode' : 'Light mode';
-  localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+// ── Theme ──────────────────────────────────────────
+function toggleTheme(){const h=document.documentElement,l=h.getAttribute('data-theme')!=='light';h.setAttribute('data-theme',l?'light':'dark');document.getElementById('toggleLabel').textContent=l?'Dark mode':'Light mode';localStorage.setItem('theme',l?'light':'dark');}
+(function(){const s=localStorage.getItem('theme');if(s==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('toggleLabel').textContent='Dark mode';}})();
+
+// ── Tree Node ─────────────────────────────────────
+// Each node: {id, val, left:id|null, right:id|null, parent:id|null}
+// We'll store nodes as an array, id = index.
+
+const PRESETS = {
+  balanced: {
+    nodes: [
+      {id:0,val:'A',left:1,right:2,parent:null},
+      {id:1,val:'B',left:3,right:4,parent:0},
+      {id:2,val:'C',left:5,right:6,parent:0},
+      {id:3,val:'D',left:null,right:null,parent:1},
+      {id:4,val:'E',left:null,right:null,parent:1},
+      {id:5,val:'F',left:null,right:null,parent:2},
+      {id:6,val:'G',left:null,right:null,parent:2}
+    ],
+    root:0
+  },
+  'left-skewed': {
+    nodes: [
+      {id:0,val:'A',left:1,right:null,parent:null},
+      {id:1,val:'B',left:2,right:null,parent:0},
+      {id:2,val:'C',left:3,right:null,parent:1},
+      {id:3,val:'D',left:4,right:null,parent:2},
+      {id:4,val:'E',left:null,right:null,parent:3}
+    ],
+    root:0
+  },
+  'right-skewed': {
+    nodes: [
+      {id:0,val:'A',left:null,right:1,parent:null},
+      {id:1,val:'B',left:null,right:2,parent:0},
+      {id:2,val:'C',left:null,right:3,parent:1},
+      {id:3,val:'D',left:null,right:4,parent:2},
+      {id:4,val:'E',left:null,right:null,parent:3}
+    ],
+    root:0
+  },
+  perfect: {
+    nodes: [
+      {id:0,val:'1',left:1,right:2,parent:null},
+      {id:1,val:'2',left:3,right:4,parent:0},
+      {id:2,val:'3',left:5,right:6,parent:0},
+      {id:3,val:'4',left:7,right:8,parent:1},
+      {id:4,val:'5',left:9,right:10,parent:1},
+      {id:5,val:'6',left:11,right:12,parent:2},
+      {id:6,val:'7',left:13,right:14,parent:2},
+      {id:7,val:'8',left:null,right:null,parent:3},
+      {id:8,val:'9',left:null,right:null,parent:3},
+      {id:9,val:'10',left:null,right:null,parent:4},
+      {id:10,val:'11',left:null,right:null,parent:4},
+      {id:11,val:'12',left:null,right:null,parent:5},
+      {id:12,val:'13',left:null,right:null,parent:5},
+      {id:13,val:'14',left:null,right:null,parent:6},
+      {id:14,val:'15',left:null,right:null,parent:6}
+    ],
+    root:0
+  },
+  zigzag: {
+    nodes: [
+      {id:0,val:'A',left:1,right:2,parent:null},
+      {id:1,val:'B',left:null,right:3,parent:0},
+      {id:2,val:'C',left:4,right:null,parent:0},
+      {id:3,val:'D',left:5,right:null,parent:1},
+      {id:4,val:'E',left:null,right:6,parent:2},
+      {id:5,val:'F',left:null,right:null,parent:3},
+      {id:6,val:'G',left:null,right:null,parent:4}
+    ],
+    root:0
+  },
+  random: null
+};
+
+let tree=null,steps=[],stepIdx=-1,isPlaying=false,playTimer=null,speedMult=2;
+const SPEEDS=[2400,1800,1200,800,450];
+
+// ── Voice ─────────────────────────────────────────
+let voiceEnabled=false;
+const synth=window.speechSynthesis;let ttsVoice=null;
+function loadVoices(){const v=synth.getVoices();ttsVoice=v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.name.includes('Google US English'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;}
+loadVoices();if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=loadVoices;
+function speak(t){return new Promise(r=>{if(!voiceEnabled||!synth){r();return;}synth.cancel();const u=new SpeechSynthesisUtterance(t);u.voice=ttsVoice;u.rate=.88;u.pitch=1.05;u.volume=1;u.onstart=()=>document.getElementById('speakBars').classList.add('on');u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');r();};synth.speak(u);});}
+function stopSpeech(){synth&&synth.cancel();document.getElementById('speakBars').classList.remove('on');}
+function toggleVoice(){voiceEnabled=!voiceEnabled;const b=document.getElementById('voiceToggle'),ic=document.getElementById('voiceIcon'),lb=document.getElementById('voiceLabel');if(voiceEnabled){ic.textContent='🔊';lb.textContent='Voice On';b.classList.remove('off');}else{ic.textContent='🔇';lb.textContent='Voice Off';b.classList.add('off');stopSpeech();}if(isPlaying){pause();play();}}
+
+// ── Random tree generator ─────────────────────────
+function generateRandom(){
+  const vals='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const n=Math.floor(Math.random()*5)+5;
+  const nodes=[];
+  for(let i=0;i<n;i++)nodes.push({id:i,val:vals[i]||String(i),left:null,right:null,parent:i>0?Math.floor((i-1)/2):null});
+  // BST-style parent assignment
+  for(let i=1;i<n;i++){const p=Math.floor((i-1)/2);if((i-1)%2===0)nodes[p].left=i;else nodes[p].right=i;}
+  return{nodes,root:0};
 }
 
-// Restore saved theme on load
-(function () {
-  const saved = localStorage.getItem('theme');
-  if (saved === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
-    // label update happens after DOM ready — handled below in init
+// ── Build preorder steps ──────────────────────────
+function buildPreorderSteps(t){
+  const steps=[];
+  const visited=[];
+  const callStack=[];
+
+  function stackCopy(){return callStack.map(x=>({...x}));}
+  function visitedCopy(){return [...visited];}
+
+  steps.push({visited:[],callStack:[],current:null,action:'init',phase:'idle',codeLine:1,
+    narration:`Starting Preorder Traversal from root node ${t.nodes[t.root].val}. We will visit every node in Root → Left → Right order.`});
+
+  function traverse(nodeId, depth){
+    if(nodeId===null){
+      callStack.push({nodeId:null,depth,stage:'null-check'});
+      steps.push({visited:visitedCopy(),callStack:stackCopy(),current:null,action:'null',phase:'visit',codeLine:2,
+        narration:`Reached a null node at depth ${depth}. Base case — return immediately.`});
+      callStack.pop();
+      return;
+    }
+    const nd=t.nodes[nodeId];
+    callStack.push({nodeId,depth,stage:'visit'});
+
+    // VISIT root
+    steps.push({visited:visitedCopy(),callStack:stackCopy(),current:nodeId,action:'visit',phase:'visit',codeLine:3,
+      narration:`Visit node ${nd.val} (depth ${depth}). RECORD it in the result — this is the "pre" step, before children.`});
+    visited.push(nodeId);
+
+    // Recurse LEFT
+    callStack[callStack.length-1].stage='recurse-left';
+    steps.push({visited:visitedCopy(),callStack:stackCopy(),current:nodeId,action:'go-left',phase:'left',codeLine:4,
+      narration:`Node ${nd.val}: recurse into LEFT child → ${nd.left!==null?t.nodes[nd.left].val:'null'}.`});
+    traverse(nd.left, depth+1);
+
+    // Recurse RIGHT
+    callStack[callStack.length-1].stage='recurse-right';
+    steps.push({visited:visitedCopy(),callStack:stackCopy(),current:nodeId,action:'go-right',phase:'right',codeLine:5,
+      narration:`Node ${nd.val}: left subtree done. Now recurse into RIGHT child → ${nd.right!==null?t.nodes[nd.right].val:'null'}.`});
+    traverse(nd.right, depth+1);
+
+    // Backtrack
+    callStack[callStack.length-1].stage='backtrack';
+    steps.push({visited:visitedCopy(),callStack:stackCopy(),current:nodeId,action:'backtrack',phase:'right',codeLine:6,
+      narration:`Backtrack: returning from node ${nd.val}. Both subtrees processed.`});
+    callStack.pop();
   }
-})();
 
-// ════════════════════════════════════════════════
-// WEB SPEECH API
-// ════════════════════════════════════════════════
-const synth = window.speechSynthesis;
-let ttsVoice = null;
+  traverse(t.root, 0);
 
-function loadVoices() {
-  const voices = synth.getVoices();
-  ttsVoice =
-    voices.find(v => v.name.includes('Google UK English Female')) ||
-    voices.find(v => v.name.includes('Google US English'))       ||
-    voices.find(v => v.lang === 'en-US' && v.localService)       ||
-    voices.find(v => v.lang.startsWith('en'))                    ||
-    voices[0] || null;
-}
-loadVoices();
-if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
-
-function speak(text) {
-  return new Promise(resolve => {
-    if (!voiceEnabled || !synth) { resolve(); return; }
-    synth.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.voice  = ttsVoice;
-    utt.rate   = 0.88;
-    utt.pitch  = 1.05;
-    utt.volume = 1;
-    utt.onstart = () => document.getElementById('speakBars').classList.add('on');
-    utt.onend = utt.onerror = () => {
-      document.getElementById('speakBars').classList.remove('on');
-      resolve();
-    };
-    synth.speak(utt);
-  });
-}
-
-function stopSpeech() {
-  synth && synth.cancel();
-  document.getElementById('speakBars').classList.remove('on');
-}
-
-// ════════════════════════════════════════════════
-// VOICE TOGGLE — default OFF
-// ════════════════════════════════════════════════
-let voiceEnabled = false;
-
-function toggleVoice() {
-  voiceEnabled = !voiceEnabled;
-  const btn   = document.getElementById('voiceToggle');
-  const icon  = document.getElementById('voiceIcon');
-  const lbl   = document.getElementById('voiceLabel');
-  if (voiceEnabled) {
-    icon.textContent = '🔊'; lbl.textContent = 'Voice On';
-    btn.classList.remove('off');
-    document.getElementById('speedWrap').style.display = 'none';
-    if (isPlaying) { stopPlay(); startPlay(); }
-  } else {
-    icon.textContent = '🔇'; lbl.textContent = 'Voice Off';
-    btn.classList.add('off');
-    stopSpeech();
-    document.getElementById('speedWrap').style.display = '';
-    if (isPlaying) { stopPlay(); startPlay(); }
-  }
-}
-
-// ════════════════════════════════════════════════
-// TREE NODE CLASS
-// ════════════════════════════════════════════════
-class TreeNode {
-  constructor(val) {
-    this.val = val;
-    this.left = null;
-    this.right = null;
-  }
-}
-
-// ════════════════════════════════════════════════
-// PREORDER TRAVERSAL — STEP GENERATOR
-// ════════════════════════════════════════════════
-function buildPreorderSteps(root) {
-  const steps = [];
-  let totalVisited = 0;
-  const order = [];
-
-  function traverse(node, depth = 0) {
-    if (!node) return;
-
-    // Visit step
-    totalVisited++;
-    order.push(node.val);
-    steps.push({
-      current: node.val,
-      visited: [...order],
-      narration: `Visiting node ${node.val} at depth ${depth}.`,
-      phase: 'visit',
-      visitedCount: totalVisited,
-      codeLine: 4,
-    });
-
-    // Recurse left
-    steps.push({
-      current: node.val,
-      visited: [...order],
-      narration: `Recursing to left subtree of ${node.val}.`,
-      phase: 'recurse-left',
-      visitedCount: totalVisited,
-      codeLine: 5,
-    });
-    traverse(node.left, depth + 1);
-
-    // Recurse right
-    steps.push({
-      current: node.val,
-      visited: [...order],
-      narration: `Recursing to right subtree of ${node.val}.`,
-      phase: 'recurse-right',
-      visitedCount: totalVisited,
-      codeLine: 6,
-    });
-    traverse(node.right, depth + 1);
-  }
-
-  steps.unshift({
-    current: null,
-    visited: [],
-    narration: `Starting Preorder Traversal from root.`,
-    phase: 'active',
-    visitedCount: 0,
-    codeLine: 1,
-  });
-
-  traverse(root);
-
-  steps.push({
-    current: null,
-    visited: [...order],
-    narration: `Preorder Traversal complete! Order: [${order.join(', ')}]`,
-    phase: 'done',
-    visitedCount: totalVisited,
-    codeLine: 6, // End
-  });
+  steps.push({visited:visitedCopy(),callStack:[],current:null,action:'done',phase:'done',codeLine:7,
+    narration:`🌳 Preorder traversal complete! Visited all ${t.nodes.length} nodes in Root→Left→Right order: ${visited.map(id=>t.nodes[id].val).join(' → ')}.`});
 
   return steps;
 }
 
-// ════════════════════════════════════════════════
-// INTRO SPEECH
-// ════════════════════════════════════════════════
-let introAborted = false;
+// ── Layout tree positions ─────────────────────────
+function layoutTree(t){
+  // Compute x,y positions for each node using level-based layout
+  const pos={};
+  const depth={};
+  const widthAtDepth={};
 
-function clearIntroTimeouts() { introAborted = true; stopSpeech(); }
-
-async function playIntroSpeech() {
-  introAborted = false;
-  stopSpeech();
-  const introLines = [
-    "Hello! I am your algorithm teacher. Today we are learning Preorder Traversal — a fundamental tree traversal method.",
-    "Preorder means we visit the root first, then the left subtree, then the right subtree.",
-    "It's recursive: for each node, process it, then go left, then go right.",
-    "In the visualization, orange nodes are being visited, green nodes are already visited.",
-    "Now, turn on Voice Mode and press Play. I will guide you through every single step."
-  ];
-  const narText = document.getElementById('narText');
-  narText.classList.add('intro-mode');
-  document.getElementById('teacher').textContent = '🧑‍🏫';
-  for (let i = 0; i < introLines.length; i++) {
-    if (introAborted) break;
-    narText.textContent = introLines[i];
-    await speak(introLines[i]);
-    if (introAborted) break;
-    await new Promise(r => setTimeout(r, 280));
+  // BFS to get depths
+  const queue=[{id:t.root,d:0}];
+  const order=[];
+  while(queue.length){
+    const {id,d}=queue.shift();
+    if(id===null)continue;
+    depth[id]=d;
+    widthAtDepth[d]=(widthAtDepth[d]||0)+1;
+    order.push(id);
+    const nd=t.nodes[id];
+    queue.push({id:nd.left,d:d+1},{id:nd.right,d:d+1});
   }
-  narText.classList.remove('intro-mode');
-  document.getElementById('teacher').textContent = '🧑‍💻';
-  if (!introAborted && steps.length > 0) narText.textContent = steps[0].narration;
+
+  const maxDepth=Math.max(...Object.values(depth));
+  const yStep=1/(maxDepth+1);
+
+  // x positions: assign in-order index
+  let inOrderIdx=0;
+  const totalLeaves=t.nodes.filter(n=>n.left===null&&n.right===null).length||1;
+
+  function inOrder(id){
+    if(id===null)return;
+    const nd=t.nodes[id];
+    inOrder(nd.left);
+    pos[id]={xIdx:inOrderIdx++};
+    inOrder(nd.right);
+  }
+  inOrder(t.root);
+
+  const totalNodes=inOrderIdx;
+  order.forEach(id=>{
+    const xFrac=(pos[id].xIdx+0.5)/totalNodes;
+    const yFrac=(depth[id]+0.5)/(maxDepth+1)*0.92+0.04;
+    pos[id]={x:xFrac,y:yFrac,depth:depth[id]};
+  });
+  return pos;
 }
 
-// ════════════════════════════════════════════════
-// CANVAS - TREE DRAWING
-// ════════════════════════════════════════════════
-const canvas = document.getElementById('vizCanvas');
-const ctx = canvas.getContext('2d');
-let animRafId = null;
+// ── Canvas ────────────────────────────────────────
+const canvas=document.getElementById('graphCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=canvas.parentElement.clientWidth;}
 
-function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; }
+function drawTree(step){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!tree)return;
+  const s=step||{visited:[],callStack:[],current:null,action:''};
+  const visitedSet=new Set(s.visited||[]);
+  const currentId=s.current;
+  const stackIds=new Set((s.callStack||[]).filter(f=>f.nodeId!==null).map(f=>f.nodeId));
+  const pos=layoutTree(tree);
 
-function buildTreeLayout(root, width, height) {
-  const positions = new Map();
-  function positionNode(node, x, y, dx) {
-    if (!node) return;
-    positions.set(node.val, {x, y});
-    positionNode(node.left, x - dx, y + 60, dx / 2);
-    positionNode(node.right, x + dx, y + 60, dx / 2);
-  }
-  positionNode(root, width / 2, 50, width / 4);
-  return positions;
-}
-
-function drawTree(step, root, positions) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!root) return;
-
-  function drawNode(node) {
-    if (!node) return;
-    const pos = positions.get(node.val);
-    let fill = '#1a2840', stroke = '#2a4060', glow = null;
-    if (step.visited.includes(node.val)) { fill = 'rgba(6,214,160,0.2)'; stroke = '#06d6a0'; glow = 'rgba(6,214,160,0.3)'; }
-    if (step.current === node.val && step.phase === 'visit') { fill = 'rgba(255,140,66,0.25)'; stroke = '#ff8c42'; glow = 'rgba(255,140,66,0.35)'; }
-    
-    // Draw edges
-    if (node.left) {
-      const leftPos = positions.get(node.left.val);
-      ctx.beginPath(); ctx.moveTo(pos.x, pos.y + 15); ctx.lineTo(leftPos.x, leftPos.y - 15);
-      ctx.strokeStyle = '#2a4060'; ctx.lineWidth = 2; ctx.stroke();
+  // Draw edges first
+  tree.nodes.forEach(nd=>{
+    if(nd.left!==null){
+      const p1=pos[nd.id],p2=pos[nd.left];
+      drawEdge(p1,p2,visitedSet.has(nd.id)&&visitedSet.has(nd.left));
     }
-    if (node.right) {
-      const rightPos = positions.get(node.right.val);
-      ctx.beginPath(); ctx.moveTo(pos.x, pos.y + 15); ctx.lineTo(rightPos.x, rightPos.y - 15);
-      ctx.strokeStyle = '#2a4060'; ctx.lineWidth = 2; ctx.stroke();
+    if(nd.right!==null){
+      const p1=pos[nd.id],p2=pos[nd.right];
+      drawEdge(p1,p2,visitedSet.has(nd.id)&&visitedSet.has(nd.right));
+    }
+  });
+
+  // Draw nodes
+  tree.nodes.forEach(nd=>{
+    const p=pos[nd.id];
+    if(!p)return;
+    const px=p.x*canvas.width, py=p.y*canvas.height;
+    const isCurr=nd.id===currentId;
+    const isVisited=visitedSet.has(nd.id);
+    const isOnStack=stackIds.has(nd.id)&&!isCurr;
+
+    // Glow
+    if(isCurr||isOnStack){
+      ctx.beginPath();ctx.arc(px,py,26,0,Math.PI*2);
+      ctx.fillStyle=isCurr?'rgba(77,166,255,.25)':'rgba(176,106,255,.15)';ctx.fill();
     }
 
-    // Draw node
-    if (glow) {
-      ctx.beginPath(); ctx.arc(pos.x, pos.y, 18, 0, 2 * Math.PI);
-      ctx.fillStyle = glow; ctx.fill();
+    ctx.beginPath();ctx.arc(px,py,18,0,Math.PI*2);
+    let fill='#1a2840',stroke='#2a4060',sw=2;
+    if(isCurr){fill='#0a1a40';stroke='#4da6ff';sw=3;}
+    else if(isVisited){fill='#0e2a20';stroke='#06d6a0';sw=2;}
+    else if(isOnStack){fill='#1e0a3a';stroke='#b06aff';sw=2;}
+    ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=sw;ctx.stroke();
+
+    ctx.fillStyle=isCurr?'#4da6ff':isVisited?'#06d6a0':isOnStack?'#b06aff':'#4a6a9a';
+    ctx.font="bold 13px 'JetBrains Mono'";ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(nd.val,px,py);
+
+    // Order badge if visited
+    const visitOrder=(s.visited||[]).indexOf(nd.id);
+    if(visitOrder>=0){
+      ctx.fillStyle='rgba(0,212,170,.9)';
+      ctx.font="bold 8px 'JetBrains Mono'";
+      ctx.fillText(visitOrder+1,px+20,py-14);
     }
-    ctx.beginPath(); ctx.arc(pos.x, pos.y, 15, 0, 2 * Math.PI);
-    ctx.fillStyle = fill; ctx.fill();
-    ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke();
 
-    ctx.fillStyle = step.current === node.val ? '#fff' : step.visited.includes(node.val) ? '#06d6a0' : '#4a6a9a';
-    ctx.font = 'bold 12px JetBrains Mono';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(node.val, pos.x, pos.y);
-
-    drawNode(node.left);
-    drawNode(node.right);
-  }
-
-  drawNode(root);
+    // L/R label
+    if(nd.parent!==null){
+      const pnd=tree.nodes[nd.parent];
+      const side=pnd.left===nd.id?'L':'R';
+      const midX=(pos[nd.parent].x*canvas.width+px)/2;
+      const midY=(pos[nd.parent].y*canvas.height+py)/2;
+      ctx.fillStyle=side==='L'?'rgba(0,212,170,.7)':'rgba(176,106,255,.7)';
+      ctx.font="bold 9px 'JetBrains Mono'";
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(side,midX+6,midY-6);
+    }
+  });
 }
 
-// ════════════════════════════════════════════════
-// CONTROLLER
-// ════════════════════════════════════════════════
-let steps = [];
-let treeInput = '1,2,3,4,5,6,7';
-let root = null;
-let positions = null;
-let stepIdx = -1;
-let isPlaying = false;
-let playTimer = null;
-let introPlayed = false;
-let speedMult = 2;
-
-const SPEED_DELAYS = { 1: 1400, 2: 800, 3: 450, 4: 220, 5: 90 };
-function getDelay() { return SPEED_DELAYS[speedMult] || 800; }
-function onSpeedChange(val) {
-  speedMult = parseInt(val);
-  document.getElementById('speedVal').textContent = val + '×';
+function drawEdge(p1,p2,isTraversed){
+  const x1=p1.x*canvas.width,y1=p1.y*canvas.height;
+  const x2=p2.x*canvas.width,y2=p2.y*canvas.height;
+  ctx.beginPath();ctx.moveTo(x1,y1+18);ctx.lineTo(x2,y2-18);
+  if(isTraversed){ctx.strokeStyle='rgba(6,214,160,0.6)';ctx.lineWidth=2.5;}
+  else{ctx.strokeStyle='rgba(28,45,69,0.6)';ctx.lineWidth=1.5;}
+  ctx.setLineDash([]);ctx.stroke();
 }
 
-function updateNarration(step) {
-  const narText = document.getElementById('narText');
-  narText.classList.remove('intro-mode');
-  document.getElementById('teacher').textContent = '🧑‍💻';
-  narText.textContent = step.narration;
-}
+// ── Render step ───────────────────────────────────
+const NODE_COLS=['#4da6ff','#ff6b9d','#b06aff','#00d4aa','#ffd166','#ff8c42','#06d6a0','#ff6b6b','#a0e0ff'];
 
-function updateStatusBar(step, idx) {
-  document.getElementById('sVisited').textContent = step.visitedCount || 0;
-  document.getElementById('statVisited').textContent = step.visitedCount || 0;
-  document.getElementById('arrDisplay').textContent = `[${step.visited.join(', ')}]`;
-  document.getElementById('stepCtr').textContent = `Step ${idx + 1} / ${steps.length}`;
-  const pct = steps.length > 1 ? ((idx / (steps.length - 1)) * 100).toFixed(1) : 0;
-  document.getElementById('progFill').style.width = pct + '%';
+function renderStep(idx){
+  if(idx<0||idx>=steps.length)return;
+  const s=steps[idx];
+  const actionLabels={visit:'VISIT ✓',backtrack:'↩ backtrack','go-left':'→ left','go-right':'→ right',null:'null (base)',done:'Done!',init:'init'};
 
-  const badge = document.getElementById('phaseBadge');
-  const phaseMap = { active:['ph-active','Running'], visit:['ph-compare','Visiting'], 'recurse-left':['ph-swap','Left Recurse'], 'recurse-right':['ph-swap','Right Recurse'], done:['ph-done','Done'], idle:['ph-idle','Idle'] };
-  const [cls, lbl] = phaseMap[step.phase] || ['ph-idle','Idle'];
-  badge.className = `phase-badge ${cls}`; badge.textContent = lbl;
+  document.getElementById('narText').textContent=s.narration;
+  document.getElementById('sCurrent').textContent=s.current!==null?tree.nodes[s.current].val:'—';
+  document.getElementById('sAction').textContent=actionLabels[s.action]||'—';
+  document.getElementById('sVisited').textContent=s.visited.length;
+  document.getElementById('sDepth').textContent=s.callStack.length;
+  document.getElementById('sRemaining').textContent=tree.nodes.length-s.visited.length;
 
-  for (let i = 1; i <= 6; i++) {
-    const el = document.getElementById(`cl${i}`);
-    if (el) el.style.background = step.codeLine === i ? 'rgba(0,212,170,0.12)' : '';
-  }
-}
+  const pb=document.getElementById('phaseBadge');
+  const pcls={idle:'ph-idle',visit:'ph-visit',left:'ph-left',right:'ph-right',done:'ph-done'};
+  const plbl={idle:'Idle',visit:'Visiting',left:'← Left',right:'Right →',done:'Complete 🌳'};
+  pb.className='phase-badge '+(pcls[s.phase]||'ph-idle');pb.textContent=plbl[s.phase]||'Idle';
 
-function renderStep(idx, autoAdvance = false) {
-  if (idx < 0 || idx >= steps.length) return;
-  stepIdx = idx;
-  const step = steps[idx];
-  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
-  drawTree(step, root, positions);
-  updateNarration(step);
-  updateStatusBar(step, idx);
-  if (autoAdvance) scheduleNext(step);
-}
+  document.getElementById('progFill').style.width=`${((idx+1)/steps.length)*100}%`;
+  document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
 
-function scheduleNext(step) {
-  if (!isPlaying) return;
-  if (stepIdx >= steps.length - 1) { stopPlay(); return; }
-  if (voiceEnabled) {
-    speak(step.narration).then(() => {
-      if (!isPlaying) return;
-      playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, 400);
-    });
+  // Code highlight
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  if(s.codeLine){const el=document.getElementById('cl'+s.codeLine);if(el)el.classList.add('active');}
+
+  // Call Stack
+  const stackEl=document.getElementById('stackWrap');
+  const stackArr=s.callStack.filter(f=>f.nodeId!==null);
+  if(stackArr.length===0){
+    stackEl.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack is empty</span>';
   } else {
-    playTimer = setTimeout(() => { if (isPlaying) renderStep(stepIdx + 1, true); }, getDelay());
+    stackEl.innerHTML=[...stackArr].reverse().map((e,i)=>{
+      const nd=tree.nodes[e.nodeId];
+      const stageLabels={'visit':'visiting','recurse-left':'going left','recurse-right':'going right','backtrack':'backtracking'};
+      return `<div class="stack-item${i===0?' stack-top':''}">
+        <span class="sk-depth">d${e.depth}</span>
+        <span class="sk-node">${nd.val}</span>
+        <span class="sk-label">${stageLabels[e.stage]||e.stage}</span>
+        ${i===0?'<span class="stack-badge top">TOP</span>':''}
+      </div>`;
+    }).join('');
   }
-}
 
-function nextStep() {
-  clearIntroTimeouts();
-  stopPlay();
-  if (stepIdx + 1 < steps.length) {
-    renderStep(stepIdx + 1, false);
-    if (voiceEnabled) speak(steps[stepIdx].narration);
+  // Result list
+  const resultEl=document.getElementById('resultList');
+  if(s.visited.length===0){
+    resultEl.innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">No nodes visited yet</span>';
+  } else {
+    resultEl.innerHTML=s.visited.map((id,i)=>{
+      const c=NODE_COLS[i%NODE_COLS.length];
+      return `${i>0?'<span class="result-arrow">→</span>':''}<span class="result-node" style="border-color:${c}30;background:${c}10;color:${c}">${tree.nodes[id].val}</span>`;
+    }).join('');
   }
+  const rs=document.getElementById('resultSummary');
+  rs.style.display=s.visited.length>0?'flex':'none';
+  document.getElementById('resultTotal').textContent=`${s.visited.length} / ${tree.nodes.length}`;
+
+  // Info
+  const info=document.getElementById('algoInfo');
+  const pct=tree.nodes.length?Math.round((s.visited.length/tree.nodes.length)*100):0;
+  info.innerHTML=`
+<div style="color:var(--blue)">Visited: ${s.visited.length} / ${tree.nodes.length} (${pct}%)</div>
+<div style="color:var(--purple)">Max call stack depth: ${Math.max(...(s.callStack.map(x=>x.depth)||[0]),0)}</div>
+<div style="color:var(--teal)">Result so far: ${s.visited.map(id=>tree.nodes[id].val).join(' → ')||'—'}</div>
+<div style="color:var(--text-dim);margin-top:4px;">Total nodes: ${tree.nodes.length}</div>
+<div style="color:${s.visited.length===tree.nodes.length?'var(--green)':'var(--text-dim)'}">Complete: ${s.visited.length===tree.nodes.length?'Yes ✅':'No'}</div>
+  `;
+
+  drawTree(s);
 }
 
-function startPlay() {
-  if (stepIdx >= steps.length - 1) stepIdx = -1;
-  clearIntroTimeouts();
-  isPlaying = true;
-  document.getElementById('btnPlay').textContent = '⏸ Pause';
-  renderStep(stepIdx + 1, true);
+// ── Playback ──────────────────────────────────────
+function togglePlay(){isPlaying?pause():play();}
+function play(){if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').innerHTML='⏸ Pause';advance();}
+function pause(){isPlaying=false;stopSpeech();clearTimeout(playTimer);document.getElementById('btnPlay').innerHTML='▶ Play';}
+function advance(){if(!isPlaying)return;if(stepIdx>=steps.length-1){pause();return;}stepIdx++;renderStep(stepIdx);if(voiceEnabled){speak(steps[stepIdx].narration).then(()=>{if(isPlaying)playTimer=setTimeout(advance,300);});}else{playTimer=setTimeout(advance,SPEEDS[speedMult-1]||1200);}}
+function doNext(){if(isPlaying)pause();if(stepIdx>=steps.length-1)return;stepIdx++;renderStep(stepIdx);if(voiceEnabled)speak(steps[stepIdx].narration);}
+function setSpeed(v){speedMult=parseInt(v);document.getElementById('speedVal').textContent=`${v}×`;}
+
+// ── Reset ─────────────────────────────────────────
+function resetAll(){
+  pause();stepIdx=-1;
+  steps=buildPreorderSteps(tree);
+  document.getElementById('narText').textContent='Press ▶ Play to begin Preorder Traversal.';
+  document.getElementById('sCurrent').textContent='—';
+  document.getElementById('sAction').textContent='—';
+  document.getElementById('sVisited').textContent='0';
+  document.getElementById('sDepth').textContent='0';
+  document.getElementById('sRemaining').textContent=tree.nodes.length;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';
+  document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('btnPlay').innerHTML='▶ Play';
+  document.getElementById('stackWrap').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">Stack is empty</span>';
+  document.getElementById('resultList').innerHTML='<span style="color:var(--text-dim);font-size:12px;font-style:italic;">No nodes visited yet</span>';
+  document.getElementById('resultSummary').style.display='none';
+  document.getElementById('algoInfo').textContent='Properties appear during traversal.';
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  drawTree(null);
 }
 
-function stopPlay() {
-  isPlaying = false;
-  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
-  document.getElementById('btnPlay').textContent = '▶ Play';
-  stopSpeech();
-}
-
-function resetAll() {
-  stopPlay();
-  introAborted = true;
-  if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
-  stepIdx = -1;
-  drawTree(steps[0], root, positions);
-  document.getElementById('arrDisplay').textContent = `[]`;
-  ['sVisited','statVisited'].forEach(id => document.getElementById(id).textContent = '0');
-  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
-  document.getElementById('progFill').style.width = '0%';
-  document.getElementById('phaseBadge').className = 'phase-badge ph-idle';
-  document.getElementById('phaseBadge').textContent = 'Idle';
-  for (let i = 1; i <= 6; i++) { const el = document.getElementById(`cl${i}`); if (el) el.style.background = ''; }
-  document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for guided teaching.';
-  if (voiceEnabled) playIntroSpeech();
-}
-
-document.getElementById('btnPlay').addEventListener('click', () => { if (isPlaying) stopPlay(); else startPlay(); });
-document.getElementById('btnNext').addEventListener('click', nextStep);
-document.getElementById('btnReset').addEventListener('click', resetAll);
-
-function buildTreeFromLevelOrder(arr) {
-  if (!arr.length) return null;
-  const root = new TreeNode(arr[0]);
-  const queue = [root];
-  let i = 1;
-  while (i < arr.length && queue.length) {
-    const node = queue.shift();
-    if (arr[i] !== 'null') {
-      node.left = new TreeNode(arr[i]);
-      queue.push(node.left);
-    }
-    i++;
-    if (i < arr.length && arr[i] !== 'null') {
-      node.right = new TreeNode(arr[i]);
-      queue.push(node.right);
-    }
-    i++;
-  }
-  return root;
-}
-
-function countNodes(root) {
-  if (!root) return 0;
-  return 1 + countNodes(root.left) + countNodes(root.right);
-}
-
-function applyTree() {
-  const raw = document.getElementById('arrInput').value;
-  const parsed = raw.split(',').map(s => s.trim() === 'null' ? 'null' : parseInt(s.trim())).filter(v => !isNaN(v) || v === 'null');
-  if (parsed.length < 1) { alert('Enter at least one node.'); return; }
-  treeInput = raw;
-  root = buildTreeFromLevelOrder(parsed);
-  init();
-}
-
-function randomize() {
-  const n = Math.floor(Math.random() * 7) + 3;
-  const arr = Array.from({length: Math.pow(2, n) - 1}, () => Math.floor(Math.random() * 99) + 1);
-  document.getElementById('arrInput').value = arr.join(', ');
-  root = buildTreeFromLevelOrder(arr);
-  init();
-}
-
-function init() {
+// ── Load preset ───────────────────────────────────
+function loadPreset(name){
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('p-'+name);if(btn)btn.classList.add('active');
+  const p=(name==='random')?generateRandom():(PRESETS[name]||PRESETS['balanced']);
+  tree=p;
   resizeCanvas();
-
-  // Sync theme toggle label on load
-  const saved = localStorage.getItem('theme');
-  if (saved === 'light') document.getElementById('toggleLabel').textContent = 'Dark mode';
-
-  if (!root) root = buildTreeFromLevelOrder(treeInput.split(',').map(s => parseInt(s.trim())));
-  positions = buildTreeLayout(root, canvas.width, canvas.height);
-  document.getElementById('statN').textContent = countNodes(root);
-  steps = buildPreorderSteps(root);
-  stopPlay();
-  stepIdx = -1;
-  drawTree(steps[0], root, positions);
-  document.getElementById('arrDisplay').textContent = `[]`;
-  document.getElementById('stepCtr').textContent = `Step 0 / ${steps.length}`;
-  document.getElementById('progFill').style.width = '0%';
-  document.getElementById('speedWrap').style.display = voiceEnabled ? 'none' : '';
-
-  if (!introPlayed) {
-    introPlayed = true;
-    document.getElementById('narText').textContent = 'Ready! Press Play to start, or turn on Voice Mode for a guided walkthrough.';
-    if (voiceEnabled) setTimeout(playIntroSpeech, 500);
-  }
+  resetAll();
 }
 
-window.addEventListener('resize', () => {
-  resizeCanvas();
-  positions = buildTreeLayout(root, canvas.width, canvas.height);
-  if (stepIdx >= 0 && steps[stepIdx]) drawTree(steps[stepIdx], root, positions);
-  else if (steps.length > 0) drawTree(steps[0], root, positions);
-});
-
-init();
+window.addEventListener('resize',()=>{resizeCanvas();drawTree(stepIdx>=0?steps[stepIdx]:null);});
+loadPreset('balanced');
 </script>
 </body>
 </html>

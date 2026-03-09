@@ -1,22 +1,813 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Segment Tree - Demo</title>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Segment Tree | AlgoClassroom</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#060b14;--surface:#0a1120;--surface2:#0f1828;--border:rgba(255,255,255,0.07);
+  --text:#ddeeff;--text-dim:#4a6a8a;
+  --cyan:#00e5ff;--cyan2:#80f0ff;--blue:#4da6ff;--orange:#ff8c42;--yellow:#ffd166;
+  --green:#06d6a0;--red:#ff3a5c;--purple:#b06aff;--teal:#00d4aa;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
+}
+[data-theme="light"]{--bg:#eef4fc;--surface:#ffffff;--surface2:#e4edf8;--border:rgba(0,0,0,0.09);--text:#0a1830;--text-dim:#5a7a9a;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,229,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.025) 1px,transparent 1px);
+  background-size:36px 36px;}
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 55% 55% at 15% 20%,rgba(0,229,255,.05) 0%,transparent 65%),
+             radial-gradient(ellipse 45% 45% at 85% 80%,rgba(176,106,255,.05) 0%,transparent 65%);}
+.navbar{position:sticky;top:0;z-index:100;background:rgba(6,11,20,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1240px;margin:0 auto;padding:0 24px;height:54px;display:flex;align-items:center;gap:28px;}
+.nav-logo{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--cyan);text-decoration:none;letter-spacing:-.5px;}
+.logo-bracket{color:var(--text-dim);}.logo-dot{color:var(--cyan);}
+.nav-links a{font-size:12px;color:var(--text-dim);text-decoration:none;letter-spacing:.5px;transition:color .2s;}
+.nav-links a:hover{color:var(--cyan);}
+.nav-links{display:flex;gap:18px;margin-left:8px;}
+.theme-toggle{margin-left:auto;display:flex;align-items:center;gap:9px;background:none;border:1px solid var(--border);border-radius:30px;padding:5px 10px 5px 5px;cursor:pointer;transition:border-color .2s;}
+.theme-toggle:hover{border-color:rgba(0,229,255,.4);}
+.toggle-track{width:32px;height:18px;background:var(--surface2);border-radius:9px;position:relative;}
+.toggle-thumb{width:14px;height:14px;background:var(--cyan);border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .3s;}
+[data-theme="light"] .toggle-thumb{transform:translateX(14px);}
+.toggle-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+.algo-page{max-width:1240px;margin:0 auto;padding:28px 24px 60px;position:relative;z-index:1;}
+.back-link{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-decoration:none;letter-spacing:1px;display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;transition:color .2s;}
+.back-link:hover{color:var(--cyan);}
+.complexity{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.cplx-chip{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);}
+.cplx-chip span{color:var(--cyan);font-weight:700;}
+.card-difficulty{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;font-weight:700;background:rgba(0,229,255,.12);color:var(--cyan);border:1px solid rgba(0,229,255,.3);}
+.narration{background:var(--surface);border:1px solid rgba(0,229,255,.18);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.narration-text{font-size:13px;color:var(--text-dim);line-height:1.7;flex:1;}
+.speak-bars{display:flex;gap:2px;align-items:center;height:16px;flex-shrink:0;}
+.speak-bars span{width:3px;border-radius:2px;background:var(--cyan);transform:scaleY(.2);}
+.speak-bars.on span:nth-child(1){animation:bar .6s 0s infinite alternate;}
+.speak-bars.on span:nth-child(2){animation:bar .6s .1s infinite alternate;}
+.speak-bars.on span:nth-child(3){animation:bar .6s .2s infinite alternate;}
+.speak-bars.on span:nth-child(4){animation:bar .6s .15s infinite alternate;}
+.speak-bars.on span:nth-child(5){animation:bar .6s .05s infinite alternate;}
+@keyframes bar{from{transform:scaleY(.2);height:6px;}to{transform:scaleY(1);height:16px;}}
+.status-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;}
+.si{display:flex;flex-direction:column;gap:2px;}
+.sl{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+.sv{font-family:var(--mono);font-size:14px;font-weight:700;}
+.phase-badge{padding:3px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;}
+.ph-idle{background:rgba(74,106,138,.12);color:var(--text-dim);border:1px solid rgba(74,106,138,.2);}
+.ph-build{background:rgba(0,229,255,.12);color:var(--cyan);border:1px solid rgba(0,229,255,.3);}
+.ph-query{background:rgba(255,209,102,.12);color:var(--yellow);border:1px solid rgba(255,209,102,.3);}
+.ph-update{background:rgba(255,140,66,.12);color:var(--orange);border:1px solid rgba(255,140,66,.3);}
+.ph-done{background:rgba(6,214,160,.12);color:var(--green);border:1px solid rgba(6,214,160,.3);}
+.divider-auto{flex:1;}
+.prog-wrap{width:100px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:2px;transition:width .4s;}
+.step-ctr{font-family:var(--mono);font-size:10px;color:var(--text-dim);white-space:nowrap;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.panel-hd{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-bottom:12px;}
+.btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn:hover{border-color:rgba(0,229,255,.4);color:var(--cyan);background:rgba(0,229,255,.05);}
+.btn-primary{background:rgba(0,229,255,.1);border-color:rgba(0,229,255,.35);color:var(--cyan);}
+.btn-primary:hover{background:rgba(0,229,255,.18);}
+.btn-yellow{background:rgba(255,209,102,.1);border-color:rgba(255,209,102,.35);color:var(--yellow);}
+.btn-yellow:hover{background:rgba(255,209,102,.18);border-color:var(--yellow);}
+.btn-orange{background:rgba(255,140,66,.1);border-color:rgba(255,140,66,.35);color:var(--orange);}
+.btn-orange:hover{background:rgba(255,140,66,.18);border-color:var(--orange);}
+.btn-danger{border-color:rgba(255,58,92,.3);color:var(--red);}
+.btn-danger:hover{background:rgba(255,58,92,.08);border-color:var(--red);}
+.speed-ctrl{display:flex;align-items:center;gap:8px;}
+.speed-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+input[type=range]{width:76px;accent-color:var(--cyan);cursor:pointer;}
+.speed-val{font-family:var(--mono);font-size:10px;color:var(--cyan);min-width:20px;}
+.code-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11px;line-height:1.95;overflow-x:auto;}
+.code-line{display:block;color:var(--text-dim);padding-left:4px;border-left:3px solid transparent;border-radius:2px;white-space:pre;}
+.code-line.active{background:rgba(0,229,255,.09);border-left:3px solid var(--cyan);color:var(--cyan2);padding-left:7px;}
+.kw{color:#b06aff;}.fn{color:#4da6ff;}.cm{color:#2a4a6a;font-style:italic;}.num{color:#ff8c42;}
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:16px;}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;transition:border-color .3s,transform .3s;position:relative;overflow:hidden;}
+.cc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--purple));opacity:0;transition:opacity .3s;}
+.cc:hover{border-color:rgba(0,229,255,.28);transform:translateY(-2px);}
+.cc:hover::after{opacity:1;}
+.cc-icon{font-size:22px;margin-bottom:7px;display:block;}
+.cc-title{font-family:var(--mono);font-size:9px;color:var(--cyan);margin-bottom:5px;text-transform:uppercase;letter-spacing:2px;}
+.cc-desc{font-size:12px;color:var(--text-dim);line-height:1.5;}
+.two-col{display:grid;grid-template-columns:1fr 390px;gap:16px;margin-bottom:16px;}
+@media(max-width:980px){.two-col{grid-template-columns:1fr;}}
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;}
+.ctrl-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+.input-group{display:flex;gap:6px;align-items:center;}
+.input-group label{font-size:10px;color:var(--text-dim);font-family:var(--mono);letter-spacing:1px;white-space:nowrap;}
+.mini-input{width:58px;background:var(--surface2);border:1px solid rgba(0,229,255,.25);border-radius:6px;padding:6px 8px;color:var(--cyan);font-family:var(--mono);font-size:12px;font-weight:700;outline:none;text-align:center;}
+.mini-input:focus{border-color:var(--cyan);box-shadow:0 0 6px rgba(0,229,255,.2);}
+.mini-input.orange{border-color:rgba(255,140,66,.25);color:var(--orange);}
+.mini-input.orange:focus{border-color:var(--orange);}
+.array-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.array-cell{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.arr-val{width:36px;height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text);transition:all .3s;cursor:pointer;}
+.arr-val.in-range{background:rgba(255,209,102,.12);border-color:var(--yellow);color:var(--yellow);}
+.arr-val.updated{background:rgba(255,140,66,.14);border-color:var(--orange);color:var(--orange);}
+.arr-val.highlighted{background:rgba(0,229,255,.12);border-color:var(--cyan);color:var(--cyan);}
+.arr-idx{font-family:var(--mono);font-size:9px;color:var(--text-dim);}
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;align-items:center;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);}
+.ld{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.voice-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1px;transition:all .2s;white-space:nowrap;}
+.voice-btn:hover{background:rgba(0,229,255,.07);border-color:rgba(0,229,255,.4);}
+.voice-btn.off{color:var(--text-dim);border-color:var(--border);}
+/* Mode tabs */
+.mode-tabs{display:flex;gap:6px;margin-bottom:14px;}
+.mode-tab{padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-family:var(--mono);font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.mode-tab.active-build{background:rgba(0,229,255,.1);border-color:rgba(0,229,255,.35);color:var(--cyan);}
+.mode-tab.active-query{background:rgba(255,209,102,.1);border-color:rgba(255,209,102,.35);color:var(--yellow);}
+.mode-tab.active-update{background:rgba(255,140,66,.1);border-color:rgba(255,140,66,.35);color:var(--orange);}
+/* Segment tree canvas */
+#treeCanvas{width:100%;display:block;border-radius:8px;}
+/* Query result */
+.query-result{padding:10px 14px;border-radius:8px;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.25);font-family:var(--mono);font-size:13px;font-weight:700;color:var(--yellow);display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+.query-result.hidden{display:none;}
+</style>
 </head>
 <body>
-    <h1>Segment Tree</h1>
-    <p>This is a demo implementation page for Segment Tree.</p>
-    <pre>
-// Sample C++ Demo Code
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../../index.html" class="nav-logo"><span class="logo-bracket">{</span>algo<span class="logo-dot">.</span>classroom<span class="logo-bracket">}</span></a>
+    <div class="nav-links">
+      <a href="../../index.html#tree">Tree</a>
+      <a href="../../index.html#dp">Dynamic Programming</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      <span class="toggle-label" id="toggleLabel">Light mode</span>
+    </button>
+  </div>
+</nav>
 
-#include <iostream>
-using namespace std;
+<div class="algo-page">
+<a href="../../index.html" class="back-link">← Back to All Algorithms</a>
 
-int main() {
-    cout << "Segment Tree Demo Running..." << endl;
-    return 0;
+<header style="margin-bottom:20px;">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+    <span style="font-size:40px;">🌿</span>
+    <div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Data Structure · Range Queries · Tree</div>
+      <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Segment Tree</h1>
+    </div>
+    <div style="margin-left:auto;"><span class="card-difficulty">Intermediate</span></div>
+  </div>
+  <p style="color:var(--text-dim);font-size:14px;max-width:660px;line-height:1.7;">A binary tree built over an array where each node stores an <strong style="color:var(--cyan)">aggregate</strong> (sum, min, max) of a subarray range. Supports both <strong style="color:var(--yellow)">range queries</strong> and <strong style="color:var(--orange)">point updates</strong> in O(log N) — far faster than brute-force O(N) per query.</p>
+  <div class="complexity" style="margin-top:10px;">
+    <div class="cplx-chip">Build: <span>O(N)</span></div>
+    <div class="cplx-chip">Query: <span>O(log N)</span></div>
+    <div class="cplx-chip">Update: <span>O(log N)</span></div>
+    <div class="cplx-chip">Space: <span>O(4N)</span></div>
+    <div class="cplx-chip">Array size: <span>2·2^⌈log N⌉</span></div>
+  </div>
+</header>
+
+<div class="concepts">
+  <div class="cc"><span class="cc-icon">🏗️</span><div class="cc-title">Build O(N)</div><div class="cc-desc">Recursively split the array in half. Each leaf holds one value; each internal node holds the aggregate of its two children.</div></div>
+  <div class="cc"><span class="cc-icon">🔍</span><div class="cc-title">Range Query O(log N)</div><div class="cc-desc">Traverse the tree, collecting nodes whose ranges are fully inside the query range and skipping those fully outside.</div></div>
+  <div class="cc"><span class="cc-icon">✏️</span><div class="cc-title">Point Update O(log N)</div><div class="cc-desc">Update a leaf, then propagate the change upward — recomputing each ancestor's aggregate on the way back to the root.</div></div>
+  <div class="cc"><span class="cc-icon">✂️</span><div class="cc-title">Three Cases</div><div class="cc-desc">During a query each node is either: fully inside (use it), fully outside (skip), or partially overlapping (recurse into children).</div></div>
+  <div class="cc"><span class="cc-icon">📦</span><div class="cc-title">Array-Backed</div><div class="cc-desc">Stored in a flat array: node 1 is root, left child of node i is 2i, right child is 2i+1. No pointers needed.</div></div>
+</div>
+
+<div class="narration" id="narration">
+  <span style="font-size:28px;flex-shrink:0">🧑‍💻</span>
+  <div class="narration-text" id="narText">Welcome to Segment Tree! Build the tree from an array, then run range sum queries or point updates to see O(log N) in action.</div>
+  <div class="speak-bars" id="speakBars"><span></span><span></span><span></span><span></span><span></span></div>
+</div>
+
+<div class="status-row">
+  <div class="si"><span class="sl">Mode</span><span class="sv" style="color:var(--cyan)" id="sMode">Build</span></div>
+  <div class="si"><span class="sl">Node</span><span class="sv" style="color:var(--cyan)" id="sNode">—</span></div>
+  <div class="si"><span class="sl">Range</span><span class="sv" style="color:var(--yellow)" id="sRange">—</span></div>
+  <div class="si"><span class="sl">Result</span><span class="sv" style="color:var(--green)" id="sResult">—</span></div>
+  <div class="si"><span class="sl">Nodes visited</span><span class="sv" style="color:var(--text-dim)" id="sVisited">0</span></div>
+  <div class="si"><span class="sl">Phase</span><span class="phase-badge ph-idle" id="phaseBadge">Idle</span></div>
+  <div class="divider-auto"></div>
+  <div class="prog-wrap"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+  <span class="step-ctr" id="stepCtr">Step 0 / 0</span>
+</div>
+
+<div class="two-col">
+<!-- LEFT -->
+<div style="display:flex;flex-direction:column;gap:14px;">
+
+  <div class="panel">
+    <div class="panel-hd">📊 Input Array</div>
+    <div class="array-row" id="arrayRow"></div>
+    <div class="query-result hidden" id="queryResult">
+      <span id="qrLabel">Sum [l, r]</span>
+      <span id="qrValue">—</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd">🌿 Segment Tree</div>
+    <div class="legend">
+      <div class="li"><div class="ld" style="background:var(--cyan);opacity:.8"></div>Current node</div>
+      <div class="li"><div class="ld" style="background:var(--yellow);opacity:.8"></div>In query range</div>
+      <div class="li"><div class="ld" style="background:var(--green);opacity:.8"></div>Fully inside</div>
+      <div class="li"><div class="ld" style="background:#3a3a5a;border:1px solid #5a5a8a"></div>Out of range</div>
+      <button class="voice-btn off" id="voiceToggle" onclick="toggleVoice()">
+        <span id="voiceIcon">🔇</span><span id="voiceLabel">Voice Off</span>
+      </button>
+    </div>
+    <canvas id="treeCanvas" height="380"></canvas>
+  </div>
+
+  <div class="controls">
+    <div class="mode-tabs">
+      <button class="mode-tab active-build" id="tab-build" onclick="setMode('build')">🏗️ Build</button>
+      <button class="mode-tab" id="tab-query" onclick="setMode('query')">🔍 Range Query</button>
+      <button class="mode-tab" id="tab-update" onclick="setMode('update')">✏️ Point Update</button>
+    </div>
+
+    <!-- Build controls -->
+    <div id="ctrl-build">
+      <div class="ctrl-row">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">Preset array:</span>
+        <button class="preset-btn active-build" onclick="loadPreset('default')" style="padding:4px 10px;border-radius:5px;border:1px solid rgba(0,229,255,.3);background:rgba(0,229,255,.08);color:var(--cyan);font-family:var(--mono);font-size:10px;cursor:pointer;">Default</button>
+        <button class="preset-btn" onclick="loadPreset('small')" style="padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-family:var(--mono);font-size:10px;cursor:pointer;">Small</button>
+        <button class="preset-btn" onclick="loadPreset('powers')" style="padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-family:var(--mono);font-size:10px;cursor:pointer;">Powers</button>
+        <button class="preset-btn" onclick="loadPreset('random')" style="padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-family:var(--mono);font-size:10px;cursor:pointer;">Random</button>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">▶ Play</button>
+        <button class="btn" onclick="doNext()">⏭ Next</button>
+        <button class="btn btn-danger" onclick="resetCurrent()">⏮ Reset</button>
+        <div class="speed-ctrl">
+          <span class="speed-lbl">⚡</span>
+          <input type="range" id="speedSlider" min="1" max="5" value="2" oninput="setSpeed(this.value)">
+          <span class="speed-val" id="speedVal">2×</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Query controls -->
+    <div id="ctrl-query" style="display:none;">
+      <div class="ctrl-row">
+        <div class="input-group">
+          <label>L (0-indexed):</label>
+          <input type="number" class="mini-input" id="qL" value="1" min="0">
+        </div>
+        <div class="input-group">
+          <label>R:</label>
+          <input type="number" class="mini-input" id="qR" value="4" min="0">
+        </div>
+        <button class="btn btn-yellow" onclick="runQuery()">🔍 Query Sum</button>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn btn-primary" id="btnPlayQ" onclick="togglePlay()">▶ Play</button>
+        <button class="btn" onclick="doNext()">⏭ Next</button>
+        <button class="btn btn-danger" onclick="resetCurrent()">⏮ Reset</button>
+      </div>
+    </div>
+
+    <!-- Update controls -->
+    <div id="ctrl-update" style="display:none;">
+      <div class="ctrl-row">
+        <div class="input-group">
+          <label>Index (0-based):</label>
+          <input type="number" class="mini-input orange" id="uIdx" value="2" min="0">
+        </div>
+        <div class="input-group">
+          <label>New value:</label>
+          <input type="number" class="mini-input orange" id="uVal" value="99" min="0">
+        </div>
+        <button class="btn btn-orange" onclick="runUpdate()">✏️ Update</button>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn btn-primary" id="btnPlayU" onclick="togglePlay()">▶ Play</button>
+        <button class="btn" onclick="doNext()">⏭ Next</button>
+        <button class="btn btn-danger" onclick="resetCurrent()">⏮ Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div style="display:flex;flex-direction:column;gap:14px;">
+
+  <div class="panel">
+    <div class="panel-hd">💻 Pseudocode</div>
+    <div id="codeWrap">
+      <!-- Build code (shown by default) -->
+      <div id="code-build" class="code-block">
+<span id="cb1" class="code-line"><span class="kw">function</span> <span class="fn">build</span>(node, start, end):</span>
+<span id="cb2" class="code-line">  <span class="kw">if</span> start == end:  <span class="cm"># leaf</span></span>
+<span id="cb3" class="code-line">    tree[node] = arr[start]</span>
+<span id="cb4" class="code-line">  <span class="kw">else</span>:</span>
+<span id="cb5" class="code-line">    mid = (start + end) / <span class="num">2</span></span>
+<span id="cb6" class="code-line">    <span class="fn">build</span>(<span class="num">2</span>*node, start, mid)</span>
+<span id="cb7" class="code-line">    <span class="fn">build</span>(<span class="num">2</span>*node+<span class="num">1</span>, mid+<span class="num">1</span>, end)</span>
+<span id="cb8" class="code-line">    tree[node] = tree[<span class="num">2</span>*node]</span>
+<span id="cb9" class="code-line">               + tree[<span class="num">2</span>*node+<span class="num">1</span>]</span>
+      </div>
+      <!-- Query code -->
+      <div id="code-query" class="code-block" style="display:none;">
+<span id="cq1" class="code-line"><span class="kw">function</span> <span class="fn">query</span>(node, start, end, l, r):</span>
+<span id="cq2" class="code-line">  <span class="kw">if</span> r &lt; start <span class="kw">or</span> end &lt; l:  <span class="cm"># no overlap</span></span>
+<span id="cq3" class="code-line">    <span class="kw">return</span> <span class="num">0</span></span>
+<span id="cq4" class="code-line">  <span class="kw">if</span> l &lt;= start <span class="kw">and</span> end &lt;= r:  <span class="cm"># full overlap</span></span>
+<span id="cq5" class="code-line">    <span class="kw">return</span> tree[node]</span>
+<span id="cq6" class="code-line">  mid = (start + end) / <span class="num">2</span>    <span class="cm"># partial</span></span>
+<span id="cq7" class="code-line">  left  = <span class="fn">query</span>(<span class="num">2</span>*node, start, mid, l, r)</span>
+<span id="cq8" class="code-line">  right = <span class="fn">query</span>(<span class="num">2</span>*node+<span class="num">1</span>, mid+<span class="num">1</span>, end, l, r)</span>
+<span id="cq9" class="code-line">  <span class="kw">return</span> left + right</span>
+      </div>
+      <!-- Update code -->
+      <div id="code-update" class="code-block" style="display:none;">
+<span id="cu1" class="code-line"><span class="kw">function</span> <span class="fn">update</span>(node, start, end, idx, val):</span>
+<span id="cu2" class="code-line">  <span class="kw">if</span> start == end:  <span class="cm"># found leaf</span></span>
+<span id="cu3" class="code-line">    arr[idx] = val</span>
+<span id="cu4" class="code-line">    tree[node] = val</span>
+<span id="cu5" class="code-line">  <span class="kw">else</span>:</span>
+<span id="cu6" class="code-line">    mid = (start + end) / <span class="num">2</span></span>
+<span id="cu7" class="code-line">    <span class="kw">if</span> idx &lt;= mid:</span>
+<span id="cu8" class="code-line">      <span class="fn">update</span>(<span class="num">2</span>*node, start, mid, idx, val)</span>
+<span id="cu9" class="code-line">    <span class="kw">else</span>:</span>
+<span id="cu10" class="code-line">      <span class="fn">update</span>(<span class="num">2</span>*node+<span class="num">1</span>, mid+<span class="num">1</span>, end, idx, val)</span>
+<span id="cu11" class="code-line">    tree[node] = tree[<span class="num">2</span>*node]</span>
+<span id="cu12" class="code-line">               + tree[<span class="num">2</span>*node+<span class="num">1</span>]</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd">📦 Segment Tree Array (1-indexed)</div>
+    <div id="treeArrayWrap" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:2;max-height:160px;overflow-y:auto;"></div>
+  </div>
+
+  <div class="panel" style="padding:14px 16px;">
+    <div class="panel-hd">📊 Properties</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;font-family:var(--mono);font-size:11px;">
+      <div style="padding:7px 10px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Array N</div>
+        <div style="font-weight:700;color:var(--cyan)" id="p-n">—</div>
+      </div>
+      <div style="padding:7px 10px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Tree nodes</div>
+        <div style="font-weight:700;color:var(--text)" id="p-tn">—</div>
+      </div>
+      <div style="padding:7px 10px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Tree height</div>
+        <div style="font-weight:700;color:var(--purple)" id="p-th">—</div>
+      </div>
+      <div style="padding:7px 10px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Root sum</div>
+        <div style="font-weight:700;color:var(--green)" id="p-rs">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+// ── Theme ──────────────────────────────────────────
+function toggleTheme(){const h=document.documentElement,l=h.getAttribute('data-theme')!=='light';h.setAttribute('data-theme',l?'light':'dark');document.getElementById('toggleLabel').textContent=l?'Dark mode':'Light mode';localStorage.setItem('theme',l?'light':'dark');}
+(function(){const s=localStorage.getItem('theme');if(s==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('toggleLabel').textContent='Dark mode';}})();
+
+// ── Voice ─────────────────────────────────────────
+let voiceEnabled=false;
+const synth=window.speechSynthesis;let ttsVoice=null;
+function loadVoices(){const v=synth.getVoices();ttsVoice=v.find(x=>x.name.includes('Google UK English Female'))||v.find(x=>x.lang==='en-US'&&x.localService)||v.find(x=>x.lang.startsWith('en'))||v[0]||null;}
+loadVoices();if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=loadVoices;
+function speak(t){return new Promise(r=>{if(!voiceEnabled||!synth){r();return;}synth.cancel();const u=new SpeechSynthesisUtterance(t);u.voice=ttsVoice;u.rate=.88;u.pitch=1.05;u.volume=1;u.onstart=()=>document.getElementById('speakBars').classList.add('on');u.onend=u.onerror=()=>{document.getElementById('speakBars').classList.remove('on');r();};synth.speak(u);});}
+function stopSpeech(){synth&&synth.cancel();document.getElementById('speakBars').classList.remove('on');}
+function toggleVoice(){voiceEnabled=!voiceEnabled;const b=document.getElementById('voiceToggle'),ic=document.getElementById('voiceIcon'),lb=document.getElementById('voiceLabel');if(voiceEnabled){ic.textContent='🔊';lb.textContent='Voice On';b.classList.remove('off');}else{ic.textContent='🔇';lb.textContent='Voice Off';b.classList.add('off');stopSpeech();}}
+
+// ── Segment Tree Data Structure ───────────────────
+let arr=[], tree=[], N=0;
+
+function buildTree(a){
+  arr=[...a]; N=arr.length;
+  tree=new Array(4*N).fill(0);
+  function build(node,s,e){
+    if(s===e){tree[node]=arr[s];return;}
+    const m=Math.floor((s+e)/2);
+    build(2*node,s,m);build(2*node+1,m+1,e);
+    tree[node]=tree[2*node]+tree[2*node+1];
+  }
+  build(1,0,N-1);
 }
-    </pre>
+
+// ── Step builders ─────────────────────────────────
+function buildBuildSteps(a){
+  const steps=[];
+  const localTree=new Array(4*a.length).fill(0);
+  const localArr=[...a];
+  steps.push({type:'build',node:null,range:null,highlight:[],arrayHL:[],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cb1',phase:'build',narration:`Building segment tree from array [${a.join(', ')}]. We recursively split the array and compute sums bottom-up.`});
+
+  function build(node,s,e){
+    steps.push({type:'build',node,range:[s,e],highlight:[node],arrayHL:[],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cb1',phase:'build',
+      narration:`build(node=${node}, range=[${s},${e}]): processing segment of length ${e-s+1}.`});
+    if(s===e){
+      localTree[node]=localArr[s];
+      steps.push({type:'build',node,range:[s,e],highlight:[node],arrayHL:[s],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cb3',phase:'build',
+        narration:`Leaf node ${node} = arr[${s}] = ${localArr[s]}. Base case reached.`});
+      return;
+    }
+    const m=Math.floor((s+e)/2);
+    steps.push({type:'build',node,range:[s,e],highlight:[node],arrayHL:[],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cb5',phase:'build',
+      narration:`Split [${s},${e}] at mid=${m}. Recurse left child ${2*node} for [${s},${m}] and right child ${2*node+1} for [${m+1},${e}].`});
+    build(2*node,s,m);
+    build(2*node+1,m+1,e);
+    localTree[node]=localTree[2*node]+localTree[2*node+1];
+    steps.push({type:'build',node,range:[s,e],highlight:[node,2*node,2*node+1],arrayHL:[],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cb8',phase:'build',
+      narration:`Merge: tree[${node}] = tree[${2*node}](${localTree[2*node]}) + tree[${2*node+1}](${localTree[2*node+1]}) = ${localTree[node]}.`});
+  }
+  build(1,0,a.length-1);
+  steps.push({type:'build',node:1,range:[0,a.length-1],highlight:[1],arrayHL:[],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cb1',phase:'done',
+    narration:`✅ Build complete! Root (node 1) = ${localTree[1]} = total sum of the array. All ${a.length} leaves and ${2*a.length-1} internal nodes filled.`});
+  return steps;
+}
+
+function buildQuerySteps(qL,qR){
+  if(!tree[1])return[];
+  const localTree=[...tree];
+  const localArr=[...arr];
+  const steps=[];
+  let accumulated=0;
+  let visited=0;
+  steps.push({type:'query',node:null,range:null,qRange:[qL,qR],highlight:[],arrayHL:Array.from({length:qR-qL+1},(_,i)=>i+qL),treeSnap:[...localTree],arrSnap:[...localArr],result:null,codeLine:'cq1',phase:'query',
+    narration:`Query sum [${qL}, ${qR}]. We'll traverse the tree and collect nodes whose ranges fully overlap [${qL},${qR}], returning 0 for no overlap.`});
+
+  const fullOverlapNodes=[];
+  function query(node,s,e){
+    visited++;
+    if(qR<s||e<qL){
+      steps.push({type:'query',node,range:[s,e],qRange:[qL,qR],highlight:[node],highlightClass:'out',arrayHL:Array.from({length:qR-qL+1},(_,i)=>i+qL),treeSnap:[...localTree],arrSnap:[...localArr],result:null,codeLine:'cq2',phase:'query',
+        narration:`Node ${node} covers [${s},${e}]: fully OUTSIDE [${qL},${qR}]. Return 0.`});
+      return 0;
+    }
+    if(qL<=s&&e<=qR){
+      fullOverlapNodes.push(node);
+      const val=localTree[node];
+      accumulated+=val;
+      steps.push({type:'query',node,range:[s,e],qRange:[qL,qR],highlight:[...fullOverlapNodes],highlightClass:'in',arrayHL:Array.from({length:qR-qL+1},(_,i)=>i+qL),treeSnap:[...localTree],arrSnap:[...localArr],result:accumulated,codeLine:'cq4',phase:'query',
+        narration:`Node ${node} covers [${s},${e}]: fully INSIDE [${qL},${qR}]. Use tree[${node}]=${val}. Running sum = ${accumulated}.`});
+      return val;
+    }
+    const m=Math.floor((s+e)/2);
+    steps.push({type:'query',node,range:[s,e],qRange:[qL,qR],highlight:[node],highlightClass:'partial',arrayHL:Array.from({length:qR-qL+1},(_,i)=>i+qL),treeSnap:[...localTree],arrSnap:[...localArr],result:null,codeLine:'cq6',phase:'query',
+      narration:`Node ${node} covers [${s},${e}]: PARTIAL overlap with [${qL},${qR}]. Recurse into both children.`});
+    const l=query(2*node,s,m);
+    const r=query(2*node+1,m+1,e);
+    return l+r;
+  }
+  query(1,0,N-1);
+  steps.push({type:'query',node:1,range:[0,N-1],qRange:[qL,qR],highlight:fullOverlapNodes,highlightClass:'in',arrayHL:Array.from({length:qR-qL+1},(_,i)=>i+qL),treeSnap:[...localTree],arrSnap:[...localArr],result:accumulated,codeLine:'cq9',phase:'done',
+    narration:`✅ Query complete! Sum[${qL}..${qR}] = ${accumulated}. Visited ${visited} nodes — far fewer than the O(N) brute force of ${N} comparisons.`});
+  return steps;
+}
+
+function buildUpdateSteps(uIdx,uVal){
+  if(!tree[1]&&N===0)return[];
+  const localTree=[...tree];
+  const localArr=[...arr];
+  const steps=[];
+  steps.push({type:'update',node:null,range:null,uIdx,uVal,highlight:[],arrayHL:[uIdx],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cu1',phase:'update',
+    narration:`Update arr[${uIdx}] = ${uVal} (was ${localArr[uIdx]}). We'll find the leaf and propagate sums upward.`});
+
+  function update(node,s,e){
+    steps.push({type:'update',node,range:[s,e],uIdx,uVal,highlight:[node],arrayHL:[uIdx],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cu1',phase:'update',
+      narration:`update(node=${node}, [${s},${e}]): ${uIdx<=Math.floor((s+e)/2)&&s!==e?`idx ${uIdx} ≤ mid=${Math.floor((s+e)/2)}, go LEFT`:(s===e?`Leaf found at index ${uIdx}`:`idx ${uIdx} > mid=${Math.floor((s+e)/2)}, go RIGHT`)}.`});
+    if(s===e){
+      localArr[s]=uVal;
+      localTree[node]=uVal;
+      steps.push({type:'update',node,range:[s,e],uIdx,uVal,highlight:[node],arrayHL:[uIdx],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cu3',phase:'update',
+        narration:`Found leaf node ${node} for index ${uIdx}. Set arr[${uIdx}]=${uVal} and tree[${node}]=${uVal}.`});
+      return;
+    }
+    const m=Math.floor((s+e)/2);
+    if(uIdx<=m)update(2*node,s,m);
+    else update(2*node+1,m+1,e);
+    const oldVal=localTree[node];
+    localTree[node]=localTree[2*node]+localTree[2*node+1];
+    steps.push({type:'update',node,range:[s,e],uIdx,uVal,highlight:[node,2*node,2*node+1],arrayHL:[uIdx],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cu11',phase:'update',
+      narration:`Propagate up: tree[${node}] = ${localTree[2*node]} + ${localTree[2*node+1]} = ${localTree[node]} (was ${oldVal}).`});
+  }
+  update(1,0,N-1);
+  // commit changes to global
+  tree=[...localTree];arr=[...localArr];
+  steps.push({type:'update',node:1,range:[0,N-1],uIdx,uVal,highlight:[1],arrayHL:[uIdx],treeSnap:[...localTree],arrSnap:[...localArr],codeLine:'cu1',phase:'done',
+    narration:`✅ Update complete! arr[${uIdx}] is now ${uVal}. Root sum updated to ${localTree[1]}. Only O(log ${N}) = ${Math.ceil(Math.log2(N))} nodes were touched.`});
+  return steps;
+}
+
+// ── Canvas drawing ────────────────────────────────
+const canvas=document.getElementById('treeCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=canvas.parentElement.clientWidth;}
+
+// Compute node positions from a flat tree array
+function computePositions(treeArr,n){
+  const pos={};
+  // tree is 1-indexed, nodes 1..2n
+  // depth of node i = floor(log2(i))
+  // position within depth = i - 2^depth
+  // We only show nodes that exist
+  const maxDepth=Math.floor(Math.log2(Math.max(2*n,2)));
+  for(let i=1;i<=4*n;i++){
+    if(treeArr[i]===undefined||treeArr[i]===0&&i>2*n)continue;
+    const depth=Math.floor(Math.log2(i));
+    if(depth>maxDepth+1)continue;
+    const posInDepth=i-(1<<depth);
+    const nodesAtDepth=(1<<depth);
+    pos[i]={
+      x:(posInDepth+0.5)/nodesAtDepth,
+      y:(depth+0.5)/(maxDepth+2)*0.9+0.05,
+      depth
+    };
+  }
+  return pos;
+}
+
+// Get node's array range
+function getNodeRange(node,s,e){
+  if(s===e)return[s,e];
+  const m=Math.floor((s+e)/2);
+  // We'll compute by traversal lookup
+  return null;
+}
+
+// Build a range map for all nodes
+function buildRangeMap(n){
+  const rangeMap={};
+  function fill(node,s,e){
+    if(node>=4*n)return;
+    rangeMap[node]=[s,e];
+    if(s===e)return;
+    const m=Math.floor((s+e)/2);
+    fill(2*node,s,m);fill(2*node+1,m+1,e);
+  }
+  fill(1,0,n-1);
+  return rangeMap;
+}
+
+function drawSegTree(treeSnap, n, highlight=[], highlightClass='current', qRange=null, arrayHL=[]){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!n||!treeSnap||!treeSnap[1])return;
+  const W=canvas.width,H=canvas.height;
+  const rangeMap=buildRangeMap(n);
+  const maxDepth=Math.ceil(Math.log2(n))+1;
+
+  const pos={};
+  function computePos(node,s,e,depth,lo,hi){
+    if(node>=4*n||!rangeMap[node])return;
+    const xFrac=(lo+hi)/2;
+    pos[node]={x:xFrac,y:(depth+0.5)/(maxDepth+1)*0.88+0.05,depth};
+    if(s===e)return;
+    const m=Math.floor((s+e)/2);
+    computePos(2*node,s,m,depth+1,lo,(lo+hi)/2);
+    computePos(2*node+1,m+1,e,depth+1,(lo+hi)/2,hi);
+  }
+  computePos(1,0,n-1,0,0,1);
+
+  const hlSet=new Set(highlight);
+
+  // Edges
+  function drawEdges(node){
+    if(!pos[node])return;
+    const lc=2*node,rc=2*node+1;
+    [lc,rc].forEach(child=>{
+      if(pos[child]){
+        ctx.beginPath();ctx.moveTo(pos[node].x*W,pos[node].y*H);ctx.lineTo(pos[child].x*W,pos[child].y*H);
+        const isHLEdge=hlSet.has(node)&&hlSet.has(child);
+        ctx.strokeStyle=isHLEdge?'rgba(0,229,255,.4)':'rgba(40,60,90,.7)';
+        ctx.lineWidth=isHLEdge?1.8:1.2;ctx.setLineDash([]);ctx.stroke();
+        drawEdges(child);
+      }
+    });
+  }
+  drawEdges(1);
+
+  // Nodes
+  function drawNodes(node){
+    if(!pos[node])return;
+    const p=pos[node];
+    const px=p.x*W,py=p.y*H;
+    const val=treeSnap[node];
+    const isHL=hlSet.has(node);
+    const range=rangeMap[node];
+    const isLeaf=range&&range[0]===range[1];
+    const r=isLeaf?15:17;
+
+    // Determine color class
+    let fillColor,strokeColor,textColor;
+    if(isHL){
+      if(highlightClass==='in'){fillColor='rgba(6,214,160,.18)';strokeColor='#06d6a0';textColor='#06d6a0';}
+      else if(highlightClass==='out'){fillColor='rgba(50,50,80,.3)';strokeColor='#3a3a5a';textColor='#5a5a8a';}
+      else if(highlightClass==='partial'){fillColor='rgba(255,209,102,.12)';strokeColor='var(--yellow)';textColor='#ffd166';}
+      else{fillColor='rgba(0,229,255,.15)';strokeColor='#00e5ff';textColor='#80f0ff';}
+    } else {
+      fillColor=isLeaf?'rgba(77,166,255,.08)':'rgba(15,24,40,.9)';
+      strokeColor=isLeaf?'rgba(77,166,255,.4)':'rgba(40,60,100,.8)';
+      textColor=isLeaf?'#4da6ff':'#6a90b0';
+    }
+
+    // Glow for highlighted
+    if(isHL&&highlightClass!=='out'){
+      ctx.beginPath();ctx.arc(px,py,r+6,0,Math.PI*2);
+      ctx.fillStyle=highlightClass==='in'?'rgba(6,214,160,.08)':'rgba(0,229,255,.07)';ctx.fill();
+    }
+
+    ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);
+    ctx.fillStyle=fillColor;ctx.fill();
+    ctx.strokeStyle=strokeColor;ctx.lineWidth=isHL?2.5:1.5;ctx.stroke();
+
+    // Value
+    ctx.fillStyle=textColor;
+    ctx.font=`bold ${val>=100?9:11}px 'JetBrains Mono'`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(val,px,py);
+
+    // Range label below node
+    if(range){
+      ctx.fillStyle='rgba(74,106,138,.7)';
+      ctx.font="8px 'JetBrains Mono'";
+      ctx.fillText(`[${range[0]},${range[1]}]`,px,py+r+8);
+    }
+
+    drawNodes(2*node);drawNodes(2*node+1);
+  }
+  drawNodes(1);
+}
+
+// ── Array row rendering ────────────────────────────
+function renderArrayRow(arrSnap, arrayHL=[], updatedIdx=-1){
+  const row=document.getElementById('arrayRow');
+  row.innerHTML=arrSnap.map((v,i)=>{
+    const inRange=arrayHL.includes(i);
+    const isUpdated=i===updatedIdx;
+    return`<div class="array-cell">
+      <div class="arr-val${inRange?' in-range':''}${isUpdated?' updated':''}">${v}</div>
+      <div class="arr-idx">${i}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Tree array panel ──────────────────────────────
+function renderTreeArray(treeSnap,n){
+  const wrap=document.getElementById('treeArrayWrap');
+  if(!n){wrap.innerHTML='<span style="font-style:italic">Build the tree first.</span>';return;}
+  const rangeMap=buildRangeMap(n);
+  let html='<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+  for(let i=1;i<=2*n+Math.max(2*n-1,0);i++){
+    if(!rangeMap[i])break;
+    const r=rangeMap[i];
+    const isLeaf=r[0]===r[1];
+    html+=`<div style="padding:3px 7px;border-radius:5px;border:1px solid ${isLeaf?'rgba(77,166,255,.3)':'rgba(40,60,90,.6)'};background:${isLeaf?'rgba(77,166,255,.07)':'var(--surface2)'};white-space:nowrap;">
+      <span style="color:var(--text-dim)">t[${i}]</span>=<span style="color:${isLeaf?'#4da6ff':'var(--cyan)'};">${treeSnap[i]||0}</span>
+    </div>`;
+  }
+  html+='</div>';
+  wrap.innerHTML=html;
+}
+
+// ── Steps & playback ──────────────────────────────
+let steps=[], stepIdx=-1, isPlaying=false, playTimer=null, speedMult=2, currentMode='build';
+const SPEEDS=[2400,1600,1100,700,400];
+
+function renderStep(idx){
+  if(idx<0||idx>=steps.length)return;
+  const s=steps[idx];
+
+  document.getElementById('narText').textContent=s.narration;
+  document.getElementById('sMode').textContent=s.type==='build'?'Build':s.type==='query'?'Query':'Update';
+  document.getElementById('sNode').textContent=s.node!==null&&s.node!==undefined?`node ${s.node}`:'—';
+  document.getElementById('sRange').textContent=s.range?`[${s.range[0]},${s.range[1]}]`:'—';
+  document.getElementById('sResult').textContent=s.result!==null&&s.result!==undefined?s.result:'—';
+  document.getElementById('sVisited').textContent=s.highlight?s.highlight.length:0;
+
+  const pb=document.getElementById('phaseBadge');
+  const pcls={build:'ph-build',query:'ph-query',update:'ph-update',done:'ph-done',idle:'ph-idle'};
+  const plbl={build:'Building',query:'Querying',update:'Updating',done:'Done ✅',idle:'Idle'};
+  pb.className='phase-badge '+(pcls[s.phase]||'ph-idle');pb.textContent=plbl[s.phase]||'Idle';
+
+  document.getElementById('progFill').style.width=`${((idx+1)/steps.length)*100}%`;
+  document.getElementById('stepCtr').textContent=`Step ${idx+1} / ${steps.length}`;
+
+  // Code highlight
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  if(s.codeLine){const el=document.getElementById(s.codeLine);if(el)el.classList.add('active');}
+
+  // Query result banner
+  const qrEl=document.getElementById('queryResult');
+  if(s.type==='query'&&s.result!==null&&s.result!==undefined){
+    qrEl.classList.remove('hidden');
+    document.getElementById('qrLabel').textContent=`Sum [${s.qRange[0]}, ${s.qRange[1]}]`;
+    document.getElementById('qrValue').textContent=s.result;
+  } else if(s.phase==='done'&&s.type==='query'){
+    qrEl.classList.remove('hidden');
+  } else if(s.type!=='query'){qrEl.classList.add('hidden');}
+
+  // Draw tree
+  drawSegTree(s.treeSnap,N,s.highlight||[],s.highlightClass||'current',s.qRange||null,s.arrayHL||[]);
+  renderArrayRow(s.arrSnap,s.arrayHL||[],s.type==='update'?s.uIdx:-1);
+  renderTreeArray(s.treeSnap,N);
+
+  // Props
+  document.getElementById('p-n').textContent=N;
+  document.getElementById('p-tn').textContent=s.treeSnap?s.treeSnap.filter((v,i)=>i>0&&v!==0).length:0;
+  document.getElementById('p-th').textContent=N>0?Math.ceil(Math.log2(N))+1:'—';
+  document.getElementById('p-rs').textContent=s.treeSnap?s.treeSnap[1]||0:0;
+}
+
+function togglePlay(){isPlaying?pause():play();}
+function play(){if(stepIdx>=steps.length-1)stepIdx=-1;isPlaying=true;document.getElementById('btnPlay').innerHTML='⏸ Pause';if(document.getElementById('btnPlayQ'))document.getElementById('btnPlayQ').innerHTML='⏸ Pause';if(document.getElementById('btnPlayU'))document.getElementById('btnPlayU').innerHTML='⏸ Pause';advance();}
+function pause(){isPlaying=false;stopSpeech();clearTimeout(playTimer);['btnPlay','btnPlayQ','btnPlayU'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='▶ Play';});}
+function advance(){if(!isPlaying)return;if(stepIdx>=steps.length-1){pause();return;}stepIdx++;renderStep(stepIdx);if(voiceEnabled){speak(steps[stepIdx].narration).then(()=>{if(isPlaying)playTimer=setTimeout(advance,300);});}else{playTimer=setTimeout(advance,SPEEDS[speedMult-1]||1200);}}
+function doNext(){if(isPlaying)pause();if(stepIdx>=steps.length-1)return;stepIdx++;renderStep(stepIdx);if(voiceEnabled)speak(steps[stepIdx].narration);}
+function setSpeed(v){speedMult=parseInt(v);document.getElementById('speedVal').textContent=`${v}×`;}
+
+function resetCurrent(){
+  pause();stepIdx=-1;
+  document.getElementById('narText').textContent='Press ▶ Play to step through the animation.';
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('stepCtr').textContent=`Step 0 / ${steps.length}`;
+  document.getElementById('phaseBadge').className='phase-badge ph-idle';document.getElementById('phaseBadge').textContent='Idle';
+  document.getElementById('sNode').textContent='—';document.getElementById('sRange').textContent='—';document.getElementById('sResult').textContent='—';document.getElementById('sVisited').textContent='0';
+  document.querySelectorAll('.code-line').forEach(el=>el.classList.remove('active'));
+  document.getElementById('queryResult').classList.add('hidden');
+  drawSegTree(tree,N,[]);
+  renderArrayRow(arr,[]);
+  renderTreeArray(tree,N);
+}
+
+// ── Mode switching ─────────────────────────────────
+function setMode(mode){
+  currentMode=mode;
+  ['build','query','update'].forEach(m=>{
+    document.getElementById('ctrl-'+m).style.display=m===mode?'':'none';
+    const tab=document.getElementById('tab-'+m);
+    tab.className='mode-tab'+(m===mode?' active-'+m:'');
+  });
+  // Show correct pseudocode
+  ['build','query','update'].forEach(m=>{
+    document.getElementById('code-'+m).style.display=m===mode?'':'none';
+  });
+  document.getElementById('queryResult').classList.add('hidden');
+  pause();
+}
+
+// ── Presets ────────────────────────────────────────
+const PRESETS={
+  default:[5,3,8,1,9,2,7,4],
+  small:[2,4,1,3],
+  powers:[1,2,4,8,16,32],
+  random:null
+};
+
+function loadPreset(name){
+  pause();
+  let a;
+  if(name==='random'){const n=Math.floor(Math.random()*4)+5;a=Array.from({length:n},()=>Math.floor(Math.random()*30)+1);}
+  else a=[...(PRESETS[name]||PRESETS.default)];
+  N=a.length;
+  buildTree(a);
+  steps=buildBuildSteps(a);
+  setMode('build');
+  resetCurrent();
+  resizeCanvas();
+  document.getElementById('qL').max=N-1;document.getElementById('qR').max=N-1;
+  document.getElementById('uIdx').max=N-1;
+  document.getElementById('p-n').textContent=N;
+  document.getElementById('p-th').textContent=Math.ceil(Math.log2(N))+1;
+}
+
+function runQuery(){
+  if(!N){alert('Build the tree first!');return;}
+  const l=parseInt(document.getElementById('qL').value);
+  const r=parseInt(document.getElementById('qR').value);
+  if(isNaN(l)||isNaN(r)||l<0||r>=N||l>r){alert(`Invalid range. Use 0–${N-1} with L ≤ R.`);return;}
+  steps=buildQuerySteps(l,r);
+  setMode('query');
+  resetCurrent();
+}
+
+function runUpdate(){
+  if(!N){alert('Build the tree first!');return;}
+  const idx=parseInt(document.getElementById('uIdx').value);
+  const val=parseInt(document.getElementById('uVal').value);
+  if(isNaN(idx)||idx<0||idx>=N){alert(`Invalid index. Use 0–${N-1}.`);return;}
+  if(isNaN(val)){alert('Enter a valid value.');return;}
+  steps=buildUpdateSteps(idx,val);
+  setMode('update');
+  resetCurrent();
+}
+
+window.addEventListener('resize',()=>{resizeCanvas();if(stepIdx>=0&&stepIdx<steps.length)renderStep(stepIdx);else{drawSegTree(tree,N,[]);renderArrayRow(arr,[]);}});
+resizeCanvas();
+loadPreset('default');
+</script>
 </body>
 </html>
